@@ -228,3 +228,11 @@
   var io=new IntersectionObserver(function(es){if(es[0].isIntersecting){play();io.disconnect();}},{threshold:.3});
   io.observe(feed);
 })();
+
+/* floating contact button: appears after the first screen, hides over the contact section */
+(function(){
+  var f=document.querySelector('.fab'); if(!f)return; var c=document.getElementById('contact'), inC=false;
+  if(c&&'IntersectionObserver' in window)new IntersectionObserver(function(es){inC=es[0].isIntersecting;tick();},{threshold:.2}).observe(c);
+  function tick(){f.classList.toggle('show',scrollY>500&&!inC);}
+  addEventListener('scroll',tick,{passive:true}); tick();
+})();

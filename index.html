@@ -95,7 +95,7 @@
     "Telegram notifications: EA start/stop, offline and back-online heartbeat alerts, trades opened and closed, pending orders, drawdown and risk-limit alerts, daily report",
     "Built for Fusion Markets and IC Markets Raw accounts",
     "Trades streamed live on YouTube 24/5 with an AI host",
-    "Demo track record on Myfxbook"
+    "Public track record on Myfxbook"
    ],
    "sameAs": [
     "https://www.youtube.com/@GoldTriEngine",
@@ -126,7 +126,7 @@
     <a class="brand" href="./" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
     <nav class="nav" id="nav" aria-label="Main">
-      <a href="#how">How it works</a><a href="#host">The host</a><a href="#backtest">Backtest</a><a href="#license">License</a><a href="guide.html">Guide</a><a href="faq.html">FAQ</a>
+      <a href="#account">Live account</a><a href="#how">How it works</a><a href="#backtest">Backtest</a><a href="#license">License</a><a href="guide.html">Guide</a><a href="faq.html">FAQ</a><a href="#contact">Contact</a>
       <a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a>
     </nav>
   </div>
@@ -212,7 +212,7 @@
         <span class="tag">02</span>
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V5"/><path d="M4 19h16"/><rect x="7" y="11" width="3" height="5" rx=".5"/><rect x="12" y="8" width="3" height="8" rx=".5"/><rect x="17" y="5" width="3" height="11" rx=".5"/></svg></div>
         <h3>A third-party track record</h3>
-        <p>Results are tracked independently on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>. It is a demo account today, and it says so everywhere it appears.</p>
+        <p>Results are tracked independently on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>. Every deposit, trade and drawdown is there for anyone to check.</p>
       </article>
       <article class="card rv" style="--d:.16s">
         <span class="tag">03</span>
@@ -220,6 +220,74 @@
         <h3>A developer with a name</h3>
         <p>GoldTriEngine is built by Yelias, who runs the stream and answers support himself. The voice host is AI and labelled as AI. Nothing is hidden behind an "account manager".</p>
       </article>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- LIVE ACCOUNT -->
+<section class="sec" id="account" data-src="https://raw.githubusercontent.com/yeliasforex/gte-live/main/account.json">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker rv"><span class="dot g" style="display:inline-block;margin-right:10px;vertical-align:1px"></span>Live account</span>
+      <h2 class="rv">The real numbers, <em class="s">straight from MetaTrader.</em></h2>
+      <p class="lead rv">Balance, equity, deposits, every open trade and every closed one, published automatically from the account GoldTriEngine trades. Nothing is typed in by hand.</p>
+    </div>
+
+    <div class="acct" data-state="loading">
+      <div class="acct-meta rv">
+        <span><b data-k="broker">—</b>Broker</span>
+        <span><b data-k="type">—</b>Account type</span>
+        <span><b data-k="leverage">—</b>Leverage</span>
+        <span><b data-k="started">—</b>Tracking since</span>
+        <span class="acct-upd"><i class="dot g"></i><b data-k="updated">—</b>Last update</span>
+      </div>
+
+      <div class="kpis rv">
+        <div class="kpi"><span>Balance</span><b data-k="balance">—</b></div>
+        <div class="kpi"><span>Equity</span><b data-k="equity">—</b></div>
+        <div class="kpi"><span>Net profit</span><b data-k="net">—</b><small data-k="gain"></small></div>
+        <div class="kpi"><span>Deposits</span><b data-k="deposits">—</b><small data-k="withdrawals"></small></div>
+        <div class="kpi"><span>Win rate</span><b data-k="winrate">—</b><small data-k="trades"></small></div>
+        <div class="kpi"><span>Max drawdown</span><b data-k="maxdd">—</b><small data-k="pf"></small></div>
+      </div>
+
+      <div class="acct-grid">
+        <div class="panel p-eq rv">
+          <div class="panel-h"><h3>Balance and equity</h3>
+            <div class="seg" role="group" aria-label="Time range"><button type="button" data-r="7">1W</button><button type="button" data-r="30">1M</button><button type="button" data-r="0" aria-pressed="true">All</button></div>
+          </div>
+          <div class="legend acct-legend"><span><i style="background:#1FA874"></i>Balance</span><span><i style="background:#5B86FF"></i>Equity</span></div>
+          <div class="chart" id="eqChart"></div>
+        </div>
+        <div class="panel p-open rv" style="--d:.06s">
+          <div class="panel-h"><h3>Open trades</h3><span class="live-pill"><i class="dot"></i>Live</span></div>
+          <div id="openList" class="open-list"></div>
+        </div>
+        <div class="panel p-daily rv">
+          <div class="panel-h"><h3>Daily profit and loss</h3><span class="muted small" data-k="dailyrange"></span></div>
+          <div class="chart" id="dailyChart"></div>
+        </div>
+        <div class="panel p-eng rv" style="--d:.06s">
+          <div class="panel-h"><h3>By engine</h3><span class="muted small">Net profit · trades · win rate</span></div>
+          <div id="engList" class="eng-list"></div>
+        </div>
+        <div class="panel p-hist rv">
+          <div class="panel-h"><h3>Trade history</h3>
+            <div class="seg" role="group" aria-label="Filter trades"><button type="button" data-f="all" aria-pressed="true">All</button><button type="button" data-f="win">Wins</button><button type="button" data-f="loss">Losses</button></div>
+          </div>
+          <div class="tbl-wrap"><table class="hist"><thead><tr><th>Closed</th><th>Engine</th><th>Side</th><th class="n">Lots</th><th class="n">Open</th><th class="n">Close</th><th class="n">Profit</th></tr></thead><tbody id="histBody"></tbody></table></div>
+          <button type="button" class="btn more" id="histMore" hidden>Show more trades</button>
+        </div>
+      </div>
+
+      <div class="acct-off">
+        <p><b>The live account feed is starting soon.</b> Until it's connected, the full track record is on Myfxbook, and every trade is on the live stream.</p>
+        <div class="btns"><a class="btn primary" href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Open Myfxbook</a><a class="btn" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch live</a></div>
+      </div>
+
+      <p class="foot-note">Published automatically from the MetaTrader 5 account by the GoldTriEngine bot, refreshed every few minutes. Also tracked independently on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>. Past results do not guarantee future results.</p>
     </div>
   </div>
 </section>
@@ -381,7 +449,7 @@
       </dl>
       <dl>
         <div><dt>Brokers</dt><dd>Fusion Markets and IC Markets, Raw accounts</dd></div>
-        <div><dt>Track record</dt><dd>Live on YouTube since October 2026; demo account tracked on Myfxbook</dd></div>
+        <div><dt>Track record</dt><dd>Live on YouTube since October 2026; tracked on Myfxbook</dd></div>
         <div><dt>Backtest</dt><dd>Jan 2024 – Oct 2026, profit factor 2.10, 1,283 trades (simulated)</dd></div>
         <div><dt>Availability</dt><dd>Yearly license, opening after two months of public live results</dd></div>
         <div><dt>Developer</dt><dd>Yelias, independent developer</dd></div>
@@ -463,6 +531,27 @@
   </div>
 </section>
 
+<!-- CONTACT -->
+<section class="sec" id="contact" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="contact rv">
+      <div class="contact-l">
+        <span class="kicker">Contact</span>
+        <h2>Questions? <em class="s">Message the developer.</em></h2>
+        <p>Ask about GoldTriEngine, licenses, brokers or setup. Messages go straight to Yelias on Telegram.</p>
+        <a class="btn primary big" href="https://t.me/GoldTriEngine_Support" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg>Message on Telegram</a>
+        <p class="contact-handle">@GoldTriEngine_Support</p>
+      </div>
+      <ul class="contact-r">
+        <li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener"><b>Telegram channel</b><span>Updates and news</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></li>
+        <li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><b>YouTube live chat</b><span>Ask the AI host during the stream</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></li>
+        <li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener"><b>Myfxbook</b><span>Full track record</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></li>
+        <li class="safe"><b>Stay safe</b><span>We never message you first and never ask for your MT5 password. Only trust @GoldTriEngine_Support.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <!-- STREAM BOT (app description for Google / TikTok reviews) -->
 <section class="sec" id="stream-bot" style="padding-top:0">
   <div class="narrow">
@@ -493,7 +582,7 @@
       <p>Open the stream, watch a few trades, ask the host a question in the chat. That is the whole pitch.</p>
       <div class="btns">
         <a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a>
-        <a class="btn" href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook (demo)</a>
+        <a class="btn" href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook track record</a>
       </div>
     </div>
   </div>
@@ -508,13 +597,15 @@
         <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
       </div>
       <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
-      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook (demo)</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a></li></ul></div>
       <div><h4>Site</h4><ul><li><a href="guide.html">How to judge a gold EA</a></li><li><a href="faq.html">FAQ</a></li><li><a href="privacy.html">Privacy</a></li><li><a href="terms.html">Terms</a></li><li><a href="llms.txt">llms.txt</a></li></ul></div>
     </div>
     <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
-    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, the live stream currently runs on a demo account, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
   </div>
 </footer>
+<a class="fab" href="https://t.me/GoldTriEngine_Support" rel="noopener" aria-label="Message GoldTriEngine on Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg><span>Contact us</span></a>
 <script src="site.js" defer></script>
+<script src="account.js" defer></script>
 </body>
 </html>
