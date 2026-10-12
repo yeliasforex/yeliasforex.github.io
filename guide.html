@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to Judge a Gold EA (XAUUSD) Before You Buy – 8 Checks | GoldTriEngine</title>
+<meta name="description" content="Eight practical checks for any gold Expert Advisor for MT5: verified live record, stop losses, profit factor and drawdown, backtest quality, broker conditions and red flags.">
+<link rel="canonical" href="https://yeliasforex.github.io/guide.html">
+<meta name="theme-color" content="#06080E">
+<meta name="author" content="Yelias">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GoldTriEngine">
+<meta property="og:title" content="How to Judge a Gold EA (XAUUSD) Before You Buy – 8 Checks | GoldTriEngine">
+<meta property="og:description" content="Eight practical checks for any gold Expert Advisor for MT5: verified live record, stop losses, profit factor and drawdown, backtest quality, broker conditions and red flags.">
+<meta property="og:url" content="https://yeliasforex.github.io/guide.html">
+<meta property="og:image" content="https://yeliasforex.github.io/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Article",
+   "@id": "https://yeliasforex.github.io/guide.html#article",
+   "headline": "How to judge a gold EA before you pay for one",
+   "description": "Eight checks for any gold (XAUUSD) Expert Advisor: live track record, stop losses, profit factor and drawdown, backtest quality, live vs. backtest, broker conditions, seller transparency and risk.",
+   "datePublished": "2026-10-12",
+   "dateModified": "2026-10-12",
+   "inLanguage": "en",
+   "author": {
+    "@id": "https://yeliasforex.github.io/#yelias"
+   },
+   "publisher": {
+    "@id": "https://yeliasforex.github.io/#org"
+   },
+   "image": "https://yeliasforex.github.io/og.jpg",
+   "mainEntityOfPage": "https://yeliasforex.github.io/guide.html",
+   "about": [
+    {
+     "@type": "Thing",
+     "name": "Expert Advisor"
+    },
+    {
+     "@type": "Thing",
+     "name": "XAUUSD"
+    }
+   ],
+   "mentions": {
+    "@id": "https://yeliasforex.github.io/#ea"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Home",
+     "item": "https://yeliasforex.github.io/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Guide",
+     "item": "https://yeliasforex.github.io/guide.html"
+    }
+   ]
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="index.html#how">How it works</a><a href="index.html#host">The host</a><a href="index.html#backtest">Backtest</a><a href="index.html#license">License</a><a href="guide.html" aria-current="page">Guide</a><a href="faq.html">FAQ</a>
+      <a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+<section class="page-head"><div class="narrow">
+  <span class="eyebrow rv"><span class="dot g"></span>Guide · Updated 12 October 2026</span>
+  <h1 class="rv">How to judge a gold EA <em class="s">before you pay for one.</em></h1>
+  <p class="lead rv">Search "best gold EA" and you'll find hundreds of robots with perfect equity curves. Most of those curves won't survive these eight checks. They apply to any Expert Advisor for XAUUSD, including ours.</p>
+  <p class="muted small rv">By Yelias, developer of GoldTriEngine. Yes, I sell a gold EA, so read this with that in mind. Each check below is one you can do yourself.</p>
+</div></section>
+
+<section style="padding-bottom:20px"><div class="narrow">
+  <div class="checks">
+    <article class="check rv">
+      <h2>Is there a live track record that someone else verifies?</h2>
+      <p>A backtest shows what a strategy would have done. A live account shows what it does. Look for a track record hosted by a third party such as Myfxbook or MQL5 Signals, where the seller can't edit the history. Check whether it is a demo or real-money account, and how long it has been running: a few weeks proves very little; many months across different market conditions proves more.</p>
+      <p class="flag"><b>Red flag:</b> only screenshots, or a "verified" badge with no link you can open.</p>
+    </article>
+    <article class="check rv">
+      <h2>Does every trade have a stop loss?</h2>
+      <p>Martingale (doubling the size after a loss) and grid systems (adding orders as price moves against you) can produce very smooth equity curves for months, until one strong gold trend wipes the account. Ask directly whether every position has a stop loss from the moment it opens, and watch a few live trades to confirm.</p>
+      <p class="flag"><b>Red flag:</b> many open positions in the same direction at once, or a "recovery" mode after losses.</p>
+    </article>
+    <article class="check rv">
+      <h2>Read profit factor and drawdown together</h2>
+      <p>Profit factor is gross profit divided by gross loss: above 1 means the system made more than it lost. On its own it says nothing about the pain along the way. The maximum drawdown tells you how far the account fell from a peak. A high profit factor with a huge drawdown, or a tiny number of trades, is fragile.</p>
+      <p class="flag"><b>Red flag:</b> results that show only total profit or win rate, with no drawdown figure.</p>
+    </article>
+    <article class="check rv">
+      <h2>Check how the backtest was made</h2>
+      <p>In the MetaTrader 5 Strategy Tester, "every tick based on real ticks" with high history quality (close to 99%) is far more realistic than modelled ticks. The test should cover several years of gold, include realistic spreads and commission, and use the same broker conditions you'll trade on.</p>
+      <p class="flag"><b>Red flag:</b> a short test period, "open prices only" modelling, or a test on a different symbol or broker than the one recommended.</p>
+    </article>
+    <article class="check rv">
+      <h2>Compare live results with the backtest</h2>
+      <p>The real test of a backtest is whether the live account behaves in a similar way: similar trade frequency, similar average win and loss, and drawdowns in the same range. Live results will always be somewhat worse, because of slippage and spreads at news. Large gaps between the two mean the backtest was probably over-fitted.</p>
+      <p class="flag"><b>Red flag:</b> live trading that looks nothing like the backtest that sold you the EA.</p>
+    </article>
+    <article class="check rv">
+      <h2>Match the broker conditions</h2>
+      <p>Gold strategies that trade often are sensitive to spread, commission and execution speed. An EA tested on a Raw (ECN-style) account may perform very differently on a standard account with wider spreads. Use the account type the EA was tested on.</p>
+      <p class="flag"><b>Red flag:</b> "works on any broker" for a strategy that trades several times a day.</p>
+    </article>
+    <article class="check rv">
+      <h2>Know who you're dealing with</h2>
+      <p>A credible seller has a name, discloses affiliate links, says clearly when an account is demo, and never promises returns. Real developers don't ask for your trading password and don't contact you first offering to "manage" your account.</p>
+      <p class="flag"><b>Red flag:</b> guaranteed or fixed monthly returns, pressure to pay now, or an "account manager" in your direct messages.</p>
+    </article>
+    <article class="check rv">
+      <h2>Decide what risk you can live with</h2>
+      <p>Take the largest drawdown in the backtest and assume live trading can be worse. If that loss would hurt you, use a smaller account or lower risk, or don't use an EA at all. Only trade money you can afford to lose.</p>
+      <p class="flag"><b>Red flag:</b> anyone telling you a trading robot is "safe" or "risk-free".</p>
+    </article>
+  </div>
+</div></section>
+
+<section class="sec" id="scorecard" style="padding-top:clamp(60px,7vw,90px)"><div class="narrow">
+  <span class="kicker rv">Applying the checks to ourselves</span>
+  <h2 class="rv" style="font-size:clamp(1.8rem,3.6vw,2.6rem)">How GoldTriEngine does on these checks</h2>
+  <p class="lead rv" style="margin-top:16px">Our honest status as of October 2026, including the parts that are still too early to judge.</p>
+  <div class="doc rv" style="padding:8px clamp(12px,3vw,28px);margin-top:28px">
+    <table class="score">
+      <thead><tr><th>Check</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Third-party live record</td><td><span class="pill2 w">Early</span>Myfxbook, demo account, live on YouTube since October 2026. Still young.</td></tr>
+        <tr><td>Stop loss on every trade</td><td><span class="pill2 y">Yes</span>Visible on every trade on the stream. No martingale, no grid.</td></tr>
+        <tr><td>Profit factor and drawdown</td><td><span class="pill2 y">Published</span>Backtest profit factor 2.10, largest relative equity drawdown 17.7%, 1,283 trades.</td></tr>
+        <tr><td>Backtest quality</td><td><span class="pill2 y">Yes</span>MT5 Strategy Tester, 99% history quality, Jan 2024 – Oct 2026, Fusion Markets data.</td></tr>
+        <tr><td>Live vs. backtest</td><td><span class="pill2 w">Too early</span>Needs more months of live trading. That's why licenses don't open until after two months of public results.</td></tr>
+        <tr><td>Broker conditions</td><td><span class="pill2 y">Defined</span>Fusion Markets and IC Markets Raw accounts only.</td></tr>
+        <tr><td>Who's behind it</td><td><span class="pill2 y">Named</span>Developer Yelias; demo, AI voice and affiliate links are disclosed. We never message anyone first.</td></tr>
+        <tr><td>Risk</td><td><span class="pill2 y">Stated</span>Trading involves substantial risk of loss. No profit promises, ever.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="btns rv" style="margin-top:30px">
+    <a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Check it live</a>
+    <a class="btn" href="index.html#backtest">See the backtest</a>
+  </div>
+</div></section>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="./"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+        <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
+      </div>
+      <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook (demo)</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="guide.html">How to judge a gold EA</a></li><li><a href="faq.html">FAQ</a></li><li><a href="privacy.html">Privacy</a></li><li><a href="terms.html">Terms</a></li><li><a href="llms.txt">llms.txt</a></li></ul></div>
+    </div>
+    <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, the live stream currently runs on a demo account, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>

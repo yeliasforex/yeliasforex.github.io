@@ -1,28 +1,518 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GoldTriEngine – Gold Trading Robot for MT5</title><meta name="description" content="GoldTriEngine is an algorithmic gold (XAUUSD) Expert Advisor for MetaTrader 5, streamed live 24/5 with an AI host that explains every trade."><link rel="stylesheet" href="style.css"><link rel="icon" type="image/png" href="data:image/png;base64,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"><link rel="apple-touch-icon" href="data:image/png;base64,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"></head>
-<body><div class="wrap">
-<header><a class="brand" href="index.html"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAG6ElEQVR4AexcS2wbVRS9M/7EnyRO4rgJTps2jWhLVdTQLihV00JALYIQQROpUYVSqBAr1EWlLkCsEAvEmmU3JSsELNiUBZ81Ql13wwKBgKYJzYckJLEdm3emSuyM7djzeZ8Jr/KN37x377nn3jNvxplYNXsu/VTSJq8HJul/UjugBZDafiItgBZAcgckp9c7QAsguQOS0+sdoAWQ3AHJ6fUO0AJI6IBCKfUOkCyGFkALILkDktPrHaAFkNwByen1DtACSO6A5PR6B2gB3HfAiG4SzD2C/MjA7oBSiaj32h+WYSy/le4YCBTAHcHdoiJdOYLt5qP6WqAFUL25zfDTAjTTJY4+WgCOzW0GOtgCsBsxwZqpVFGfwApghEtUKhqWYaxofxvSCqYABlHr00vUkt2wDGNicw2rVdAhkAKY8QK1n12gUHLTMowxp2B/G1IKpACJ48uUPL6yXRzGmNueCNAgcAKYiQLtuzxDZqR898XYmmNrAeq9RTVYApglSo8+pEg6b5Gv/IE5rBHzqZyXPW6UP1ACxAZXqf30Ut2asBZnPnUdFFwIjABmS5E6zs5TuKNQt41YSzEf+NZ1UmwhMALEDq9S68nlhu2DD3wbOiriEAwB2HU988YD6yNno77ho2nm8gMKyr1AfQGMEnW+OEexg2uNer+9Hutfs2KIxW5PKjpQXoDoE+vUcWGetc9g1uzLsGKi2fVmA6T5KS0AnvGknltgHztzjhsUSecodWaBgOE4WGCA0gKEkgVKHFklwwVLxCAWGAL76TiVi9Ic5/AW4OTKY8/kJdaOxelYfQE4Fa4KrJICmOzMZS/3PbJFAguYtmklDpUTIBw26Eh/nGIt/lEDFjCBrUTXK0j4V2UFqJdhb1eEJl7qpmgE560XpHIssIAJ7PKsGiOlBMBl4t3Xe2mwL+Z7d4AJbOTwHdwDoFICPHuijd58pcdDObuHAhs5dvcSu6qMAO3JEL3/1gFKxPhRAjZyIJfYNtfPxq/a+jmrVnBZeG24i04MJqrW/J5ADuRCTr+x3eApIUCmM0KTFzPs7A+5qcFRTCIWsnIhp6NATs5KCDA+kqZnjrZyKrEaFrnGR7qrFyTMCBcgwj7nDw+101MDcavc/t4o3by6n8Ih/z52WsC7/ECum1f7CLnhBi7gBG44FmnCBUiym+wn7x2iKfZpJ8HGH17vp9YE/0uPvanIidzgAC7gBG52P97HPgrQPFWc67DnT6XoArPmI/31RG5wABeYv+jNoUkRANQ62tjN8FKGUq1hHEox5J5kHMBFCgGWVJoAuBEOD6UYBbkvcAAXWSykCdDfG6O4jw/c3DYQHMDFbbzXOOECGIZhfaWfvXnl7ls8uJQYmmGIvxMIF+DYoTi1J+Vd91mfa77ACdxqLnKcFCpAMs5uvOw33nSHegKA0+TFbgJHjv2ughYqwMknEzR6rotMCVu9qnLbBDiNnkvTEONoW+J6KEyA1rhJH7x9QPgZ5qR7OPvBEVydxHnxFSbA9bEeOn2szQtXIbGnGEdwFZKMJREiwNGDcbr2ag8peOVhLdj5AkdwBeedK7WPvM5yFyAWNdnj327qSUe9chUWD664IYM776TcBRjIxmhiJCP0aafXpuFpKTgPZFu8QjWM5ypAmD3kvDXVR6r88aNhNyocwPnWFB6TV0xyGHIVYOx8F718ppMDbTGQ4D52Ps01GTcB+vZF6caVPjJN8b/e+9UxcL9xJUuoxS9MOw4XAULsr1vjL6TpMIfv99gL4H2M7xNNsFrCrCYeuUweoC0Rg1b+LdLnd2fp9jczO2z67kNaWinQ/V9Xd8xX+n3/8yJt5EtUzJn0z70ULfyYrmmFpTDB6q0jFhjAAmZljsoxuIATuFXOY3yH1bDMasG363j0iosAa+tFmv52lj66/XuVfTr9Jz1aytO9+ytVa1v+X3z3N61vFKm4FqLFHzI093W2yma/ylL+UcQyjGv5IBYYwALmFr79HVzACdzsazhGLagpMALg0W6+UKIcO4vtls8XCc+ji+zNvrZ1XNgEwuNyS5vs8XWhtj32YHB11hG75QPMLXz7O7iAE7jZ13CMWsqMthD9eeeyA/yh9v9ACaYAe0gb4QIU2V7+bWaD5har/78Hp33Nz0cJ5jTO7g8u4ARu9jXex8IFWF7dpHc+/oU++/IvT7XhodnMnf0Ew9gLGLiAE7h5wXETK1wAtgFodb1IGzmM3FAux5RyIYKVZ9yNwAWcvDNynl+4AM4p7u0ILYBkfbUAWgDJHZCcXu8ALYDkDkhOr3dAcASQzHSPptc7QLKwWgAtgOQOSE6vd4AWQHIHJKfXO0ALILkDktPrHaAFkNwByen1DmggAO/l/wAAAP//WqePXQAAAAZJREFUAwCHiPK/VJ6C9gAAAABJRU5ErkJggg==" width="44" height="44" alt="GoldTriEngine logo" style="border-radius:10px"><b>GoldTriEngine</b></a>
-<nav><a href="index.html">Home</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></nav></header>
-<h1>A gold trading robot you can watch live</h1>
-<p class="lead">GoldTriEngine is an algorithmic Expert Advisor for MetaTrader 5 that trades gold (XAUUSD). It runs live on YouTube 24 hours a day, Monday to Friday, with an AI voice host that explains every trade as it happens, wins and losses.</p>
-<p><a class="cta" href="https://www.youtube.com/@GoldTriEngine/live">Watch live on YouTube</a></p>
-<div class="card"><b>Transparency.</b> I am the developer of GoldTriEngine. The live stream currently runs on a demo account. The voice host is AI-generated. Results: <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544">Myfxbook (demo)</a>.</div>
-<h2>What you see on the stream</h2>
-<ul><li>The live XAUUSD chart with every entry and exit</li><li>Live stats: trades, win rate, net result and drawdown</li><li>Warnings before big news (NFP, CPI, FOMC) and how gold reacted afterwards</li><li>Trading education between trades</li></ul>
-<h2>GoldTriEngine Stream Bot</h2>
-<p><b>GoldTriEngine Stream Bot</b> is a small desktop program that runs on the developer's own computer and operates the GoldTriEngine live stream. It is not offered to other users, and nobody else signs in to it.</p>
-<p>With the channel owner's permission (Google OAuth scope <code>youtube.force-ssl</code>, YouTube Data API), the bot acts on the GoldTriEngine channel only. It:</p>
-<ul>
-<li>reads which live broadcast is active, ends it before a scheduled restart and starts the next one;</li>
-<li>sets the title, description, tags, category and thumbnail of the channel's own live streams and Shorts;</li>
-<li>uploads the channel's own Shorts (short clips from the live stream) and adds them to the channel's playlists;</li>
-<li>reads the public live chat and posts replies and official links in it, so the AI host can answer viewers.</li>
-</ul>
-<p>The bot does not access other users' channels or private data, and no data is sold or shared. Live chat messages are kept in a local log on the developer's computer for at most 30 days and are then deleted. Details are in the <a href="privacy.html">privacy policy</a>. The bot's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
-<p>A companion tool, GoldTriEngine Shorts, uploads the same clips to the developer's own TikTok account. These tools only act on the developer's own accounts.</p>
-<h2>Follow</h2>
-<ul><li>YouTube: <a href="https://www.youtube.com/@GoldTriEngine">@GoldTriEngine</a></li><li>TikTok: <a href="https://www.tiktok.com/@goldtriengine">@goldtriengine</a></li><li>Telegram: <a href="https://t.me/+l7QyD_fRy25mNWJl">official channel</a></li></ul>
-<footer>© 2026 GoldTriEngine · Built by Yelias · Contact: Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
-Trading involves substantial risk of loss. Nothing on this site is financial advice.</footer>
-</div></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GoldTriEngine – Gold Trading Robot (EA) for MT5, Live 24/5</title>
+<meta name="description" content="GoldTriEngine is an Expert Advisor for MetaTrader 5 that trades gold (XAUUSD). Watch every trade live on YouTube 24/5 on a channel hosted by an AI robot. Stop loss on every trade, no martingale.">
+<link rel="canonical" href="https://yeliasforex.github.io/">
+<meta name="theme-color" content="#06080E">
+<meta name="author" content="Yelias">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GoldTriEngine">
+<meta property="og:title" content="GoldTriEngine – Gold Trading Robot (EA) for MT5, Live 24/5">
+<meta property="og:description" content="GoldTriEngine is an Expert Advisor for MetaTrader 5 that trades gold (XAUUSD). Watch every trade live on YouTube 24/5 on a channel hosted by an AI robot. Stop loss on every trade, no martingale.">
+<meta property="og:url" content="https://yeliasforex.github.io/">
+<meta property="og:image" content="https://yeliasforex.github.io/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" type="image/png" href="data:image/png;base64,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">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "Organization",
+   "@id": "https://yeliasforex.github.io/#org",
+   "name": "GoldTriEngine",
+   "url": "https://yeliasforex.github.io/",
+   "logo": "https://yeliasforex.github.io/icon-512.png",
+   "founder": {
+    "@id": "https://yeliasforex.github.io/#yelias"
+   },
+   "sameAs": [
+    "https://www.youtube.com/@GoldTriEngine",
+    "https://www.tiktok.com/@goldtriengine",
+    "https://t.me/+l7QyD_fRy25mNWJl",
+    "https://www.myfxbook.com/portfolio/goldtriengine/12235544"
+   ],
+   "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "customer support",
+    "url": "https://t.me/GoldTriEngine_Support"
+   }
+  },
+  {
+   "@type": "Person",
+   "@id": "https://yeliasforex.github.io/#yelias",
+   "name": "Yelias",
+   "jobTitle": "Developer of GoldTriEngine",
+   "worksFor": {
+    "@id": "https://yeliasforex.github.io/#org"
+   }
+  },
+  {
+   "@type": "WebSite",
+   "@id": "https://yeliasforex.github.io/#site",
+   "url": "https://yeliasforex.github.io/",
+   "name": "GoldTriEngine",
+   "publisher": {
+    "@id": "https://yeliasforex.github.io/#org"
+   },
+   "inLanguage": "en"
+  },
+  {
+   "@type": "SoftwareApplication",
+   "@id": "https://yeliasforex.github.io/#ea",
+   "name": "GoldTriEngine",
+   "alternateName": [
+    "GoldTriEngine EA",
+    "GoldTriEngine Expert Advisor"
+   ],
+   "description": "GoldTriEngine is an Expert Advisor (automated trading robot) for MetaTrader 5 that trades gold (XAUUSD) with three independent rule-based engines. Every trade has a stop loss; it uses no martingale and no grid. Its trades are streamed live on YouTube 24/5 on a channel hosted by an animated AI robot that explains each trade as it happens.",
+   "applicationCategory": "FinanceApplication",
+   "applicationSubCategory": "Expert Advisor (EA) for MetaTrader 5",
+   "operatingSystem": "Windows",
+   "softwareRequirements": "MetaTrader 5",
+   "softwareVersion": "1.06",
+   "url": "https://yeliasforex.github.io/",
+   "image": "https://yeliasforex.github.io/og.jpg",
+   "author": {
+    "@id": "https://yeliasforex.github.io/#yelias"
+   },
+   "publisher": {
+    "@id": "https://yeliasforex.github.io/#org"
+   },
+   "featureList": [
+    "Trades gold (XAUUSD) on MetaTrader 5",
+    "Three independent engines: Alpha, Beta and Gamma",
+    "Stop loss on every trade",
+    "No martingale, no grid",
+    "Telegram notifications: EA start/stop, trades opened and closed, pending orders, drawdown and risk-limit alerts, daily report",
+    "Built for Fusion Markets and IC Markets Raw accounts",
+    "Trades streamed live on YouTube 24/5 with an AI host",
+    "Demo track record on Myfxbook"
+   ],
+   "sameAs": [
+    "https://www.youtube.com/@GoldTriEngine",
+    "https://www.myfxbook.com/portfolio/goldtriengine/12235544"
+   ]
+  },
+  {
+   "@type": "WebPage",
+   "@id": "https://yeliasforex.github.io/#home",
+   "url": "https://yeliasforex.github.io/",
+   "name": "GoldTriEngine – Gold Trading Robot (EA) for MT5, Live 24/5",
+   "about": {
+    "@id": "https://yeliasforex.github.io/#ea"
+   },
+   "isPartOf": {
+    "@id": "https://yeliasforex.github.io/#site"
+   }
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="#how">How it works</a><a href="#host">The host</a><a href="#backtest">Backtest</a><a href="#license">License</a><a href="guide.html">Guide</a><a href="faq.html">FAQ</a>
+      <a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a>
+    </nav>
+  </div>
+</header>
+<main id="main">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow rv"><span class="dot"></span>Gold EA for MT5 · Live 24/5 · AI-hosted</span>
+      <h1 class="split" aria-label="A gold trading robot you can watch trade."><span class="w" aria-hidden="true"><span style="--i:0">A</span></span> <span class="w" aria-hidden="true"><span style="--i:1">gold</span></span> <span class="w" aria-hidden="true"><span style="--i:2">trading</span></span> <span class="w" aria-hidden="true"><span style="--i:3">robot</span></span> <span class="w" aria-hidden="true"><span style="--i:4">you</span></span> <span class="w" aria-hidden="true"><span style="--i:5">can</span></span> <span class="w" aria-hidden="true"><span style="--i:6"><em class="s">watch</em></span></span> <span class="w" aria-hidden="true"><span style="--i:7">trade.</span></span></h1>
+      <p class="lead rv" style="--d:.12s">GoldTriEngine is an Expert Advisor (EA) for MetaTrader 5 that trades gold (XAUUSD) automatically. Every trade it takes, win or loss, runs live on YouTube, with an AI host explaining it as it happens.</p>
+      <div class="btns rv" style="--d:.18s">
+        <a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch live on YouTube <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn" href="#backtest">See the backtest</a>
+      </div>
+      <div class="hero-meta rv" style="--d:.24s">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Stop loss on every trade</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No martingale, no grid</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Public track record</span>
+      </div>
+    </div>
+
+    <div class="stagewrap rv" style="--d:.15s">
+    <figure class="hostfig" aria-hidden="true"><img src="img/host-wave.webp" data-pose="wave" width="640" height="494" alt="" decoding="async" class="on"><img src="img/host-point.webp" data-pose="point" width="640" height="494" alt="" decoding="async"><img src="img/host-surprised.webp" data-pose="surprised" width="640" height="494" alt="" decoding="async"><img src="img/host-concerned.webp" data-pose="concerned" width="640" height="494" alt="" decoding="async"><img src="img/host-tablet.webp" data-pose="tablet" width="640" height="494" alt="" decoding="async"><img src="img/host-thumbs.webp" data-pose="thumbs" width="640" height="494" alt="" decoding="async"><img src="img/host-think.webp" data-pose="think" width="640" height="494" alt="" decoding="async"></figure>
+    <div class="console" aria-label="Illustration of the GoldTriEngine live stream">
+      <div class="console-in">
+        <div class="c-bar"><span class="c-live"><span class="dot"></span>Live</span><span><b>XAUUSD</b> · MT5</span><span>GoldTriEngine</span></div>
+        <div class="c-stage" id="stage">
+          <canvas id="tape" aria-hidden="true"></canvas>
+          <span class="c-note">Illustration</span>
+          <button class="c-play" id="play-live" type="button"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>Play the real stream</button>
+          <div class="c-host" aria-live="off">
+            <div class="c-say"><small id="say-t">AI host</small><span id="say-b">Every trade, explained as it happens.</span><span class="c-caret" aria-hidden="true"></span></div>
+          </div>
+        </div>
+        <div class="c-stats">
+          <div class="c-spacer" aria-hidden="true"></div><div>Platform<b>MT5</b></div><div>Host<b>AI voice</b></div><div>Schedule<b>24/5</b></div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOPICS BAND -->
+<div class="band" aria-label="What the live stream covers">
+  <div class="track">
+    <ul><li>Live trades</li><li>Stop loss &amp; exits</li><li>Wins and losses</li><li>NFP</li><li>CPI</li><li>FOMC</li><li>Gold sessions</li><li>Risk management</li><li>Trading psychology</li><li>Jesse Livermore</li><li>Market Wizards</li><li>Trading in the Zone</li><li>Backtests explained</li><li>Live chat Q&amp;A</li></ul>
+    <ul aria-hidden="true"><li>Live trades</li><li>Stop loss &amp; exits</li><li>Wins and losses</li><li>NFP</li><li>CPI</li><li>FOMC</li><li>Gold sessions</li><li>Risk management</li><li>Trading psychology</li><li>Jesse Livermore</li><li>Market Wizards</li><li>Trading in the Zone</li><li>Backtests explained</li><li>Live chat Q&amp;A</li></ul>
+  </div>
+</div>
+
+<!-- FACT STRIP -->
+<section class="sec" style="padding-bottom:0">
+  <div class="wrap">
+    <div class="facts">
+      <div class="fact rv"><b>24/5</b><span>Live on YouTube, Monday to Friday, around the clock</span></div>
+      <div class="fact rv" style="--d:.06s"><b>3</b><span>Independent trading engines: Alpha, Beta and Gamma</span></div>
+      <div class="fact rv" style="--d:.12s"><b data-count="1283">1,283</b><span>Trades in the MT5 backtest, 2024 to 2026</span></div>
+      <div class="fact rv" style="--d:.18s"><b data-count="2.10">2.10</b><span>Backtest profit factor (simulated, not a promise)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- TRANSPARENCY -->
+<section class="sec" id="transparency">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker rv">Trust first</span>
+      <h2 class="rv">Most trading robots show you a screenshot. <em class="s">This one shows you everything.</em></h2>
+      <p class="lead rv">Backtests are easy to polish. Live trading is not. So GoldTriEngine trades in public, where every entry, stop loss and exit can be checked.</p>
+    </div>
+    <div class="grid3">
+      <article class="card rv">
+        <span class="tag">01</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="13" rx="2"/><path d="M7 14l3-3 3 2 4-5"/><path d="M9 21h6"/></svg></div>
+        <h3>Every trade on screen</h3>
+        <p>The live XAUUSD chart shows each entry and exit as it happens, with running stats: trades, win rate, net result and drawdown. Losing trades stay on screen too.</p>
+      </article>
+      <article class="card rv" style="--d:.08s">
+        <span class="tag">02</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V5"/><path d="M4 19h16"/><rect x="7" y="11" width="3" height="5" rx=".5"/><rect x="12" y="8" width="3" height="8" rx=".5"/><rect x="17" y="5" width="3" height="11" rx=".5"/></svg></div>
+        <h3>A third-party track record</h3>
+        <p>Results are tracked independently on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>. It is a demo account today, and it says so everywhere it appears.</p>
+      </article>
+      <article class="card rv" style="--d:.16s">
+        <span class="tag">03</span>
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></div>
+        <h3>A developer with a name</h3>
+        <p>GoldTriEngine is built by Yelias, who runs the stream and answers support himself. The voice host is AI and labelled as AI. Nothing is hidden behind an "account manager".</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- HOW IT WORKS -->
+<section class="sec" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker rv">How the stream works</span>
+      <h2 class="rv">From a trade on MT5 to an explanation <em class="s">in seconds.</em></h2>
+      <p class="lead rv">The trading is done by the EA alone. The AI never decides a trade. It reads what the EA did and explains it in plain English.</p>
+    </div>
+    <div class="pipe rv">
+      <svg class="pipe-svg" viewBox="0 0 1000 120" aria-hidden="true">
+        <defs><linearGradient id="flowGrad" x1="0" x2="1"><stop offset="0" stop-color="#3EE09A" stop-opacity="0"/><stop offset=".6" stop-color="#3EE09A"/><stop offset="1" stop-color="#5B86FF"/></linearGradient></defs>
+        <path class="wire" d="M60 60 H940"/>
+        <path class="flow" d="M60 60 H940" pathLength="600"/>
+        <path class="flow b" d="M60 60 H940" pathLength="600"/>
+        <g font-family="Geist Mono, monospace" font-size="11" fill="#8892A8" letter-spacing="1.5">
+          <g transform="translate(125 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><path d="M-12 8 l8-10 6 5 10-13" fill="none" stroke="#3EE09A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>
+          <g transform="translate(375 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><rect x="-12" y="-12" width="24" height="24" rx="5" fill="none" stroke="#5B86FF" stroke-width="2"/><path d="M-5 0h10M0-5v10" stroke="#5B86FF" stroke-width="2" stroke-linecap="round"/></g>
+          <g transform="translate(625 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><path d="M-10 -4 v8 M-4 -10 v20 M2 -6 v12 M8 -12 v24" stroke="#E3B95F" stroke-width="2.2" stroke-linecap="round"/></g>
+          <g transform="translate(875 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><path d="M-7 -10 L11 0 L-7 10 Z" fill="#FF4D5E"/></g>
+        </g>
+      </svg>
+      <div class="pipe-steps">
+        <div class="step rv"><span class="n">01 · MT5</span><h3>The EA trades gold</h3><p>GoldTriEngine runs on MetaTrader 5 and manages each XAUUSD trade on its own, stop loss included.</p></div>
+        <div class="step rv" style="--d:.08s"><span class="n">02 · Stream bot</span><h3>The bot reads each event</h3><p>Entries, exits and account stats are passed to the stream bot the moment they happen.</p></div>
+        <div class="step rv" style="--d:.16s"><span class="n">03 · AI host</span><h3>The host explains it</h3><p>An AI voice describes the trade, the risk and the result, and answers questions from the live chat.</p></div>
+        <div class="step rv" style="--d:.24s"><span class="n">04 · You</span><h3>You watch it live</h3><p>On YouTube 24/5, with short daily clips as Shorts and updates in the official Telegram channel.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- MEET THE HOST -->
+<section class="sec" id="host">
+  <div class="wrap host-grid">
+    <div class="host-stage rv" aria-hidden="true">
+      <div class="host-ring"></div>
+      <div class="host-pic"><img src="img/host-point.webp" data-pose="point" width="640" height="494" alt="" decoding="async" class="on"><img src="img/host-thumbs.webp" data-pose="thumbs" width="640" height="494" alt="" decoding="async"><img src="img/host-concerned.webp" data-pose="concerned" width="640" height="494" alt="" decoding="async"><img src="img/host-surprised.webp" data-pose="surprised" width="640" height="494" alt="" decoding="async"><img src="img/host-tablet.webp" data-pose="tablet" width="640" height="494" alt="" decoding="async"><img src="img/host-think.webp" data-pose="think" width="640" height="494" alt="" decoding="async"></div>
+      <div class="host-bubble"><small id="hb-t">When a trade opens</small><span id="hb-b">Engine Alpha opened a trade. The stop loss is already on the chart.</span></div>
+    </div>
+    <div>
+      <span class="kicker rv">Meet the host</span>
+      <h2 class="rv">The host is AI. <em class="s">The trading isn't.</em></h2>
+      <p class="lead rv">Most trading channels have a person talking over a chart. The GoldTriEngine channel is hosted by an AI robot, live, around the clock on trading days. Its face reacts to what the EA just did, and its voice explains it, so you understand each trade instead of just seeing it.</p>
+      <div class="moods rv" role="tablist" aria-label="How the host reacts">
+        <button type="button" class="mood" data-pose="point" data-c="#5B86FF" data-say="Engine Alpha opened a trade. The stop loss is already on the chart.">When a trade opens</button>
+        <button type="button" class="mood" data-pose="thumbs" data-c="#3EE09A" data-say="Engine Gamma closed in profit. Here is what happened on the chart.">When it wins</button>
+        <button type="button" class="mood" data-pose="concerned" data-c="#E3B95F" data-say="Stopped out for a small loss. Losses are part of the plan, and you see them too.">When it loses</button>
+        <button type="button" class="mood" data-pose="surprised" data-c="#5B86FF" data-say="US CPI is in 30 minutes. Gold can move fast, so spreads may widen.">Before big news</button>
+        <button type="button" class="mood" data-pose="tablet" data-c="#5B86FF" data-say="Gold is most active when London and New York overlap. Here is why.">Between trades</button>
+        <button type="button" class="mood" data-pose="think" data-c="#5B86FF" data-say="Good question from the chat. Let me explain what a drawdown is.">When you ask in chat</button>
+      </div>
+      <p class="foot-note rv">The voice and face are AI-generated and labelled as such on every stream and Short. The host only explains; it never tells anyone to buy or sell.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- BACKTEST -->
+<section class="sec" id="backtest">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker rv">Backtest · MT5 Strategy Tester</span>
+      <h2 class="rv">Almost three years of gold, <em class="s">tested trade by trade.</em></h2>
+      <p class="lead rv">GoldTriEngine v1.06 on XAUUSD from 1 January 2024 to 4 October 2026, using Fusion Markets data at 99% history quality. These are simulated results. The live stream is where they get tested for real.</p>
+    </div>
+
+    <div class="bt">
+      <div class="chart-card rv">
+        <div class="chart-top">
+          <div><h3>Equity curve</h3><p class="muted small" style="margin:6px 0 0">Log scale · lot size grows with the balance</p></div>
+          <span class="chip">Simulated</span>
+        </div>
+        <div class="eq-wrap" data-pts='[[8.0,269.6,"2024.01",0.0],[9.9,270.3,"2024.01",1.0],[11.9,271.2,"2024.01",2.4],[13.8,271.5,"2024.01",2.9],[15.8,269.7,"2024.01",0.2],[17.7,269.3,"2024.01",0.0],[19.7,267.1,"2024.01",0.0],[21.6,267.6,"2024.01",0.7],[23.6,267.9,"2024.01",1.2],[25.5,269.6,"2024.01",3.7],[27.4,270.3,"2024.01",4.8],[29.4,270.9,"2024.02",5.7],[31.3,270.6,"2024.02",5.2],[33.3,269.4,"2024.02",3.4],[35.2,268.6,"2024.02",2.3],[37.2,269.6,"2024.02",3.7],[39.1,264.3,"2024.02",0.0],[41.0,265.2,"2024.02",1.3],[43.0,265.7,"2024.02",2.1],[44.9,265.3,"2024.02",1.6],[46.9,265.9,"2024.02",2.5],[48.8,266.8,"2024.02",3.9],[50.8,267.1,"2024.03",4.2],[52.7,252.7,"2024.03",0.0],[54.7,244.1,"2024.03",0.0],[56.6,240.3,"2024.03",0.0],[58.5,241.1,"2024.03",1.2],[60.5,239.0,"2024.03",0.0],[62.4,240.6,"2024.03",2.4],[64.4,240.1,"2024.03",1.7],[66.3,234.5,"2024.03",0.0],[68.3,232.2,"2024.03",0.0],[70.2,227.7,"2024.03",0.0],[72.1,229.5,"2024.04",2.7],[74.1,226.2,"2024.04",0.0],[76.0,225.2,"2024.04",0.0],[78.0,224.6,"2024.04",0.0],[79.9,223.6,"2024.04",0.0],[81.9,224.6,"2024.04",1.5],[83.8,225.7,"2024.04",3.1],[85.8,226.5,"2024.04",4.3],[87.7,225.5,"2024.04",2.8],[89.6,226.4,"2024.04",4.2],[91.6,228.4,"2024.05",7.1],[93.5,229.4,"2024.05",8.6],[95.5,228.8,"2024.05",7.7],[97.4,226.0,"2024.05",3.7],[99.4,226.9,"2024.05",5.0],[101.3,225.5,"2024.05",2.8],[103.3,225.4,"2024.05",2.8],[105.2,224.8,"2024.06",1.9],[107.1,226.7,"2024.06",4.6],[109.1,227.7,"2024.06",6.0],[111.0,227.8,"2024.06",6.2],[113.0,225.7,"2024.06",3.2],[114.9,227.3,"2024.06",5.6],[116.9,227.8,"2024.06",6.3],[118.8,227.4,"2024.06",5.7],[120.7,227.9,"2024.07",6.4],[122.7,229.8,"2024.07",9.1],[124.6,230.3,"2024.07",9.7],[126.6,229.0,"2024.07",7.9],[128.5,229.3,"2024.07",8.4],[130.5,227.6,"2024.07",6.0],[132.4,228.0,"2024.07",6.6],[134.4,228.0,"2024.07",6.6],[136.3,230.1,"2024.07",9.5],[138.2,229.7,"2024.07",8.9],[140.2,227.4,"2024.08",5.6],[142.1,227.6,"2024.08",6.0],[144.1,228.5,"2024.08",7.3],[146.0,229.3,"2024.08",8.5],[148.0,228.8,"2024.08",7.7],[149.9,228.5,"2024.08",7.2],[151.9,228.4,"2024.08",7.2],[153.8,227.5,"2024.09",5.8],[155.7,228.6,"2024.09",7.4],[157.7,230.8,"2024.09",10.4],[159.6,228.1,"2024.09",6.7],[161.6,227.4,"2024.09",5.6],[163.5,228.8,"2024.09",7.7],[165.5,229.1,"2024.09",8.1],[167.4,228.8,"2024.09",7.7],[169.3,226.2,"2024.09",3.9],[171.3,224.8,"2024.10",1.8],[173.2,225.7,"2024.10",3.1],[175.2,225.9,"2024.10",3.5],[177.1,225.2,"2024.10",2.5],[179.1,224.0,"2024.10",0.5],[181.0,223.5,"2024.10",0.0],[183.0,222.2,"2024.10",0.0],[184.9,221.3,"2024.10",0.0],[186.8,221.4,"2024.10",0.1],[188.8,220.4,"2024.10",0.0],[190.7,217.8,"2024.11",0.0],[192.7,217.1,"2024.11",0.0],[194.6,216.5,"2024.11",0.0],[196.6,214.3,"2024.11",0.0],[198.5,214.5,"2024.11",0.3],[200.4,213.6,"2024.11",0.0],[202.4,208.6,"2024.11",0.0],[204.3,207.4,"2024.11",0.0],[206.3,207.4,"2024.11",0.0],[208.2,208.8,"2024.12",2.1],[210.2,210.3,"2024.12",4.3],[212.1,211.7,"2024.12",6.5],[214.1,211.4,"2024.12",6.0],[216.0,212.3,"2024.12",7.3],[217.9,207.7,"2024.12",0.4],[219.9,208.0,"2024.12",1.0],[221.8,207.8,"2024.12",0.7],[223.8,199.6,"2024.12",0.0],[225.7,200.1,"2024.12",0.7],[227.7,201.0,"2024.12",2.1],[229.6,202.2,"2024.12",3.8],[231.6,199.5,"2025.01",0.0],[233.5,199.5,"2025.01",0.0],[235.4,198.8,"2025.01",0.0],[237.4,198.5,"2025.01",0.0],[239.3,199.9,"2025.01",2.2],[241.3,199.5,"2025.01",1.6],[243.2,198.5,"2025.01",0.0],[245.2,199.9,"2025.01",2.2],[247.1,201.5,"2025.01",4.6],[249.0,199.6,"2025.02",1.7],[251.0,186.6,"2025.02",0.0],[252.9,187.8,"2025.02",1.8],[254.9,189.2,"2025.02",3.9],[256.8,186.9,"2025.02",0.5],[258.8,188.5,"2025.02",2.9],[260.7,188.8,"2025.02",3.4],[262.7,188.8,"2025.02",3.3],[264.6,186.8,"2025.02",0.3],[266.5,184.6,"2025.02",0.0],[268.5,185.8,"2025.03",1.8],[270.4,183.7,"2025.03",0.0],[272.4,184.4,"2025.03",1.0],[274.3,183.7,"2025.03",0.0],[276.3,183.4,"2025.03",0.0],[278.2,177.7,"2025.03",0.0],[280.1,178.5,"2025.03",1.2],[282.1,178.1,"2025.03",0.6],[284.0,177.6,"2025.03",0.0],[286.0,177.8,"2025.03",0.2],[287.9,177.8,"2025.04",0.3],[289.9,178.0,"2025.04",0.6],[291.8,180.0,"2025.04",3.6],[293.8,180.0,"2025.04",3.5],[295.7,175.4,"2025.04",0.0],[297.6,176.1,"2025.04",0.9],[299.6,147.0,"2025.04",0.0],[301.5,148.1,"2025.04",1.6],[303.5,147.9,"2025.04",1.3],[305.4,146.7,"2025.04",0.0],[307.4,147.4,"2025.04",1.0],[309.3,147.0,"2025.05",0.4],[311.3,145.0,"2025.05",0.0],[313.2,146.1,"2025.05",1.7],[315.1,147.1,"2025.05",3.2],[317.1,143.5,"2025.05",0.0],[319.0,144.8,"2025.05",2.0],[321.0,144.4,"2025.05",1.4],[322.9,142.4,"2025.05",0.0],[324.9,134.6,"2025.05",0.0],[326.8,135.9,"2025.06",1.9],[328.7,135.2,"2025.06",0.9],[330.7,133.3,"2025.06",0.0],[332.6,134.5,"2025.06",1.8],[334.6,134.7,"2025.06",2.1],[336.5,134.7,"2025.06",2.0],[338.5,133.7,"2025.06",0.7],[340.4,134.9,"2025.06",2.4],[342.4,135.4,"2025.06",3.1],[344.3,135.3,"2025.06",3.0],[346.2,136.7,"2025.06",5.1],[348.2,136.1,"2025.06",4.2],[350.1,137.9,"2025.07",6.8],[352.1,138.7,"2025.07",8.0],[354.0,140.6,"2025.07",10.6],[356.0,141.6,"2025.07",12.0],[357.9,142.3,"2025.07",12.9],[359.9,141.2,"2025.07",11.4],[361.8,142.1,"2025.07",12.6],[363.7,140.1,"2025.07",9.9],[365.7,140.5,"2025.07",10.5],[367.6,136.0,"2025.07",4.0],[369.6,134.6,"2025.07",1.9],[371.5,132.0,"2025.08",0.0],[373.5,133.3,"2025.08",1.9],[375.4,133.0,"2025.08",1.5],[377.3,132.8,"2025.08",1.2],[379.3,133.3,"2025.08",1.9],[381.2,133.3,"2025.08",1.9],[383.2,133.4,"2025.08",2.1],[385.1,133.7,"2025.08",2.6],[387.1,132.8,"2025.08",1.3],[389.0,133.7,"2025.08",2.6],[391.0,132.7,"2025.09",1.1],[392.9,130.2,"2025.09",0.0],[394.8,130.5,"2025.09",0.5],[396.8,128.1,"2025.09",0.0],[398.7,126.7,"2025.09",0.0],[400.7,124.2,"2025.09",0.0],[402.6,124.6,"2025.09",0.6],[404.6,125.0,"2025.10",1.1],[406.5,125.9,"2025.10",2.5],[408.4,124.4,"2025.10",0.3],[410.4,124.6,"2025.10",0.6],[412.3,124.5,"2025.10",0.5],[414.3,122.4,"2025.10",0.0],[416.2,123.0,"2025.10",0.9],[418.2,122.0,"2025.10",0.0],[420.1,122.3,"2025.11",0.4],[422.1,121.2,"2025.11",0.0],[424.0,117.5,"2025.11",0.0],[425.9,118.9,"2025.11",2.1],[427.9,118.7,"2025.11",1.9],[429.8,117.6,"2025.11",0.2],[431.8,118.9,"2025.11",2.2],[433.7,120.5,"2025.11",4.6],[435.7,120.7,"2025.11",4.9],[437.6,115.0,"2025.12",0.0],[439.6,115.6,"2025.12",0.9],[441.5,117.0,"2025.12",3.0],[443.4,115.8,"2025.12",1.3],[445.4,116.4,"2025.12",2.2],[447.3,117.1,"2025.12",3.1],[449.3,118.5,"2025.12",5.2],[451.2,118.9,"2025.12",5.8],[453.2,118.2,"2025.12",4.8],[455.1,120.5,"2025.12",8.2],[457.0,120.6,"2025.12",8.3],[459.0,120.3,"2026.01",7.8],[460.9,117.4,"2026.01",3.7],[462.9,118.5,"2026.01",5.2],[464.8,118.9,"2026.01",5.8],[466.8,119.8,"2026.01",7.2],[468.7,119.1,"2026.01",6.1],[470.7,100.5,"2026.01",0.0],[472.6,101.9,"2026.01",2.2],[474.5,100.3,"2026.01",0.0],[476.5,101.3,"2026.02",1.4],[478.4,101.9,"2026.02",2.4],[480.4,101.2,"2026.02",1.3],[482.3,101.4,"2026.02",1.6],[484.3,99.7,"2026.02",0.0],[486.2,97.3,"2026.02",0.0],[488.1,96.3,"2026.02",0.0],[490.1,96.8,"2026.02",0.8],[492.0,95.2,"2026.02",0.0],[494.0,95.9,"2026.02",1.1],[495.9,96.6,"2026.02",2.2],[497.9,97.4,"2026.03",3.4],[499.8,98.6,"2026.03",5.2],[501.8,98.4,"2026.03",4.9],[503.7,99.3,"2026.03",6.2],[505.6,98.9,"2026.03",5.6],[507.6,90.5,"2026.03",0.0],[509.5,84.4,"2026.03",0.0],[511.5,81.9,"2026.03",0.0],[513.4,82.4,"2026.03",0.8],[515.4,80.9,"2026.04",0.0],[517.3,80.3,"2026.04",0.0],[519.3,80.7,"2026.04",0.7],[521.2,81.7,"2026.04",2.1],[523.1,81.4,"2026.04",1.7],[525.1,76.2,"2026.04",0.0],[527.0,73.5,"2026.04",0.0],[529.0,73.5,"2026.04",0.0],[530.9,73.4,"2026.04",0.0],[532.9,63.6,"2026.04",0.0],[534.8,65.2,"2026.05",2.5],[536.7,66.4,"2026.05",4.2],[538.7,66.6,"2026.05",4.5],[540.6,66.1,"2026.05",3.8],[542.6,66.1,"2026.05",3.7],[544.5,66.7,"2026.05",4.6],[546.5,62.4,"2026.05",0.0],[548.4,63.0,"2026.06",0.9],[550.4,63.8,"2026.06",2.2],[552.3,64.8,"2026.06",3.6],[554.2,51.6,"2026.06",0.0],[556.2,51.7,"2026.06",0.1],[558.1,51.0,"2026.06",0.0],[560.1,50.9,"2026.06",0.0],[562.0,52.1,"2026.06",1.9],[564.0,52.5,"2026.06",2.5],[565.9,53.4,"2026.06",3.8],[567.9,50.6,"2026.06",0.0],[569.8,52.2,"2026.06",2.5],[571.7,52.8,"2026.07",3.3],[573.7,53.4,"2026.07",4.2],[575.6,52.6,"2026.07",3.0],[577.6,52.2,"2026.07",2.4],[579.5,51.6,"2026.07",1.4],[581.5,51.5,"2026.07",1.4],[583.4,49.5,"2026.07",0.0],[585.3,48.2,"2026.07",0.0],[587.3,49.5,"2026.07",2.1],[589.2,50.7,"2026.07",3.8],[591.2,52.4,"2026.08",6.3],[593.1,52.6,"2026.08",6.5],[595.1,51.7,"2026.08",5.3],[597.0,24.2,"2026.08",0.0],[599.0,15.8,"2026.08",0.0],[600.9,17.0,"2026.08",1.9],[602.8,17.6,"2026.08",2.7],[604.8,15.9,"2026.08",0.2],[606.7,16.4,"2026.08",0.9],[608.7,17.3,"2026.08",2.3],[610.6,18.9,"2026.08",4.7],[612.6,15.4,"2026.09",0.0],[614.5,17.9,"2026.09",3.8],[616.4,16.8,"2026.09",2.1],[618.4,17.2,"2026.09",2.8],[620.3,15.2,"2026.09",0.0],[622.3,15.9,"2026.09",1.1],[624.2,15.5,"2026.09",0.5],[626.2,16.9,"2026.09",2.6],[628.1,16.9,"2026.09",2.5],[630.1,17.2,"2026.10",3.1],[632.0,18.0,"2026.10",4.3]]'><svg class="eq" viewBox="0 0 640 300" role="img" aria-label="Backtest equity curve of GoldTriEngine from January 2024 to October 2026, log scale, rising overall with drawdowns"><defs><linearGradient id="eqFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3EE09A" stop-opacity=".22"/><stop offset="1" stop-color="#3EE09A" stop-opacity="0"/></linearGradient></defs><line class="gridl" x1="8" x2="632" y1="14.0" y2="14.0"/><line class="gridl" x1="8" x2="632" y1="78.5" y2="78.5"/><line class="gridl" x1="8" x2="632" y1="143.0" y2="143.0"/><line class="gridl" x1="8" x2="632" y1="207.5" y2="207.5"/><line class="gridl" x1="8" x2="632" y1="272.0" y2="272.0"/><line class="gridl" x1="8.0" x2="8.0" y1="14" y2="272"/><text class="yl" x="14.0" y="292">2024</text><line class="gridl" x1="231.6" x2="231.6" y1="14" y2="272"/><text class="yl" x="237.6" y="292">2025</text><line class="gridl" x1="459.0" x2="459.0" y1="14" y2="272"/><text class="yl" x="465.0" y="292">2026</text><path class="area" d="M8.0 269.6 L9.9 270.3 L11.9 271.2 L13.8 271.5 L15.8 269.7 L17.7 269.3 L19.7 267.1 L21.6 267.6 L23.6 267.9 L25.5 269.6 L27.4 270.3 L29.4 270.9 L31.3 270.6 L33.3 269.4 L35.2 268.6 L37.2 269.6 L39.1 264.3 L41.0 265.2 L43.0 265.7 L44.9 265.3 L46.9 265.9 L48.8 266.8 L50.8 267.1 L52.7 252.7 L54.7 244.1 L56.6 240.3 L58.5 241.1 L60.5 239.0 L62.4 240.6 L64.4 240.1 L66.3 234.5 L68.3 232.2 L70.2 227.7 L72.1 229.5 L74.1 226.2 L76.0 225.2 L78.0 224.6 L79.9 223.6 L81.9 224.6 L83.8 225.7 L85.8 226.5 L87.7 225.5 L89.6 226.4 L91.6 228.4 L93.5 229.4 L95.5 228.8 L97.4 226.0 L99.4 226.9 L101.3 225.5 L103.3 225.4 L105.2 224.8 L107.1 226.7 L109.1 227.7 L111.0 227.8 L113.0 225.7 L114.9 227.3 L116.9 227.8 L118.8 227.4 L120.7 227.9 L122.7 229.8 L124.6 230.3 L126.6 229.0 L128.5 229.3 L130.5 227.6 L132.4 228.0 L134.4 228.0 L136.3 230.1 L138.2 229.7 L140.2 227.4 L142.1 227.6 L144.1 228.5 L146.0 229.3 L148.0 228.8 L149.9 228.5 L151.9 228.4 L153.8 227.5 L155.7 228.6 L157.7 230.8 L159.6 228.1 L161.6 227.4 L163.5 228.8 L165.5 229.1 L167.4 228.8 L169.3 226.2 L171.3 224.8 L173.2 225.7 L175.2 225.9 L177.1 225.2 L179.1 224.0 L181.0 223.5 L183.0 222.2 L184.9 221.3 L186.8 221.4 L188.8 220.4 L190.7 217.8 L192.7 217.1 L194.6 216.5 L196.6 214.3 L198.5 214.5 L200.4 213.6 L202.4 208.6 L204.3 207.4 L206.3 207.4 L208.2 208.8 L210.2 210.3 L212.1 211.7 L214.1 211.4 L216.0 212.3 L217.9 207.7 L219.9 208.0 L221.8 207.8 L223.8 199.6 L225.7 200.1 L227.7 201.0 L229.6 202.2 L231.6 199.5 L233.5 199.5 L235.4 198.8 L237.4 198.5 L239.3 199.9 L241.3 199.5 L243.2 198.5 L245.2 199.9 L247.1 201.5 L249.0 199.6 L251.0 186.6 L252.9 187.8 L254.9 189.2 L256.8 186.9 L258.8 188.5 L260.7 188.8 L262.7 188.8 L264.6 186.8 L266.5 184.6 L268.5 185.8 L270.4 183.7 L272.4 184.4 L274.3 183.7 L276.3 183.4 L278.2 177.7 L280.1 178.5 L282.1 178.1 L284.0 177.6 L286.0 177.8 L287.9 177.8 L289.9 178.0 L291.8 180.0 L293.8 180.0 L295.7 175.4 L297.6 176.1 L299.6 147.0 L301.5 148.1 L303.5 147.9 L305.4 146.7 L307.4 147.4 L309.3 147.0 L311.3 145.0 L313.2 146.1 L315.1 147.1 L317.1 143.5 L319.0 144.8 L321.0 144.4 L322.9 142.4 L324.9 134.6 L326.8 135.9 L328.7 135.2 L330.7 133.3 L332.6 134.5 L334.6 134.7 L336.5 134.7 L338.5 133.7 L340.4 134.9 L342.4 135.4 L344.3 135.3 L346.2 136.7 L348.2 136.1 L350.1 137.9 L352.1 138.7 L354.0 140.6 L356.0 141.6 L357.9 142.3 L359.9 141.2 L361.8 142.1 L363.7 140.1 L365.7 140.5 L367.6 136.0 L369.6 134.6 L371.5 132.0 L373.5 133.3 L375.4 133.0 L377.3 132.8 L379.3 133.3 L381.2 133.3 L383.2 133.4 L385.1 133.7 L387.1 132.8 L389.0 133.7 L391.0 132.7 L392.9 130.2 L394.8 130.5 L396.8 128.1 L398.7 126.7 L400.7 124.2 L402.6 124.6 L404.6 125.0 L406.5 125.9 L408.4 124.4 L410.4 124.6 L412.3 124.5 L414.3 122.4 L416.2 123.0 L418.2 122.0 L420.1 122.3 L422.1 121.2 L424.0 117.5 L425.9 118.9 L427.9 118.7 L429.8 117.6 L431.8 118.9 L433.7 120.5 L435.7 120.7 L437.6 115.0 L439.6 115.6 L441.5 117.0 L443.4 115.8 L445.4 116.4 L447.3 117.1 L449.3 118.5 L451.2 118.9 L453.2 118.2 L455.1 120.5 L457.0 120.6 L459.0 120.3 L460.9 117.4 L462.9 118.5 L464.8 118.9 L466.8 119.8 L468.7 119.1 L470.7 100.5 L472.6 101.9 L474.5 100.3 L476.5 101.3 L478.4 101.9 L480.4 101.2 L482.3 101.4 L484.3 99.7 L486.2 97.3 L488.1 96.3 L490.1 96.8 L492.0 95.2 L494.0 95.9 L495.9 96.6 L497.9 97.4 L499.8 98.6 L501.8 98.4 L503.7 99.3 L505.6 98.9 L507.6 90.5 L509.5 84.4 L511.5 81.9 L513.4 82.4 L515.4 80.9 L517.3 80.3 L519.3 80.7 L521.2 81.7 L523.1 81.4 L525.1 76.2 L527.0 73.5 L529.0 73.5 L530.9 73.4 L532.9 63.6 L534.8 65.2 L536.7 66.4 L538.7 66.6 L540.6 66.1 L542.6 66.1 L544.5 66.7 L546.5 62.4 L548.4 63.0 L550.4 63.8 L552.3 64.8 L554.2 51.6 L556.2 51.7 L558.1 51.0 L560.1 50.9 L562.0 52.1 L564.0 52.5 L565.9 53.4 L567.9 50.6 L569.8 52.2 L571.7 52.8 L573.7 53.4 L575.6 52.6 L577.6 52.2 L579.5 51.6 L581.5 51.5 L583.4 49.5 L585.3 48.2 L587.3 49.5 L589.2 50.7 L591.2 52.4 L593.1 52.6 L595.1 51.7 L597.0 24.2 L599.0 15.8 L600.9 17.0 L602.8 17.6 L604.8 15.9 L606.7 16.4 L608.7 17.3 L610.6 18.9 L612.6 15.4 L614.5 17.9 L616.4 16.8 L618.4 17.2 L620.3 15.2 L622.3 15.9 L624.2 15.5 L626.2 16.9 L628.1 16.9 L630.1 17.2 L632.0 18.0 L632.0 272 L8.0 272 Z"/><path class="line" d="M8.0 269.6 L9.9 270.3 L11.9 271.2 L13.8 271.5 L15.8 269.7 L17.7 269.3 L19.7 267.1 L21.6 267.6 L23.6 267.9 L25.5 269.6 L27.4 270.3 L29.4 270.9 L31.3 270.6 L33.3 269.4 L35.2 268.6 L37.2 269.6 L39.1 264.3 L41.0 265.2 L43.0 265.7 L44.9 265.3 L46.9 265.9 L48.8 266.8 L50.8 267.1 L52.7 252.7 L54.7 244.1 L56.6 240.3 L58.5 241.1 L60.5 239.0 L62.4 240.6 L64.4 240.1 L66.3 234.5 L68.3 232.2 L70.2 227.7 L72.1 229.5 L74.1 226.2 L76.0 225.2 L78.0 224.6 L79.9 223.6 L81.9 224.6 L83.8 225.7 L85.8 226.5 L87.7 225.5 L89.6 226.4 L91.6 228.4 L93.5 229.4 L95.5 228.8 L97.4 226.0 L99.4 226.9 L101.3 225.5 L103.3 225.4 L105.2 224.8 L107.1 226.7 L109.1 227.7 L111.0 227.8 L113.0 225.7 L114.9 227.3 L116.9 227.8 L118.8 227.4 L120.7 227.9 L122.7 229.8 L124.6 230.3 L126.6 229.0 L128.5 229.3 L130.5 227.6 L132.4 228.0 L134.4 228.0 L136.3 230.1 L138.2 229.7 L140.2 227.4 L142.1 227.6 L144.1 228.5 L146.0 229.3 L148.0 228.8 L149.9 228.5 L151.9 228.4 L153.8 227.5 L155.7 228.6 L157.7 230.8 L159.6 228.1 L161.6 227.4 L163.5 228.8 L165.5 229.1 L167.4 228.8 L169.3 226.2 L171.3 224.8 L173.2 225.7 L175.2 225.9 L177.1 225.2 L179.1 224.0 L181.0 223.5 L183.0 222.2 L184.9 221.3 L186.8 221.4 L188.8 220.4 L190.7 217.8 L192.7 217.1 L194.6 216.5 L196.6 214.3 L198.5 214.5 L200.4 213.6 L202.4 208.6 L204.3 207.4 L206.3 207.4 L208.2 208.8 L210.2 210.3 L212.1 211.7 L214.1 211.4 L216.0 212.3 L217.9 207.7 L219.9 208.0 L221.8 207.8 L223.8 199.6 L225.7 200.1 L227.7 201.0 L229.6 202.2 L231.6 199.5 L233.5 199.5 L235.4 198.8 L237.4 198.5 L239.3 199.9 L241.3 199.5 L243.2 198.5 L245.2 199.9 L247.1 201.5 L249.0 199.6 L251.0 186.6 L252.9 187.8 L254.9 189.2 L256.8 186.9 L258.8 188.5 L260.7 188.8 L262.7 188.8 L264.6 186.8 L266.5 184.6 L268.5 185.8 L270.4 183.7 L272.4 184.4 L274.3 183.7 L276.3 183.4 L278.2 177.7 L280.1 178.5 L282.1 178.1 L284.0 177.6 L286.0 177.8 L287.9 177.8 L289.9 178.0 L291.8 180.0 L293.8 180.0 L295.7 175.4 L297.6 176.1 L299.6 147.0 L301.5 148.1 L303.5 147.9 L305.4 146.7 L307.4 147.4 L309.3 147.0 L311.3 145.0 L313.2 146.1 L315.1 147.1 L317.1 143.5 L319.0 144.8 L321.0 144.4 L322.9 142.4 L324.9 134.6 L326.8 135.9 L328.7 135.2 L330.7 133.3 L332.6 134.5 L334.6 134.7 L336.5 134.7 L338.5 133.7 L340.4 134.9 L342.4 135.4 L344.3 135.3 L346.2 136.7 L348.2 136.1 L350.1 137.9 L352.1 138.7 L354.0 140.6 L356.0 141.6 L357.9 142.3 L359.9 141.2 L361.8 142.1 L363.7 140.1 L365.7 140.5 L367.6 136.0 L369.6 134.6 L371.5 132.0 L373.5 133.3 L375.4 133.0 L377.3 132.8 L379.3 133.3 L381.2 133.3 L383.2 133.4 L385.1 133.7 L387.1 132.8 L389.0 133.7 L391.0 132.7 L392.9 130.2 L394.8 130.5 L396.8 128.1 L398.7 126.7 L400.7 124.2 L402.6 124.6 L404.6 125.0 L406.5 125.9 L408.4 124.4 L410.4 124.6 L412.3 124.5 L414.3 122.4 L416.2 123.0 L418.2 122.0 L420.1 122.3 L422.1 121.2 L424.0 117.5 L425.9 118.9 L427.9 118.7 L429.8 117.6 L431.8 118.9 L433.7 120.5 L435.7 120.7 L437.6 115.0 L439.6 115.6 L441.5 117.0 L443.4 115.8 L445.4 116.4 L447.3 117.1 L449.3 118.5 L451.2 118.9 L453.2 118.2 L455.1 120.5 L457.0 120.6 L459.0 120.3 L460.9 117.4 L462.9 118.5 L464.8 118.9 L466.8 119.8 L468.7 119.1 L470.7 100.5 L472.6 101.9 L474.5 100.3 L476.5 101.3 L478.4 101.9 L480.4 101.2 L482.3 101.4 L484.3 99.7 L486.2 97.3 L488.1 96.3 L490.1 96.8 L492.0 95.2 L494.0 95.9 L495.9 96.6 L497.9 97.4 L499.8 98.6 L501.8 98.4 L503.7 99.3 L505.6 98.9 L507.6 90.5 L509.5 84.4 L511.5 81.9 L513.4 82.4 L515.4 80.9 L517.3 80.3 L519.3 80.7 L521.2 81.7 L523.1 81.4 L525.1 76.2 L527.0 73.5 L529.0 73.5 L530.9 73.4 L532.9 63.6 L534.8 65.2 L536.7 66.4 L538.7 66.6 L540.6 66.1 L542.6 66.1 L544.5 66.7 L546.5 62.4 L548.4 63.0 L550.4 63.8 L552.3 64.8 L554.2 51.6 L556.2 51.7 L558.1 51.0 L560.1 50.9 L562.0 52.1 L564.0 52.5 L565.9 53.4 L567.9 50.6 L569.8 52.2 L571.7 52.8 L573.7 53.4 L575.6 52.6 L577.6 52.2 L579.5 51.6 L581.5 51.5 L583.4 49.5 L585.3 48.2 L587.3 49.5 L589.2 50.7 L591.2 52.4 L593.1 52.6 L595.1 51.7 L597.0 24.2 L599.0 15.8 L600.9 17.0 L602.8 17.6 L604.8 15.9 L606.7 16.4 L608.7 17.3 L610.6 18.9 L612.6 15.4 L614.5 17.9 L616.4 16.8 L618.4 17.2 L620.3 15.2 L622.3 15.9 L624.2 15.5 L626.2 16.9 L628.1 16.9 L630.1 17.2 L632.0 18.0"/><circle class="tip" cx="632.0" cy="18.0" r="4"/><line class="xh" x1="0" x2="0" y1="14" y2="272"/><circle class="xd" cx="0" cy="0" r="4.5"/></svg><div class="eq-tip"></div></div><p class="eq-hint">Hover or tap the curve to see the drawdown at any point</p>
+      </div>
+      <div class="stats rv" style="--d:.08s">
+        <div class="stat"><b data-count="2.10">2.10</b><span>Profit factor</span></div>
+        <div class="stat"><b data-count="1283">1,283</b><span>Trades</span></div>
+        <div class="stat"><b data-count="52.3" data-suf="%">52.3%</b><span>Winning trades</span></div>
+        <div class="stat"><b data-count="1.92" data-suf="×">1.92×</b><span>Average win vs. average loss</span></div>
+        <div class="stat"><b data-count="17.7" data-suf="%">17.7%</b><span>Largest equity drawdown (relative)</span></div>
+        <div class="stat"><b data-count="99" data-suf="%">99%</b><span>History quality (real ticks)</span></div>
+      </div>
+    </div>
+
+    <div class="months rv">
+      <div class="months-head">
+        <h3>28 of 34 months closed positive</h3>
+        <div class="legend"><span><i style="background:#2FC985"></i>Positive</span><span><i style="background:#E85B6B"></i>Negative</span></div>
+      </div>
+      <div class="mgrid" role="img" aria-label="Monthly backtest results: 28 of 34 months positive"><span></span><span class="mh">J</span><span class="mh">F</span><span class="mh">M</span><span class="mh">A</span><span class="mh">M</span><span class="mh">J</span><span class="mh">J</span><span class="mh">A</span><span class="mh">S</span><span class="mh">O</span><span class="mh">N</span><span class="mh">D</span><span class="y">2024</span><span class="m l" title="January 2024: negative"></span><span class="m p" title="February 2024: positive"></span><span class="m p" title="March 2024: positive"></span><span class="m p" title="April 2024: positive"></span><span class="m p" title="May 2024: positive"></span><span class="m l" title="June 2024: negative"></span><span class="m l" title="July 2024: negative"></span><span class="m p" title="August 2024: positive"></span><span class="m p" title="September 2024: positive"></span><span class="m p" title="October 2024: positive"></span><span class="m p" title="November 2024: positive"></span><span class="m p" title="December 2024: positive"></span><span class="y">2025</span><span class="m p" title="January 2025: positive"></span><span class="m p" title="February 2025: positive"></span><span class="m p" title="March 2025: positive"></span><span class="m p" title="April 2025: positive"></span><span class="m p" title="May 2025: positive"></span><span class="m l" title="June 2025: negative"></span><span class="m p" title="July 2025: positive"></span><span class="m p" title="August 2025: positive"></span><span class="m p" title="September 2025: positive"></span><span class="m p" title="October 2025: positive"></span><span class="m p" title="November 2025: positive"></span><span class="m p" title="December 2025: positive"></span><span class="y">2026</span><span class="m p" title="January 2026: positive"></span><span class="m p" title="February 2026: positive"></span><span class="m p" title="March 2026: positive"></span><span class="m p" title="April 2026: positive"></span><span class="m p" title="May 2026: positive"></span><span class="m p" title="June 2026: positive"></span><span class="m p" title="July 2026: positive"></span><span class="m p" title="August 2026: positive"></span><span class="m l" title="September 2026: negative"></span><span class="m l" title="October 2026: negative"></span><span class="m" title="Not tested yet"></span><span class="m" title="Not tested yet"></span></div>
+      <p class="foot-note">MT5 Strategy Tester, $5,000 starting balance, 1:100 leverage, Fusion Markets Raw conditions. October 2026 is a partial month. Backtests are simulations: they can't include every live condition (slippage, spreads at news, platform outages), and past performance, simulated or live, does not guarantee future results.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- TELEGRAM -->
+<section class="sec" id="telegram">
+  <div class="wrap tg-grid">
+    <div>
+      <span class="kicker rv">On your phone</span>
+      <h2 class="rv">Your EA reports to you, <em class="s">as it happens.</em></h2>
+      <p class="lead rv">GoldTriEngine sends its own notifications to Telegram, so you know what it's doing without opening MetaTrader. It's the same alert system proven in our earlier Alhamdulillah EA, built into GoldTriEngine.</p>
+      <ul class="tg-list rv">
+        <li><b>Start and stop.</b> Know the moment the EA starts or stops running.</li>
+        <li><b>Every trade.</b> Opened and closed, with the engine, direction, stop loss and result.</li>
+        <li><b>Pending orders.</b> When an order is placed, changed or removed.</li>
+        <li><b>Risk alerts.</b> Drawdown warnings at levels you choose, and a message whenever a risk limit blocks a trade.</li>
+        <li><b>Daily report.</b> Trades, win rate, net result and drawdown, every evening.</li>
+      </ul>
+      <p class="foot-note rv">Each alert type can be switched on or off. Times and messages shown are an example.</p>
+    </div>
+    <div class="phone-wrap rv" style="--d:.1s" aria-label="Example of GoldTriEngine Telegram notifications">
+      <div class="phone">
+        <div class="phone-top"><span class="tg-av" aria-hidden="true"></span><div><b>GoldTriEngine</b><small>bot</small></div></div>
+        <ol class="tg-feed">
+          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#5B86FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></svg></span><b>EA started</b><time>09:00</time></div><p>GoldTriEngine is running on XAUUSD. License active.</p></li>
+          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#3EE09A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span><b>Trade opened</b><time>10:42</time></div><p>Engine Alpha · Buy · stop loss set.</p></li>
+          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#E3B95F"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg></span><b>Pending order placed</b><time>13:05</time></div><p>Engine Gamma · order waiting at its level.</p></li>
+          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#3EE09A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>Trade closed</b><time>15:31</time></div><p>Engine Alpha · closed in profit · result and reason.</p></li>
+          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#FF6B78"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span><b>Drawdown alert</b><time>18:20</time></div><p>The account has reached your first drawdown alert level.</p></li>
+          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#C3CADA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V9M12 19V5M19 19v-7"/></svg></span><b>Daily report</b><time>23:15</time></div><p>Trades, win rate, net result and drawdown for the day.</p></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- AT A GLANCE -->
+<section class="sec" id="about">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker rv">At a glance</span>
+      <h2 class="rv">What GoldTriEngine <em class="s">is,</em> in one place.</h2>
+    </div>
+    <div class="spec rv">
+      <dl>
+        <div><dt>Type</dt><dd>Expert Advisor (EA), a fully automated trading robot</dd></div>
+        <div><dt>Platform</dt><dd>MetaTrader 5 (MT5), desktop or VPS</dd></div>
+        <div><dt>Market</dt><dd>Gold, XAUUSD only</dd></div>
+        <div><dt>Engines</dt><dd>Three independent engines: Alpha, Beta and Gamma</dd></div>
+        <div><dt>Method</dt><dd>Rule-based and algorithmic. The AI hosts the stream; it does not trade.</dd></div>
+        <div><dt>Risk</dt><dd>Stop loss on every trade. No martingale, no grid.</dd></div>
+        <div><dt>Alerts</dt><dd>Telegram notifications: trades, pending orders, risk alerts, daily report</dd></div>
+      </dl>
+      <dl>
+        <div><dt>Brokers</dt><dd>Fusion Markets and IC Markets, Raw accounts</dd></div>
+        <div><dt>Track record</dt><dd>Live on YouTube since October 2026; demo account tracked on Myfxbook</dd></div>
+        <div><dt>Backtest</dt><dd>Jan 2024 – Oct 2026, profit factor 2.10, 1,283 trades (simulated)</dd></div>
+        <div><dt>Availability</dt><dd>Yearly license, opening after two months of public live results</dd></div>
+        <div><dt>Developer</dt><dd>Yelias, independent developer</dd></div>
+        <div><dt>Support</dt><dd>Telegram <a href="https://t.me/GoldTriEngine_Support" rel="noopener">@GoldTriEngine_Support</a></dd></div>
+      </dl>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- LICENSE -->
+<section class="sec" id="license">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker rv">Getting GoldTriEngine</span>
+      <h2 class="rv">Not for sale yet. <em class="s">On purpose.</em></h2>
+      <p class="lead rv">You should be able to judge a trading robot on live results before anyone asks you to pay for it. So the first two months are public results only. Licenses open after that.</p>
+    </div>
+    <div class="tl">
+      <article class="card now rv">
+        <span class="when"><span class="dot g"></span>Now</span>
+        <h3>Watch it trade, for free</h3>
+        <ul><li>Live stream, 24/5</li><li>Myfxbook track record</li><li>Daily Shorts and Telegram updates</li></ul>
+      </article>
+      <article class="card rv" style="--d:.08s">
+        <span class="when">After two months of live results</span>
+        <h3>Yearly licenses open</h3>
+        <ul><li>The GoldTriEngine EA for MT5</li><li>Step-by-step setup guide</li><li>Telegram notifications on your phone</li><li>Personal setup help on Telegram</li><li>Free updates during the license</li></ul>
+      </article>
+      <article class="card rv" style="--d:.16s">
+        <span class="when">What you'll need</span>
+        <h3>A setup that matches the tests</h3>
+        <ul><li>A Fusion Markets or IC Markets Raw account</li><li>MetaTrader 5 running 24/5 (PC or VPS)</li><li>Only money you can afford to lose</li></ul>
+      </article>
+    </div>
+    <div class="btns rv" style="margin-top:28px">
+      <a class="btn primary" href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Join the Telegram channel <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn" href="https://t.me/GoldTriEngine_Support" rel="noopener">Ask about pricing</a>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- BROKERS -->
+<section class="sec" id="brokers">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="kicker rv">Brokers</span>
+      <h2 class="rv">Built and tested on <em class="s">Raw</em> accounts.</h2>
+      <p class="lead rv">A gold robot that trades often depends on tight spreads, low commission and fast execution. GoldTriEngine is built for, and supported on, these two brokers.</p>
+    </div>
+    <div class="brokers">
+      <a class="broker rv" href="https://fusionmarkets.com/?refcode=122230" rel="sponsored noopener"><span><b>Fusion Markets</b><small>Raw account · MT5</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+      <a class="broker rv" style="--d:.08s" href="https://ic.com/?camp=94149" rel="sponsored noopener"><span><b>IC Markets</b><small>Raw account · MT5</small></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
+    </div>
+    <p class="foot-note rv">Affiliate disclosure: these are affiliate links. If you open an account through them, GoldTriEngine may earn a commission at no extra cost to you.</p>
+  </div>
+</section>
+
+<hr class="rule">
+
+<!-- FAQ PREVIEW -->
+<section class="sec" id="faq">
+  <div class="narrow">
+    <div class="sec-head">
+      <span class="kicker rv">Questions</span>
+      <h2 class="rv">Straight answers.</h2>
+    </div>
+    <div class="faq rv">
+      <details id="what"><summary><h3 style="font:inherit;margin:0;letter-spacing:inherit">What is GoldTriEngine?</h3><i aria-hidden="true"></i></summary><div class="a"><p>GoldTriEngine is an Expert Advisor (EA), a fully automated trading robot, for MetaTrader 5. It trades gold (XAUUSD) using three independent engines called Alpha, Beta and Gamma. Its trades are streamed live on <a href="https://www.youtube.com/@GoldTriEngine/live">YouTube</a> 24 hours a day, Monday to Friday, with an AI host that explains each trade.</p></div></details>
+      <details id="ai"><summary><h3 style="font:inherit;margin:0;letter-spacing:inherit">Is GoldTriEngine an AI trading bot?</h3><i aria-hidden="true"></i></summary><div class="a"><p>No. The trading is rule-based and algorithmic: the EA decides and manages every trade by itself. AI is used only for the live stream host, which reads what the EA did and explains it in plain English. The AI never places, changes or closes a trade.</p></div></details>
+      <details id="martingale"><summary><h3 style="font:inherit;margin:0;letter-spacing:inherit">Does GoldTriEngine use martingale or grid trading?</h3><i aria-hidden="true"></i></summary><div class="a"><p>No. Every trade has a stop loss from the moment it opens. GoldTriEngine does not use martingale (increasing size after losses) or grid trading (stacking orders without a stop).</p></div></details>
+      <details id="buy"><summary><h3 style="font:inherit;margin:0;letter-spacing:inherit">Can I buy GoldTriEngine?</h3><i aria-hidden="true"></i></summary><div class="a"><p>Not yet. GoldTriEngine follows a "trust first" approach: the first two months are public live results only. After that, yearly licenses open. Join the <a href="https://t.me/+l7QyD_fRy25mNWJl">official Telegram channel</a> to hear when they do.</p></div></details>
+      <details id="risk"><summary><h3 style="font:inherit;margin:0;letter-spacing:inherit">Is trading gold with an EA risky?</h3><i aria-hidden="true"></i></summary><div class="a"><p>Yes. Gold is a volatile market and any trading robot can lose money, including GoldTriEngine. Past results, simulated or live, do not guarantee future results. Only trade with money you can afford to lose.</p></div></details>
+    </div>
+    <p style="margin-top:28px" class="rv"><a class="btn" href="faq.html">All questions <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></p>
+  </div>
+</section>
+
+<!-- STREAM BOT (app description for Google / TikTok reviews) -->
+<section class="sec" id="stream-bot" style="padding-top:0">
+  <div class="narrow">
+    <div class="doc rv">
+      <span class="kicker">The software behind the stream</span>
+      <h2>GoldTriEngine Stream Bot</h2>
+      <p><b>GoldTriEngine Stream Bot</b> is a small desktop program that runs on the developer's own computer and operates the GoldTriEngine live stream. It is not offered to other users, and nobody else signs in to it.</p>
+      <p>With the channel owner's permission (Google OAuth scope <code>youtube.force-ssl</code>, YouTube Data API), the bot acts on the GoldTriEngine channel only. It:</p>
+      <ul>
+        <li>reads which live broadcast is active, ends it before a scheduled restart and starts the next one;</li>
+        <li>sets the title, description, tags, category and thumbnail of the channel's own live streams and Shorts;</li>
+        <li>uploads the channel's own Shorts (short clips from the live stream) and adds them to the channel's playlists;</li>
+        <li>reads the public live chat and posts replies and official links in it, so the AI host can answer viewers.</li>
+      </ul>
+      <p>The bot does not access other users' channels or private data, and no data is sold or shared. Live chat messages are kept in a local log on the developer's computer for at most 30 days and are then deleted. Details are in the <a href="privacy.html">privacy policy</a>. The bot's use of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
+      <p style="margin:0">A companion tool, GoldTriEngine Shorts, uploads the same clips to the developer's own TikTok account. These tools only act on the developer's own accounts.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding-bottom:0">
+  <div class="wrap">
+    <div class="cta-box rv">
+      <svg class="cta-mark" viewBox="0 0 1000 1000" aria-hidden="true"><path d="M393.6 448.69L227.96 735.59H393.6Z" fill="#fff"/><path d="M582.82 407.86L500 264.41 417.18 407.86V735.59H582.82Z" fill="#3EE09A"/><path d="M606.4 735.59H772.04L606.4 448.69Z" fill="#fff"/></svg>
+      <span class="kicker">Live right now</span>
+      <h2>Judge it by what it does, <em class="s">not by what we say.</em></h2>
+      <p>Open the stream, watch a few trades, ask the host a question in the chat. That is the whole pitch.</p>
+      <div class="btns">
+        <a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a>
+        <a class="btn" href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook (demo)</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="./"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+        <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
+      </div>
+      <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook (demo)</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="guide.html">How to judge a gold EA</a></li><li><a href="faq.html">FAQ</a></li><li><a href="privacy.html">Privacy</a></li><li><a href="terms.html">Terms</a></li><li><a href="llms.txt">llms.txt</a></li></ul></div>
+    </div>
+    <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, the live stream currently runs on a demo account, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+  </div>
+</footer>
+<script src="site.js" defer></script>
+</body>
+</html>
