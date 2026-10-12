@@ -92,7 +92,7 @@
     "Three independent engines: Alpha, Beta and Gamma",
     "Stop loss on every trade",
     "No martingale, no grid",
-    "Telegram notifications: EA start/stop, trades opened and closed, pending orders, drawdown and risk-limit alerts, daily report",
+    "Telegram notifications: EA start/stop, offline and back-online heartbeat alerts, trades opened and closed, pending orders, drawdown and risk-limit alerts, daily report",
     "Built for Fusion Markets and IC Markets Raw accounts",
     "Trades streamed live on YouTube 24/5 with an AI host",
     "Demo track record on Myfxbook"
@@ -334,7 +334,8 @@
       <h2 class="rv">Your EA reports to you, <em class="s">as it happens.</em></h2>
       <p class="lead rv">GoldTriEngine sends its own notifications to Telegram, so you know what it's doing without opening MetaTrader. It's the same alert system proven in our earlier Alhamdulillah EA, built into GoldTriEngine.</p>
       <ul class="tg-list rv">
-        <li><b>Start and stop.</b> Know the moment the EA starts or stops running.</li>
+        <li><b>Start and stop.</b> A start-up message with version, engines, license status, balance and equity.</li>
+        <li><b>Offline watch.</b> A built-in heartbeat warns you with "EA offline detected" if MT5 or the EA stops (PC asleep, internet down, VPS restart), and says "EA back online" when it recovers.</li>
         <li><b>Every trade.</b> Opened and closed, with the engine, direction, stop loss and result.</li>
         <li><b>Pending orders.</b> When an order is placed, changed or removed.</li>
         <li><b>Risk alerts.</b> Drawdown warnings at levels you choose, and a message whenever a risk limit blocks a trade.</li>
@@ -346,9 +347,10 @@
       <div class="phone">
         <div class="phone-top"><span class="tg-av" aria-hidden="true"></span><div><b>GoldTriEngine</b><small>bot</small></div></div>
         <ol class="tg-feed">
-          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#5B86FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></svg></span><b>EA started</b><time>09:00</time></div><p>GoldTriEngine is running on XAUUSD. License active.</p></li>
+          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#5B86FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></svg></span><b>EA started</b><time>09:00</time></div><p>GoldTriEngine v1.06 · XAUUSD · all 3 engines on · license OK · balance and equity.</p></li>
           <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#3EE09A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span><b>Trade opened</b><time>10:42</time></div><p>Engine Alpha · Buy · stop loss set.</p></li>
-          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#E3B95F"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg></span><b>Pending order placed</b><time>13:05</time></div><p>Engine Gamma · order waiting at its level.</p></li>
+          <li class="tg-msg tg-short"><div class="tg-row"><span class="tg-ic" style="--c:#E3B95F"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span><b>EA offline detected</b><time>13:39</time></div></li>
+          <li class="tg-msg tg-short"><div class="tg-row"><span class="tg-ic" style="--c:#3EE09A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/></svg></span><b>EA back online</b><time>13:52</time></div></li>
           <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#3EE09A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>Trade closed</b><time>15:31</time></div><p>Engine Alpha · closed in profit · result and reason.</p></li>
           <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#FF6B78"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span><b>Drawdown alert</b><time>18:20</time></div><p>The account has reached your first drawdown alert level.</p></li>
           <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#C3CADA"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19V9M12 19V5M19 19v-7"/></svg></span><b>Daily report</b><time>23:15</time></div><p>Trades, win rate, net result and drawdown for the day.</p></li>
