@@ -18,7 +18,7 @@ Key facts:
 
 ## Main pages
 - [Home](https://yeliasforex.github.io/): what GoldTriEngine is, how the stream works, backtest summary, license plans, brokers
-- [How to judge a gold EA](https://yeliasforex.github.io/guide.html): eight checks for any XAUUSD Expert Advisor (verified live record, stop losses, profit factor and drawdown, backtest quality, broker conditions, seller transparency, risk), with GoldTriEngine's own honest scorecard
+- [How to judge a gold EA](https://yeliasforex.github.io/guide.html): eight checks for any XAUUSD Expert Advisor (verified live record, stop losses, profit factor and drawdown, how the backtest was made, broker conditions, seller transparency, risk), with GoldTriEngine's own honest scorecard
 - [FAQ](https://yeliasforex.github.io/faq.html): answers about the EA, backtest, brokers, risk, licenses and the live stream
 
 ## Official channels
