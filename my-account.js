@@ -8,6 +8,19 @@
   const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['alerts', 'Alerts'], ['billing', 'Orders & keys']];
   const NOTIFY = [['ea_started', 'EA started / stopped'], ['trade_open', 'Trade opened'], ['trade_close', 'Trade closed with result'], ['addon', 'Add-on filled / closed'], ['daily_report', 'Daily report'], ['offline', 'EA offline / back online']];
   const SEV = {error: 0, warning: 1, info: 2}, tradeCache = {};
+  let quiet = false, calM = null;                       // quiet = background refresh: no replayed animations
+  const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // numbers count up from zero: any element with data-cu (target) and data-f (format)
+  function countUp(root) {
+    const fmt = {usd: v => R.usd(v, 2), sgn: v => R.sgn(v, 2), pct: v => v.toFixed(0) + '%', dec: v => v.toFixed(2), int: v => String(Math.round(v))};
+    root.querySelectorAll('[data-cu]').forEach(el => {
+      const to = +el.dataset.cu, f = fmt[el.dataset.f] || fmt.int, end = el.textContent;
+      if (quiet || REDUCED || !isFinite(to)) return;
+      const t0 = performance.now(), dur = 1100;
+      const step = now => { const p = Math.min(1, (now - t0) / dur); if (p < 1) { el.textContent = f(to * (1 - Math.pow(1 - p, 3))); requestAnimationFrame(step); } else el.textContent = end; };
+      el.textContent = f(0); requestAnimationFrame(step);
+    });
+  }
 
   // ---------- data ----------
   async function load() {
@@ -76,7 +89,7 @@
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · ${esc(l.key)}</option>`).join('')}</select></div>`);
     parts.push(hero(lic, trades));
     parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</a>`).join('')}</div><div id="tabbody"></div>`);
-    A.innerHTML = parts.join('');
+    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A);
     const sel = $('#licSel'); if (sel) sel.onchange = e => { cur = e.target.value; render(); };
     A.querySelectorAll('#subnav a').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.tab; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x === a)); drawTab(lic, trades); });
     drawTab(lic, trades);
@@ -93,15 +106,16 @@
       <div class="hero-l">
         <div class="row"><span class="plan-chip">${esc(pl.name)}</span><span class="pill ${pc}">${pt}</span><span class="pill ${l.bound_is_demo ? 'info' : ''}">${l.bound_account ? (l.bound_is_demo ? 'Demo account' : 'Real account') : 'Not bound'}</span></div>
         <div class="eyebrow">EQUITY</div>
-        <div class="eqbig">${st.equity != null ? usd(st.equity) : '-'}</div>
+        <div class="eqbig"${st.equity != null ? ` data-cu="${st.equity}" data-f="usd"` : ''}>${st.equity != null ? usd(st.equity) : '-'}</div>
         <div class="hint">Balance ${st.balance != null ? usd(st.balance) : '-'}${fl != null ? ' · Floating <b style="color:' + R.col(fl) + '">' + R.sgn(fl) + '</b>' : ''} · ${st.open_positions ?? 0} open position${(st.open_positions ?? 0) === 1 ? '' : 's'}</div>
         <div class="live"><span class="dot2 ${online}"></span> ${l.status !== 'active' ? 'EA not running' : st.online ? esc(prettyState(st.engine_state)) : 'EA offline'}<span class="hint"> · ${st.last_heartbeat ? 'last report ' + ago(st.last_heartbeat) : 'no report yet'}${st.ea_version ? ' · v' + esc(st.ea_version) : ''}</span></div>
+        ${R.spark(R.curve(trades).map(p => p.c), '#3EE09A', 54)}
       </div>
       <div class="hero-r">
-        <div class="tile"><div class="l">Today (closed)</div><div class="v" style="color:${R.col(today)}">${R.sgn(today)}</div></div>
-        <div class="tile"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}">${R.sgn(week)}</div></div>
-        <div class="tile"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}">${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades</div></div>
-        <div class="tile"><div class="l">Win rate</div><div class="v">${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2)}</div></div>
+        <div class="tile"><div class="l">Today (closed)</div><div class="v" style="color:${R.col(today)}" data-cu="${today}" data-f="sgn">${R.sgn(today)}</div></div>
+        <div class="tile"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div></div>
+        <div class="tile"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades</div></div>
+        <div class="tile"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2)}</div></div>
       </div>
       <div class="hero-f">
         <div class="row"><span class="key" id="k-${l.id}">${esc(l.key)}</span><button class="btn sm" data-copy="${esc(l.key)}">Copy</button><a class="btn sm" href="download.html">Download EA</a></div>
@@ -110,8 +124,9 @@
   }
   function drawTab(lic, trades) {
     const body = $('#tabbody'); if (!body) return;
+    A.classList.toggle('still', quiet);
     body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, alerts: () => telegramPanel(), billing: tBilling}[tab] || tOverview)(lic, trades);
-    wire(); afterDraw(lic, trades);
+    wire(); afterDraw(lic, trades); countUp(body);
   }
   function tOverview(l, trades) {
     const st = stOf(l.id), pl = planOf(l.plan_id), probs = problems(l, st);
@@ -130,21 +145,34 @@
         ${over ? '<div class="msg err" style="margin-top:12px">Deposits are above your plan. New trades are paused until you upgrade or withdraw the excess. Open trades keep being managed.</div><div class="row" style="margin-top:10px"><a class="btn sm mint" href="#tab=billing" data-go="billing">Upgrade plan</a></div>' : ''}</div></div>
       <div class="panel"><div class="row sp"><div><h2>Equity curve</h2><p class="sub" style="margin:0">Cumulative net result of closed trades.</p></div><a class="btn sm" href="#tab=results" data-go="results">All charts</a></div><div id="ov-eq"></div></div>
       <div class="panel"><div class="row sp"><div><h2>Recent trades</h2><p class="sub" style="margin:0">Times in your local time.</p></div><a class="btn sm" href="#tab=trades" data-go="trades">All trades</a></div>
-        ${recent.length ? `<div style="overflow-x:auto"><table class="tbl2"><tr><th>Closed</th><th>Engine</th><th>Side</th><th>Lots</th><th>Open</th><th>Close</th><th>Held</th><th>Result</th></tr>${R.tradeRows(recent)}</table></div>` : '<div class="empty">The EA has not closed a trade on this account yet. Charts and history appear here automatically.</div>'}</div>`;
+        ${recent.length ? `<div style="overflow-x:auto"><table class="tbl2"><tr><th>Closed</th><th>Engine</th><th>Side</th><th>Lots</th><th>Open</th><th>Close</th><th>Held</th><th>Result</th></tr>${R.tradeRows(recent)}</table></div>` : '<div class="empty">The EA has not closed a trade on this account yet. Charts and history appear here automatically.</div>'}</div>
+      ${trades.length ? `<div class="panel"><div class="row sp"><div><h2>Last 14 days</h2><p class="sub" style="margin:0">Result per day, amounts in USD.</p></div><a class="btn sm" href="#tab=results" data-go="results">Profit calendar</a></div>${R.bars(R.dayItems(trades, 14), 190)}</div>
+      <div class="panel"><h2>By engine</h2><p class="sub">Which part of the strategy earned what.</p>${R.engineBars(trades)}</div>` : ''}`;
   }
   function rangeTabs() { return `<div class="tabsx" id="rs-tabs">${[['1m', '1 month'], ['3m', '3 months'], ['all', 'All']].map(([k, n]) => `<a href="#" data-r="${k}" class="${k === range ? 'on' : ''}">${n}</a>`).join('')}</div>`; }
   function tResults(l, all) {
     if (!all.length) return `<div class="panel"><h2>Results</h2><div class="empty">Charts appear here after the EA closes its first trade on your account.</div></div>`;
-    const t = inRange(all, range), s = R.stats(t), k = (lab, v, sub, clr) => `<div class="tile"><div class="l">${lab}</div><div class="v"${clr ? ` style="color:${clr}"` : ''}>${v}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
+    const t = inRange(all, range), s = R.stats(t), k = (lab, v, sub, clr, cu, f) => `<div class="tile"><div class="l">${lab}</div><div class="v"${clr ? ` style="color:${clr}"` : ''}${cu != null ? ` data-cu="${cu}" data-f="${f}"` : ''}>${v}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
+    if (!calM) { const n = new Date(); calM = {y: n.getFullYear(), m: n.getMonth()}; }
+    const dayTot = {}; t.forEach(x => { const d = new Date(x.closed_at).toDateString(); dayTot[d] = (dayTot[d] || 0) + x.profit; });
+    const dv = Object.entries(dayTot), bestD = dv.length ? dv.reduce((a, b) => b[1] > a[1] ? b : a) : null, worstD = dv.length ? dv.reduce((a, b) => b[1] < a[1] ? b : a) : null;
+    const dshort = d => new Date(d).toLocaleDateString([], {month: 'short', day: 'numeric'});
+    const stk = s.streak > 0 ? s.streak + ' win' + (s.streak > 1 ? 's' : '') + ' in a row' : s.streak < 0 ? -s.streak + ' loss' + (s.streak < -1 ? 'es' : '') + ' in a row' : '-';
     return `<div class="panel"><div class="row sp"><div><h2>Results</h2><p class="sub" style="margin:0">Closed trades recorded by the EA on your account. Source: your own trade records. Times in your local time.</p></div>${rangeTabs()}</div>
-      <div class="tiles">${k('Net result', s.n ? R.sgn(s.net) : '-', s.n + ' closed trades', R.col(s.net))}${k('Win rate', s.win.toFixed(0) + '%', s.wins + ' wins · ' + s.losses + ' losses')}${k('Profit factor', s.pf == null ? '-' : s.pf.toFixed(2), 'gross profit / gross loss')}${k('Largest drawdown', usd(s.maxDD, 2), 'below a result peak')}
-        ${k('Average win', R.sgn(s.avgWin), '')}${k('Average loss', R.sgn(s.avgLoss), '')}${k('Best trade', R.sgn(s.best), '', 'var(--mint)')}${k('Worst trade', R.sgn(s.worst), '', 'var(--red)')}</div></div>
+      <div class="tiles">${k('Net result', s.n ? R.sgn(s.net) : '-', s.n + ' closed trades' + R.spark(R.curve(t).map(p => p.c), s.net >= 0 ? '#3EE09A' : '#FF6B78', 26), R.col(s.net), s.n ? s.net : null, 'sgn')}${k('Win rate', s.win.toFixed(0) + '%', s.wins + ' wins · ' + s.losses + ' losses', '', s.win, 'pct')}${k('Profit factor', s.pf == null ? '-' : s.pf.toFixed(2), 'gross profit / gross loss', '', s.pf, 'dec')}${k('Largest drawdown', usd(s.maxDD, 2), 'below a result peak', 'var(--red)', s.maxDD, 'usd')}
+        ${k('Average win', R.sgn(s.avgWin), 'per winning trade', 'var(--mint)', s.avgWin, 'sgn')}${k('Average loss', R.sgn(s.avgLoss), 'per losing trade', 'var(--red)', s.avgLoss, 'sgn')}${k('Best trade', R.sgn(s.best), '', 'var(--mint)', s.best, 'sgn')}${k('Worst trade', R.sgn(s.worst), '', 'var(--red)', s.worst, 'sgn')}
+        ${k('Expectancy', R.sgn(s.expectancy), 'average result per trade', R.col(s.expectancy), s.expectancy, 'sgn')}${k('Payoff ratio', s.payoff == null ? '-' : s.payoff.toFixed(2), 'average win / average loss', '', s.payoff, 'dec')}
+        ${k('Best day', bestD ? R.sgn(bestD[1]) : '-', bestD ? dshort(bestD[0]) : '', 'var(--mint)', bestD ? bestD[1] : null, 'sgn')}${k('Worst day', worstD ? R.sgn(worstD[1]) : '-', worstD ? dshort(worstD[0]) : '', worstD && worstD[1] < 0 ? 'var(--red)' : '', worstD ? worstD[1] : null, 'sgn')}</div></div>
+      <div class="grid2"><div class="panel"><h3 class="rh" style="margin-top:0">Wins and losses</h3><div class="winbox">${R.donut(s.wins, s.losses)}
+          <div class="wfacts"><div class="kv"><span>Winning trades</span><b style="color:var(--mint)">${s.wins}</b></div><div class="kv"><span>Losing trades</span><b style="color:var(--red)">${s.losses}</b></div><div class="kv"><span>Longest win streak</span><b>${s.maxWinStreak}</b></div><div class="kv"><span>Longest loss streak</span><b>${s.maxLossStreak}</b></div><div class="kv"><span>Right now</span><b>${stk}</b></div><div class="kv"><span>Average time in a trade</span><b>${s.avgHold == null ? '-' : R.fmtMin(s.avgHold)}</b></div></div></div></div>
+        <div class="panel"><h3 class="rh" style="margin-top:0">By engine</h3>${R.engineBars(t)}</div></div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Equity curve <span class="hint">hover to read a point</span></h3><div id="rs-eq"></div></div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Drawdown <span class="hint">distance below the highest result so far</span></h3><div id="rs-dd"></div></div>
-      <div class="grid2"><div class="panel"><h3 class="rh" style="margin-top:0">By engine</h3>${R.engineBars(t)}</div>
-        <div class="panel"><h3 class="rh" style="margin-top:0">Profit calendar <span class="hint">last 16 weeks</span></h3>${R.calendar(all, 16)}</div></div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">Daily result <span class="hint">last 30 days</span></h3>${R.bars(R.dayItems(all, 30), 170)}</div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 190)}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
+      <div class="panel"><h3 class="rh" style="margin-top:0">Profit calendar <span class="hint">result of each day, by closing time</span></h3><div id="calhost">${R.calendar(all, calM.y, calM.m)}</div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Daily result <span class="hint">last 30 days, amounts in USD</span></h3>${R.bars(R.dayItems(all, 30), 210)}</div>
+      <div class="grid2"><div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">closing day</span></h3>${R.weekdayBars(t)}</div>
+        <div class="panel"><h3 class="rh" style="margin-top:0">By hour of day <span class="hint">closing hour, your local time</span></h3>${R.hourStrip(t)}</div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 230, {full: true})}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
   }
   function tTrades(l, all) {
     if (!all.length) return `<div class="panel"><h2>Trades</h2><div class="empty">No closed trades yet.</div></div>`;
@@ -175,6 +203,12 @@
       const el = document.getElementById(host); if (!el) continue;
       el.innerHTML = R.lineChart(host + 'c', pts, key, color, neg); R.bindHover(el, host + 'c', pts, key, neg);
     }
+    const calHost = document.getElementById('calhost');
+    if (calHost) calHost.onclick = e => {
+      const b = e.target.closest('[data-cal]'); if (!b || b.disabled) return;
+      const d = new Date(calM.y, calM.m + (+b.dataset.cal), 1); calM = {y: d.getFullYear(), m: d.getMonth()};
+      calHost.innerHTML = R.calendar(all, calM.y, calM.m);
+    };
     A.querySelectorAll('#rs-tabs a').forEach(a => a.onclick = e => { e.preventDefault(); range = a.dataset.r; drawTab(l, all); });
     const fe = $('#f-eng'), fr = $('#f-res');
     if (fe) fe.onchange = () => { tflt.eng = fe.value; tflt.page = 1; drawTab(l, all); };
@@ -257,6 +291,7 @@
   await render();
   if (!DEMO) setInterval(async () => {
     const ae = document.activeElement; if (document.hidden || (ae && /INPUT|SELECT|TEXTAREA/.test(ae.tagName))) return;
-    try { S = await load(); await render(); } catch (e) {}
+    quiet = true;
+    try { S = await load(); await render(); } catch (e) {} finally { quiet = false; }
   }, 60000);
 })();
