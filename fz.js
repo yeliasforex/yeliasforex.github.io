@@ -36,3 +36,12 @@
     c.addEventListener('pointerleave', function () { c.style.transform = ''; });
   });
 })();
+
+// keep the page light: looping animations pause while their section is off screen (saves battery and CPU on phones)
+(function () {
+  if (!('IntersectionObserver' in window)) return;
+  var els = document.querySelectorAll('.fz, .ma-hero, .page-head, .fz-strip, .bk-grid');
+  if (!els.length) return;
+  var io = new IntersectionObserver(function (es) { es.forEach(function (e) { e.target.classList.toggle('anim-off', !e.isIntersecting); }); }, {rootMargin: '120px'});
+  els.forEach(function (e) { io.observe(e); });
+})();

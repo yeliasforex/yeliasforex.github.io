@@ -279,3 +279,7 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 .bk:hover .bk-logo,.fb-broker:hover .bk-logo{transform:scale(1.06) rotate(-1.5deg)}
 .fb-broker .bk-logo{width:140px;height:56px;margin-bottom:12px}
 @media (max-width:760px){.bk-logo{width:130px;height:56px}}
+
+/* performance: paused while off screen; lighter glow on phones */
+.anim-off,.anim-off *,.anim-off::before,.anim-off::after{animation-play-state:paused!important}
+@media (max-width:640px){.fz-orb{filter:blur(40px)}.fz-orb.o2{display:none}.page-head::after{display:none}}
