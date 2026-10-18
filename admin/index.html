@@ -319,13 +319,36 @@ function vSettings() {
   ${data.plans.map(p => `<tr data-p="${p.id}"><td><input class="n" value="${esc(p.name)}" style="width:130px"></td><td><input class="l" type="number" value="${p.limit_usd ?? ''}" style="width:120px"></td><td><input class="pr" type="number" value="${p.price_usd}" style="width:110px"></td><td><input class="po" type="checkbox" ${p.popular ? 'checked' : ''}></td><td><input class="ac" type="checkbox" ${p.active ? 'checked' : ''}></td><td><button class="b">Save</button></td></tr>`).join('')}</table></div></div>
   <div class="card"><b>Payment instructions (shown only to a signed-in customer with an order)</b>${fld('payment_network', 'Network and coin (shown to customers)')}${fld('payment_address', 'Wallet address (customers see it with a QR code)')}${fld('payment_instructions', 'Extra instructions', true)}${fld('payment_link', 'Optional payment link')}<div class="row" style="margin-top:10px"><button class="b pri" data-k="payment_network,payment_address,payment_instructions,payment_link">Save payment details</button></div></div>
   <div class="card"><b>General</b><label>Sales</label><select id="c_sales_open" style="width:100%"><option value="true" ${c.sales_open !== 'false' ? 'selected' : ''}>Open: customers can buy new licenses</option><option value="false" ${c.sales_open === 'false' ? 'selected' : ''}>Paused: new purchases blocked (renewals, upgrades and unbinds still work)</option></select>${fld('support_url', 'Support link (Telegram)')}${fld('latest_version', 'Latest EA version')}${fld('unbind_fee_usd', 'Unbind fee (USD)')}${fld('limit_tolerance_pct', 'Deposit tolerance over plan size (%)')}${fld('offline_minutes', 'Minutes without heartbeat = offline')}<div class="row" style="margin-top:10px"><button class="b pri" data-k="sales_open,support_url,latest_version,unbind_fee_usd,limit_tolerance_pct,offline_minutes">Save</button></div></div>
-  <div class="card"><b>Backup</b><div class="mute">Downloads licenses, orders, trades and customers as JSON. Do this regularly on the free plan.</div><div class="row" style="margin-top:8px"><button class="b" id="exp">Download export</button></div></div>`;
+  <div class="card"><b>Backup</b><div class="mute">Downloads licenses, orders, trades and customers as JSON. Do this regularly on the free plan.</div><div class="row" style="margin-top:8px"><button class="b" id="exp">Download export</button></div></div>
+  <div class="card"><b>EA release</b> <span class="mute">current version: ${esc(c.latest_version || '-')}</span>
+    <div class="mute" style="margin:6px 0 10px">Upload the new customer file (GoldTriEngine.ex5 from build/customer). The Download page then serves it, every customer with an active license gets a notice in My account and a Telegram message, and their account page shows "new version available".</div>
+    <label>New version number (for example 1.09)</label><input id="rv" placeholder="1.09" style="width:140px">
+    <label>What changed (one or two lines, customers see this)</label><textarea id="rn" style="min-height:60px"></textarea>
+    <label>File</label><input id="rf" type="file" accept=".ex5">
+    <div class="row" style="margin-top:12px"><button class="b pri" id="rp">Publish release</button></div><div id="rm"></div></div>`;
   $('#view').querySelectorAll('tr[data-p] button').forEach(b => b.onclick = async () => {
     const r = b.closest('tr'), lim = r.querySelector('.l').value;
     await call('admin_update_plan', {p_id: r.dataset.p, p_name: r.querySelector('.n').value, p_limit: lim === '' ? null : +lim, p_price: +r.querySelector('.pr').value, p_popular: r.querySelector('.po').checked, p_active: r.querySelector('.ac').checked});
     toast('Plan saved'); await load();
   });
   $('#view').querySelectorAll('[data-k]').forEach(b => b.onclick = async () => { for (const k of b.dataset.k.split(',')) await call('admin_set_config', {p_key: k, p_value: $('#c_' + k).value}); toast('Saved'); await load(); });
+  $('#rp').onclick = async () => {
+    const ver = $('#rv').value.trim(), notes = $('#rn').value.trim(), f = $('#rf').files[0];
+    if (!/^[0-9]+(\.[0-9]+){0,3}$/.test(ver)) return say('#rm', 'Type the version like 1.09.', true);
+    if (!f || !/\.ex5$/i.test(f.name)) return say('#rm', 'Choose the GoldTriEngine.ex5 file.', true);
+    if (f.size > 20e6) return say('#rm', 'The file is too big.', true);
+    if (!confirm('Publish version ' + ver + '? The Download page switches to this file and all active customers are notified now.')) return;
+    $('#rp').disabled = true; say('#rm', 'Uploading...', false);
+    try {
+      const path = 'v' + ver + '/GoldTriEngine.ex5';
+      const up = await sb.storage.from('ea-releases').upload(path, f, {upsert: true, contentType: 'application/octet-stream'});
+      if (up.error) throw up.error;
+      const url = sb.storage.from('ea-releases').getPublicUrl(path).data.publicUrl;
+      const r = await call('admin_publish_release', {p_version: ver, p_notes: notes, p_url: url});
+      say('#rm', 'Published v' + r.version + '. ' + r.notified + ' customer(s) notified.', false); await load();
+    } catch (e) { say('#rm', 'Failed: ' + (e.message || e), true); }
+    $('#rp').disabled = false;
+  };
   $('#exp').onclick = async () => { const j = await call('admin_export'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(j, null, 1)], {type: 'application/json'})); a.download = 'gte-export-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); };
 }
 function vVideos() {

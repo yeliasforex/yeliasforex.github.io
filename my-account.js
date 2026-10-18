@@ -5,7 +5,7 @@
   let c, S = {}, cur = null, range = 'all';
   const tflt = {eng: 'all', res: 'all', page: 1};
   let tab = (location.hash.match(/tab=(\w+)/) || [])[1] || 'overview';
-  const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['alerts', 'Alerts'], ['billing', 'Orders & keys']];
+  const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['inbox', 'Notifications'], ['alerts', 'Telegram'], ['billing', 'Orders & keys']];
   const NOTIFY = [['ea_started', 'EA started / stopped'], ['trade_open', 'Trade opened'], ['trade_close', 'Trade closed with result'], ['addon', 'Add-on filled / closed'], ['daily_report', 'Daily report'], ['offline', 'EA offline / back online']];
   const SEV = {error: 0, warning: 1, info: 2}, tradeCache = {};
   const QS = new URLSearchParams(location.search), INJ = QS.has('inject');
@@ -29,17 +29,18 @@
     if (DEMO) return demoData();
     if (INJ) return window.__inj.S;
     const q = async p => { const r = await p; if (r.error) throw r.error; return r.data; };
+    const notices = AS ? [] : (await c.from('customer_notices').select('*').order('created_at', {ascending: false}).limit(60)).data || [];
     const [profile, licenses, statuses, plans, catalog, orders, settings] = await Promise.all([
       AS ? Promise.resolve(null) : q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').maybeSingle()),
       q(c.from('licenses').select('id,key,plan_id,owner_user_id,status,activated_at,expires_at,bound_account,bound_broker,bound_is_demo,extra_allowance_usd,created_at').order('created_at')),
       q(c.from('license_status').select('*')), q(c.from('plans').select('*').order('sort')), q(c.from('message_catalog').select('*')),
       q(c.from('orders').select('*').order('created_at', {ascending: false})), gte.settings()]);
-    if (!AS) return {profile, licenses, statuses, plans, catalog, orders, settings};
+    if (!AS) return {profile, licenses, statuses, plans, catalog, orders, settings, notices};
     // Admin view: the database lets an admin (signed in and verified with the Telegram code) read everything; show just this one customer's license
     const lic = licenses.filter(l => l.id === AS), owner = lic[0] && lic[0].owner_user_id;
     const prof = owner ? await q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').eq('user_id', owner).maybeSingle()) : null;
     return {profile: prof || {email: null, telegram_chat_id: null, notify_prefs: {}}, licenses: lic, statuses: statuses.filter(s => s.license_id === AS), plans, catalog,
-            orders: orders.filter(o => o.license_id === AS || (owner && o.user_id === owner)), settings};
+            orders: orders.filter(o => o.license_id === AS || (owner && o.user_id === owner)), settings, notices: []};
   }
   async function rpc(fn, args) {
     if (AS) throw new Error('This is the admin view of a customer account: it is read-only.');
@@ -67,12 +68,14 @@
       plans: gte.fallbackPlans.map((p, i) => ({...p, sort: i, active: true})),
       catalog: [{code: 'OVER_LIMIT', severity: 'warning', title: 'Deposits above your plan limit', explanation: 'The money deposited on this account is above your plan size. New trades are paused; open trades are still managed and nothing is closed.', solution: 'Upgrade your plan on your account page, or withdraw the excess. Trading resumes by itself within minutes.'},
         {code: 'TELEGRAM_NOT_CONNECTED', severity: 'info', title: 'Telegram not connected', explanation: 'You will not get notifications on Telegram.', solution: 'Open your account page and tap Connect Telegram.'}],
-      orders: [], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5, latestVersion: '1.09'}};
+      orders: [], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5, latestVersion: '1.09', downloadUrl: '', releaseNotes: 'Smoother exits and a faster panel.'},
+      notices: [{id: 2, kind: 'update', title: 'New EA version 1.09 is available', body: 'Smoother exits and a faster panel. Download it from your account page, replace the old file and restart MT5.', link: 'download.html', created_at: d(-0.1), read_at: null}, {id: 1, kind: 'license', title: 'Deposits above your plan limit', body: 'New trades are paused until you upgrade or withdraw the excess.', link: null, created_at: d(-2), read_at: d(-1.9)}]};
   }
   function toast(t, err) { const e = document.createElement('div'); e.className = 'msg ' + (err ? 'err' : 'ok'); e.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:99;min-width:260px;max-width:92vw'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 4000); }
   const guard = f => async (...a) => { try { await f(...a); } catch (e) { toast(e.message || String(e), true); } };
 
   // ---------- helpers ----------
+  const unread = () => (S.notices || []).filter(x => !x.read_at).length;
   const planOf = id => S.plans.find(p => p.id === id) || {name: id};
   const stOf = id => S.statuses.find(s => s.license_id === id) || {};
   const fill = t => String(t || '').replace('{SUPPORT}', S.settings.supportUrl || 'the support link');
@@ -101,9 +104,11 @@
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · ${esc(l.key)}</option>`).join('')}</select></div>`);
     const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
-    if (lv && cv && lic.status === 'active' && vc(lv, cv) > 0) parts.push(`<div class="msg" style="border-color:var(--gold);margin-bottom:12px"><b>A new EA version is available: v${esc(lv)}.</b> Your EA reports v${esc(cv)}. <a href="download.html">Download the new file</a>, replace the old one in MetaTrader's MQL5 &rarr; Experts folder, and restart MT5. Open trades are not affected.</div>`);
+    if (lv && cv && lic.status === 'active' && vc(lv, cv) > 0) parts.push(`<div class="msg" style="border-color:var(--gold);margin-bottom:12px"><b>A new EA version is available: v${esc(lv)}.</b> Your EA reports v${esc(cv)}. ${S.settings.releaseNotes ? esc(S.settings.releaseNotes) + ' ' : ''}<a href="${esc(S.settings.downloadUrl || 'download.html')}">Download the new file</a>, replace the old one in MetaTrader's MQL5 &rarr; Experts folder, and restart MT5. Open trades are not affected.</div>`);
+    const nn = unread();
+    if (nn && tab !== 'inbox') parts.push(`<div class="msg" style="border-color:var(--blue-hi);margin-bottom:12px"><b>You have ${nn} new notification${nn > 1 ? 's' : ''}.</b> ${esc((S.notices.find(x => !x.read_at) || {}).title || '')} <a href="#tab=inbox" data-go="inbox">Open</a></div>`);
     parts.push(hero(lic, trades));
-    parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</a>`).join('')}</div><div id="tabbody"></div>`);
+    parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}${k === 'inbox' && unread() ? `<span class="nb">${unread()}</span>` : ''}</a>`).join('')}</div><div id="tabbody"></div>`);
     A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A);
     const sel = $('#licSel'); if (sel) sel.onchange = e => { cur = e.target.value; render(); };
     A.querySelectorAll('#subnav a').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.tab; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x === a)); drawTab(lic, trades); });
@@ -140,8 +145,9 @@
   function drawTab(lic, trades) {
     const body = $('#tabbody'); if (!body) return;
     A.classList.toggle('still', quiet);
-    body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, alerts: () => telegramPanel(), billing: tBilling}[tab] || tOverview)(lic, trades);
+    body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, inbox: tInbox, alerts: () => telegramPanel(), billing: tBilling}[tab] || tOverview)(lic, trades);
     wire(); afterDraw(lic, trades); countUp(body);
+    if (tab === 'inbox' && unread() && !DEMO && !AS) markRead();
   }
   function tOverview(l, trades) {
     const st = stOf(l.id), pl = planOf(l.plan_id), probs = problems(l, st);
@@ -188,6 +194,11 @@
       <div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">closing day</span></h3>${R.weekdayBars(t)}</div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 230, {full: true})}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
   }
+  function tInbox() {
+    const list = S.notices || [];
+    return `<div class="panel"><div class="row sp"><div><h2>Notifications</h2><p class="sub" style="margin:0">Important messages about your license, deposits, orders and EA updates. Trade alerts go to Telegram.</p></div></div>
+      ${list.length ? list.map(n => `<div class="nt ${n.read_at ? '' : 'new'}"><div class="row sp"><b>${esc(n.title)}</b><span class="hint">${ago(n.created_at)}</span></div>${n.body ? `<div class="nb2">${esc(n.body).replace(/\n/g, '<br>')}</div>` : ''}${n.link ? `<a class="btn sm" href="${esc(n.link)}" style="margin-top:8px">${n.kind === 'update' ? 'Download the update' : 'Open'}</a>` : ''}</div>`).join('') : '<div class="empty">No notifications yet. Important messages appear here.</div>'}</div>`;
+  }
   function tTrades(l, all) {
     if (!all.length) return `<div class="panel"><h2>Trades</h2><div class="empty">No closed trades yet.</div></div>`;
     let t = all.slice().sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at));
@@ -233,6 +244,11 @@
     A.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.go; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x.dataset.tab === tab)); drawTab(l, all); });
   }
 
+  async function markRead() {
+    const now = new Date().toISOString();
+    try { const {error} = await c.from('customer_notices').update({read_at: now}).is('read_at', null); if (error) throw error; } catch (e) { return; }
+    setTimeout(() => { (S.notices || []).forEach(n => { if (!n.read_at) n.read_at = now; }); const b = A.querySelector('#subnav [data-tab="inbox"] .nb'); if (b) b.remove(); }, 2500);
+  }
   function emptyPanel() { return `<div class="panel"><h2>You don't have a license yet</h2><p class="sub">Choose a plan by the account size you trade. If we sent you a key, add it below.</p><a class="btn mint" href="pricing.html">See plans</a></div>`; }
   function orderPanel(o) {
     const pl = planOf(o.plan_id), kind = {purchase: 'New license', renewal: 'Renewal', upgrade: 'Upgrade', unbind: 'Unbind fee'}[o.kind], claimed = o.status === 'paid_claimed';
