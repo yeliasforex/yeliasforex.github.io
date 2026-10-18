@@ -262,3 +262,7 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 
 /* My account: the license date keeps its big mint-green look (a plain rule now, not borrowed from the home-page card) */
 .acct .yr b,#acct .yr b{font-size:clamp(22px,4.6vw,32px);line-height:1.1;color:#3EE09A;font-variant-numeric:tabular-nums}
+
+/* My account: the license-year line uses the gold-to-mint colours and is drawn at once (no late fill) */
+.yr .meter i{background:linear-gradient(90deg,#E3B95F,#3EE09A);animation:none;transform:none}
+.yr .meter.warn i{background:var(--gold)}.yr .meter.bad i{background:var(--red)}
