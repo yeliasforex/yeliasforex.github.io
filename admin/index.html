@@ -284,21 +284,111 @@ function createKeys() {
   };
 }
 
+// ---------- Sign-ups: follow-up (groups, status, notes, email templates) ----------
+const GRP = {new: ['New, not downloaded', 'p-info'], downloaded: ['Downloaded, not bought', 'p-warn'], order_waiting: ['Waiting for payment', 'p-warn'], cold: ['Quiet 14+ days', 'p-mute'],
+  key_unused: ['Has key, not started', 'p-info'], customer: ['Customer', 'p-ok'], expiring: ['Expiring soon', 'p-warn'], expired: ['License ended', 'p-bad']};
+const STATUS = [['new', 'New'], ['contacted', 'Contacted'], ['replied', 'Replied'], ['won', 'Won'], ['lost', 'Lost'], ['dont_contact', 'Do not contact']];
+const SUGGEST = {new: 'welcome', downloaded: 'downloaded', order_waiting: 'order_waiting', cold: 'cold', key_unused: 'key_unused', expiring: 'expiring', expired: 'expired'};
+const crm = {leads: [], tpls: [], stats: null, view: 'todo', q: '', sel: new Set()};
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const isLead = l => !['customer', 'expiring', 'expired', 'key_unused'].includes(l.grp);
+const due = l => isLead(l) && !l.optout && ['new', 'contacted', 'replied'].includes(l.status) && ((l.next_followup && l.next_followup <= todayStr()) || (l.status === 'new' && ['downloaded', 'order_waiting'].includes(l.grp)));
 async function vFunnel() {
   $('#view').innerHTML = '<div class="card mute">Loading...</div>';
-  let st; try { st = await call('admin_stats'); } catch (e) { return; }
-  if (!st) { $('#view').innerHTML = '<div class="card mute">No data in demo mode.</div>'; return; }
-  const n = x => Number(x || 0), buyers = n(st.license_holders), pct = n(st.signups) ? Math.round(buyers / n(st.signups) * 100) : 0;
+  try { [crm.stats, crm.leads, crm.tpls] = await Promise.all([call('admin_stats'), call('admin_leads'), call('admin_templates')]); } catch (e) { return; }
+  if (!crm.stats) { $('#view').innerHTML = '<div class="card mute">No data in demo mode.</div>'; return; }
+  crmDraw();
+}
+function crmDraw() {
+  const st = crm.stats, n = x => Number(x || 0), L = crm.leads, q = crm.q.toLowerCase();
+  const buyers = n(st.license_holders), pct = n(st.signups) ? Math.round(buyers / n(st.signups) * 100) : 0;
+  const count = f => L.filter(f).length;
+  const chips = [['todo', 'To follow up', count(due)], ['all', 'All sign-ups', L.length], ...Object.entries(GRP).map(([k, v]) => [k, v[0], count(l => l.grp === k)]), ['optout', 'Unsubscribed', count(l => l.optout)]];
+  const rows = L.filter(l => (crm.view === 'todo' ? due(l) : crm.view === 'all' ? true : crm.view === 'optout' ? l.optout : l.grp === crm.view) && (!q || String(l.email).toLowerCase().includes(q) || String(l.note).toLowerCase().includes(q)));
   const since = st.first_download ? fmt(st.first_download).slice(0, 10) : null;
   $('#view').innerHTML = `<div class="grid" style="margin-bottom:14px">
     <div class="kpi">Sign-ups<b>${n(st.signups)}</b><span class="mute">${n(st.signups_7d)} in 7 days · ${n(st.signups_30d)} in 30 days</span></div>
     <div class="kpi">EA downloads<b>${n(st.downloads)}</b><span class="mute">${n(st.downloads_7d)} in 7 days · ${n(st.downloaders_signed_in)} signed-in people</span></div>
-    <div class="kpi">Have a license<b style="color:var(--ok)">${buyers}</b><span class="mute">${pct}% of sign-ups · ${n(st.paid_buyers)} paid orders</span></div>
-    <div class="kpi">Signed up, no license<b style="color:var(--warn)">${(st.not_purchased || []).length}</b><span class="mute">follow these up</span></div></div>
-  <div class="card"><b>Signed up but not purchased</b>
-    <div class="mute" style="margin:4px 0 8px">Downloads are counted from ${since || 'now on'}; earlier downloads were not tracked, and visitors who are not signed in only add to the download total.</div>
-    <div class="tblw"><table class="tbl"><tr><th>Email</th><th>Signed up</th><th>Downloaded the EA</th><th>Open order</th></tr>
-    ${(st.not_purchased || []).map(r => `<tr><td>${esc(r.email)}</td><td class="mute">${fmt(r.created_at)}</td><td>${r.downloaded ? '<span class="pill p-ok">yes</span>' : '<span class="pill p-mute">not seen</span>'}</td><td>${r.open_order ? '<span class="pill p-warn">waiting for payment</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="4" class="mute">Nobody. Everyone who signed up has a license.</td></tr>'}</table></div></div>`;
+    <div class="kpi">Have a license<b style="color:var(--ok)">${buyers}</b><span class="mute">${pct}% of sign-ups</span></div>
+    <div class="kpi">To follow up now<b style="color:var(--warn)">${count(due)}</b><span class="mute">due or hot</span></div></div>
+  <div class="card"><div class="row" style="gap:6px">${chips.map(([k, name, c]) => `<button class="b ${crm.view === k ? 'pri' : ''}" data-v="${k}">${esc(name)} <span style="opacity:.7">${c}</span></button>`).join('')}</div>
+    <div class="row"><input id="cq" placeholder="Search email or note" value="${esc(crm.q)}" style="flex:1;min-width:200px">
+      <select id="bt" title="Email template">${crm.tpls.map(t => `<option value="${esc(t.key)}">${esc(t.name)}</option>`).join('')}</select>
+      <button class="b pri" id="bs">Email selected (<span id="bn">${crm.sel.size}</span>)</button><button class="b" id="tp">Edit email templates</button></div>
+    <div class="mute" style="margin:2px 0 8px">Downloads are counted from ${since || 'now on'} (earlier ones were not tracked). Promotional emails skip people who unsubscribed or are marked "Do not contact". Gmail allows about 500 emails a day: send in small batches.</div>
+    <div class="tblw"><table class="tbl"><tr><th></th><th>Email</th><th>Signed up</th><th>Group</th><th>Status</th><th>Next follow-up</th><th>Last email</th><th></th></tr>
+    ${rows.map(l => `<tr data-u="${esc(l.user_id)}"><td><input type="checkbox" data-s="${esc(l.user_id)}" ${crm.sel.has(l.user_id) ? 'checked' : ''}></td><td class="click">${esc(l.email)}${l.optout ? ' <span class="pill p-mute">unsubscribed</span>' : ''}${l.note ? ' <span class="mute" title="' + esc(l.note) + '">&#9998;</span>' : ''}</td><td class="mute">${fmt(l.created_at).slice(0, 10)}</td>
+      <td><span class="pill ${GRP[l.grp][1]}">${GRP[l.grp][0]}</span></td>
+      <td><select data-st="${esc(l.user_id)}">${STATUS.map(([k, v]) => `<option value="${k}" ${k === l.status ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
+      <td><input type="date" data-nx="${esc(l.user_id)}" value="${esc(l.next_followup || '')}" style="width:140px"></td>
+      <td class="mute">${l.last_contacted_at ? fmt(l.last_contacted_at).slice(0, 10) + (l.last_template ? ' · ' + esc(l.last_template) : '') : '-'}</td>
+      <td><button class="b" data-o="${esc(l.user_id)}">Open</button></td></tr>`).join('') || '<tr><td colspan="8" class="mute">Nobody here.</td></tr>'}</table></div></div>`;
+  const v = $('#view');
+  v.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { crm.view = b.dataset.v; crmDraw(); });
+  $('#cq').oninput = e => { crm.q = e.target.value; clearTimeout(window._t); window._t = setTimeout(() => { crmDraw(); const i = $('#cq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 250); };
+  v.querySelectorAll('[data-s]').forEach(c => c.onchange = () => { c.checked ? crm.sel.add(c.dataset.s) : crm.sel.delete(c.dataset.s); $('#bn').textContent = crm.sel.size; });
+  v.querySelectorAll('[data-st]').forEach(s2 => s2.onchange = () => saveLead(s2.dataset.st, {status: s2.value}));
+  v.querySelectorAll('[data-nx]').forEach(i => i.onchange = () => saveLead(i.dataset.nx, {next: i.value || null}));
+  v.querySelectorAll('[data-o]').forEach(b => b.onclick = () => openLead(b.dataset.o));
+  v.querySelectorAll('tr[data-u] td.click').forEach(td => td.onclick = () => openLead(td.parentElement.dataset.u));
+  $('#bs').onclick = () => bulkSend(); $('#tp').onclick = () => templatesEditor();
+}
+async function saveLead(uid, ch) {
+  const l = crm.leads.find(x => x.user_id === uid); if (!l) return;
+  const next = 'next' in ch ? ch.next : l.next_followup, status = ch.status || l.status, note = 'note' in ch ? ch.note : l.note;
+  await call('admin_lead_set', {p_user: uid, p_status: status, p_note: note, p_next: next});
+  l.status = status; l.note = note; l.next_followup = next; toast('Saved');
+}
+async function sendTemplate(uid, tpl) {
+  const {data: sess} = await sb.auth.getSession();
+  const r = await fetch(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.session.access_token, apikey: SB_KEY}, body: JSON.stringify({kind: 'template', user_id: uid, template: tpl})});
+  const j = await r.json().catch(() => ({})); return {ok: r.ok && j.ok, skipped: j.skipped, error: j.error || (r.ok ? '' : 'HTTP ' + r.status)};
+}
+async function bulkSend() {
+  const ids = [...crm.sel]; if (!ids.length) return toast('Tick the people first.', true);
+  if (ids.length > 25) return toast('Please send at most 25 at a time.', true);
+  const tpl = $('#bt').value, name = (crm.tpls.find(t => t.key === tpl) || {}).name;
+  if (!confirm('Send the email "' + name + '" to ' + ids.length + ' people now?')) return;
+  let ok = 0, skip = 0, fail = 0, err = '';
+  for (const uid of ids) { const r = await sendTemplate(uid, tpl); if (r.ok) ok++; else if (r.skipped) skip++; else { fail++; err = r.error; } await new Promise(res => setTimeout(res, 900)); }
+  crm.sel.clear(); toast(`Sent ${ok}, skipped ${skip} (unsubscribed), failed ${fail}${err ? ': ' + err : ''}`, fail > 0); [crm.leads, crm.stats] = await Promise.all([call('admin_leads'), call('admin_stats')]); crmDraw();
+}
+async function openLead(uid) {
+  const l = crm.leads.find(x => x.user_id === uid), d = $('#drawer'); d.classList.remove('hide');
+  const hist = await call('admin_lead_history', {p_user: uid}).catch(() => []);
+  d.innerHTML = `<div class="row"><h3>${esc(l.email)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
+  <div class="mute">Signed up ${fmt(l.created_at).slice(0, 10)} · <span class="pill ${GRP[l.grp][1]}">${GRP[l.grp][0]}</span>${l.optout ? ' · <span class="pill p-mute">unsubscribed</span>' : ''}</div>
+  <div class="grid" style="margin:12px 0"><div class="kpi">Downloaded the EA<b style="font-size:15px">${l.last_download ? fmt(l.last_download).slice(0, 10) : 'not seen'}</b></div><div class="kpi">Licenses<b style="font-size:15px">${Number(l.licenses)}</b><span class="mute">${Number(l.active_keys)} active</span></div><div class="kpi">Order<b style="font-size:15px">${l.open_order ? 'waiting for payment' : '-'}</b></div></div>
+  <label>Status</label><select id="ls" style="width:100%">${STATUS.map(([k, v]) => `<option value="${k}" ${k === l.status ? 'selected' : ''}>${v}</option>`).join('')}</select>
+  <label>Next follow-up date</label><input id="ln" type="date" value="${esc(l.next_followup || '')}" style="width:100%">
+  <label>Note (only you see this)</label><textarea id="lt" placeholder="What they asked, what you promised...">${esc(l.note)}</textarea>
+  <div class="row"><button class="b pri" id="lsv">Save</button></div>
+  <label style="margin-top:16px">Send an email</label>
+  <div class="row"><select id="lm" style="flex:1">${crm.tpls.map(t => `<option value="${esc(t.key)}" ${t.key === SUGGEST[l.grp] ? 'selected' : ''}>${esc(t.name)}</option>`).join('')}</select><button class="b pri" id="lse">Send</button></div>
+  <div class="mute" id="lmsg"></div>
+  <label style="margin-top:14px">Emails sent to this person</label>
+  ${hist.length ? `<table class="tbl">${hist.map(h => `<tr><td>${esc(h.template)}</td><td class="mute">${fmt(h.sent_at)}</td><td>${h.ok ? '<span class="pill p-ok">sent</span>' : '<span class="pill p-bad">failed</span>'}</td></tr>`).join('')}</table>` : '<div class="mute">None yet.</div>'}`;
+  $('#dc').onclick = closeDrawer;
+  $('#lsv').onclick = async () => { await saveLead(uid, {status: $('#ls').value, note: $('#lt').value, next: $('#ln').value || null}); crmDraw(); };
+  $('#lse').onclick = async () => {
+    const tpl = $('#lm').value; if (!confirm('Send this email to ' + l.email + '?')) return; $('#lse').disabled = true; $('#lmsg').textContent = 'Sending...';
+    const r = await sendTemplate(uid, tpl); $('#lse').disabled = false;
+    $('#lmsg').textContent = r.ok ? 'Sent.' : r.skipped ? 'Not sent: this person is ' + r.skipped + '.' : 'Failed: ' + r.error;
+    if (r.ok) { crm.leads = await call('admin_leads'); crmDraw(); openLead(uid); }
+  };
+}
+function templatesEditor() {
+  const d = $('#drawer'); d.classList.remove('hide');
+  d.innerHTML = `<div class="row"><h3>Email templates</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
+  <div class="mute">Write plain text. A blank line starts a new paragraph. These words are replaced for each person: <span class="mono">{{name}} {{email}} {{site_url}} {{account_url}} {{download_url}} {{pricing_url}} {{watch_url}} {{support_url}}</span>. Promotional templates get an unsubscribe line automatically. Do not promise profits.</div>
+  <label>Template</label><select id="te" style="width:100%">${crm.tpls.map(t => `<option value="${esc(t.key)}">${esc(t.name)}${t.marketing ? '' : ' (service message)'}</option>`).join('')}</select>
+  <label>Name (only you see it)</label><input id="tn" style="width:100%">
+  <label>Subject</label><input id="ts" style="width:100%">
+  <label>Text</label><textarea id="tb" style="min-height:300px"></textarea>
+  <div class="row"><button class="b pri" id="tsv">Save template</button></div><div id="tm"></div>`;
+  const fillF = () => { const t = crm.tpls.find(x => x.key === $('#te').value); $('#tn').value = t.name; $('#ts').value = t.subject; $('#tb').value = t.body; };
+  $('#te').onchange = fillF; fillF(); $('#dc').onclick = closeDrawer;
+  $('#tsv').onclick = async () => { const k = $('#te').value; await call('admin_template_save', {p_key: k, p_name: $('#tn').value, p_subject: $('#ts').value, p_body: $('#tb').value}); crm.tpls = await call('admin_templates'); say('#tm', 'Saved.', false); };
 }
 function vHealth() {
   const act = data.licenses.filter(l => l.status === 'active');

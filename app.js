@@ -33,6 +33,7 @@
       fetch(URL_ + '/rest/v1/rpc/ea_track_download', {method: 'POST', keepalive: true, headers: {apikey: KEY_, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json'}, body: JSON.stringify({p_version: v})}).catch(() => {});
     } catch (e) {}
   };
+  gte.rpcAnon = async (fn, args) => { const r = await fetch(URL_ + '/rest/v1/rpc/' + fn, {method: 'POST', headers: {apikey: KEY_, Authorization: 'Bearer ' + KEY_, 'Content-Type': 'application/json'}, body: JSON.stringify(args || {})}); if (!r.ok) throw new Error('request failed'); return r.json(); };
   gte.settings = async () => { try { const c = await gte.client(); const {data} = await c.rpc('public_settings'); return data || {}; } catch (e) { return {}; } };
   gte.plans = async () => { try { const c = await gte.client(); const {data} = await c.from('plans').select('*').eq('active', true).order('sort'); return data && data.length ? data : FALLBACK; } catch (e) { return FALLBACK; } };
 
