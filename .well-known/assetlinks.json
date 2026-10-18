@@ -1,0 +1,14 @@
+[
+ {
+  "relation": [
+   "delegate_permission/common.handle_all_urls"
+  ],
+  "target": {
+   "namespace": "android_app",
+   "package_name": "com.goldtriengine.app",
+   "sha256_cert_fingerprints": [
+    "CE:35:9C:0E:03:C0:80:C4:5B:33:3F:46:BD:DE:7C:46:5A:C8:77:C4:3A:45:D0:28:20:EA:AA:63:AE:DA:B3:BC"
+   ]
+  }
+ }
+]
