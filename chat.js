@@ -55,10 +55,10 @@
   document.body.append(fab, box);
   const M = box.querySelector('#gcm'), F = box.querySelector('#gcf'), I = box.querySelector('#gci'), B = F.querySelector('button');
   const add = (cls, html) => { const d = document.createElement('div'); d.className = 'gc-b ' + cls; d.innerHTML = html; M.appendChild(d); M.scrollTop = M.scrollHeight; return d; };
-  const SUG = ['How do I install the EA?', 'What does each plan cover?', 'Why are no new trades opening?', 'How do I move my key to another account?'];
+  const SUG = ['How much does it cost?', 'Is it real and safe?', 'Can I test it for free?', 'Which brokers and commissions?', 'How do I install the EA?', 'What is the refund policy?', 'Why are no new trades opening?'];
   function start() {
     M.innerHTML = '';
-    add('a', 'Hi! Ask me about setup, plans, your license or the account page. If you are signed in I can also look at your own license status.');
+    add('a', 'Hi! Ask me anything about GoldTriEngine: how it works, plans and prices, brokers, the free backtest, setup or your license. If you are signed in I can also look at your own license status.');
     hist.forEach(h => add(h.role === 'user' ? 'u' : 'a', fmt(h.text)));
     if (!hist.length) { const s = document.createElement('div'); s.className = 'gc-s'; SUG.forEach(q => { const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => { s.remove(); send(q); }; s.appendChild(b); }); M.appendChild(s); }
   }
