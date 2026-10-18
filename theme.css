@@ -1,0 +1,62 @@
+/* Day mode. The site is dark by default (brand); [data-theme="light"] swaps the colour tokens and fixes the few hard-coded dark spots. */
+:root[data-theme="light"]{
+  --ink:#F4F6FB; --ink-2:#EBEFF7; --panel:#FFFFFF; --panel-2:#EDF1F9;
+  --line:rgba(25,40,80,.10); --line-2:rgba(25,40,80,.18);
+  --fg:#0D1424; --fg-2:#2B3650; --muted:#586379; --faint:#8993A8;
+  --blue:#1747C8; --blue-hi:#2A55D9; --mint:#0B8A5C; --gold:#9A6E10; --red:#D0364A;
+  color-scheme:light;
+}
+:root[data-theme="light"] ::selection{background:rgba(23,71,200,.2);color:var(--fg)}
+:root[data-theme="light"] a:hover{color:#1747C8}
+:root[data-theme="light"] .top.scrolled{background:rgba(244,246,251,.78)}
+@media (max-width:1200px){:root[data-theme="light"] .nav{background:rgba(244,246,251,.97)}}
+:root[data-theme="light"] .brand:hover,:root[data-theme="light"] .nav a:hover,:root[data-theme="light"] .nav a[aria-current="page"],
+:root[data-theme="light"] .btn:hover,:root[data-theme="light"] .broker:hover,:root[data-theme="light"] .faq summary:hover,:root[data-theme="light"] .foot a:hover,
+:root[data-theme="light"] .mood:hover,:root[data-theme="light"] .seg button:hover,:root[data-theme="light"] .contact-r a:hover{color:var(--fg)}
+:root[data-theme="light"] .fact b,:root[data-theme="light"] .stat b,:root[data-theme="light"] .kpi b{color:var(--fg)}
+:root[data-theme="light"] .nav a:hover,:root[data-theme="light"] .nav a[aria-current="page"],:root[data-theme="light"] .btn:hover,:root[data-theme="light"] .mood:hover{background:rgba(25,40,80,.06);border-color:rgba(25,40,80,.28)}
+:root[data-theme="light"] .btn,:root[data-theme="light"] .ico,:root[data-theme="light"] .mood,:root[data-theme="light"] code{background:rgba(25,40,80,.04)}
+:root[data-theme="light"] .btn.primary{background:var(--fg);color:#fff;border-color:var(--fg)}
+:root[data-theme="light"] .btn.primary:hover{background:#1747C8;color:#fff;border-color:#1747C8}
+:root[data-theme="light"] .btn.mint,:root[data-theme="light"] .nav .pill,:root[data-theme="light"] .nav .pill:hover,:root[data-theme="light"] .skip,:root[data-theme="light"] .pill2.y,:root[data-theme="light"] .side.buy{color:#fff}
+:root[data-theme="light"] .nav .pill:hover{background:#0A7A50}
+:root[data-theme="light"] .eng-track,:root[data-theme="light"] .m{background:rgba(25,40,80,.06)}
+:root[data-theme="light"] .eq-tip,:root[data-theme="light"] .ctip,:root[data-theme="light"] .host-bubble{background:rgba(255,255,255,.96);color:var(--fg);border-color:var(--line-2);box-shadow:0 10px 30px -10px rgba(20,30,60,.25)}
+:root[data-theme="light"] .contact-r a{background:rgba(255,255,255,.7)}
+:root[data-theme="light"] .hero::before{background:radial-gradient(60% 55% at 78% 30%,rgba(23,71,200,.14),transparent 70%),radial-gradient(40% 40% at 10% 0%,rgba(11,138,92,.10),transparent 70%)}
+:root[data-theme="light"] .hero::after{opacity:.35}
+:root[data-theme="light"] .wow-aurora i{opacity:.35}
+:root[data-theme="light"] .wow-n{background:rgba(25,40,80,.03)}
+:root[data-theme="light"] .wow-live .wow-box::after{background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.7) 50%,transparent 60%)}
+/* account page */
+:root[data-theme="light"] .eqbig{background:linear-gradient(180deg,#0D1424 30%,#3A4A73);-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-theme="light"] .cd b,:root[data-theme="light"] .hc b{color:var(--fg);text-shadow:none}
+:root[data-theme="light"] .cd em{color:var(--fg-2)}
+:root[data-theme="light"] .cd.pos .dnum,:root[data-theme="light"] .cd.neg .dnum,:root[data-theme="light"] .hc.pos span,:root[data-theme="light"] .hc.neg span{color:var(--fg-2)}
+:root[data-theme="light"] .cd.pos{background:rgba(11,138,92,var(--a))}
+:root[data-theme="light"] .cd.neg{background:rgba(208,54,74,var(--a))}
+:root[data-theme="light"] .hc.pos{background:rgba(11,138,92,var(--a))}
+:root[data-theme="light"] .hc.neg{background:rgba(208,54,74,var(--a))}
+:root[data-theme="light"] .hero::after{background:none}
+:root[data-theme="light"] #acct .hero::after{background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.7) 50%,transparent 60%)}
+:root[data-theme="light"] .tipbox{background:#fff;color:var(--fg)}
+
+/* the toggle */
+.theme-btn{display:inline-grid;place-items:center;width:42px;height:38px;border-radius:10px;border:1px solid var(--line-2);background:transparent;color:var(--fg-2);cursor:pointer;flex:none;margin-left:6px;transition:color .2s,border-color .2s,background .2s,transform .3s}
+.theme-btn:hover{color:var(--fg);border-color:var(--muted)}
+.theme-btn svg{width:19px;height:19px;transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+.theme-btn:active svg{transform:rotate(90deg) scale(.8)}
+.theme-btn .sun{display:none}
+:root[data-theme="light"] .theme-btn .sun{display:block}:root[data-theme="light"] .theme-btn .moon{display:none}
+html.theme-anim,html.theme-anim *,html.theme-anim *::before,html.theme-anim *::after{transition:background-color .35s,color .35s,border-color .35s,fill .35s,stroke .35s!important}
+
+/* parts that are dark by design (stream window, Telegram phone mock) keep the night palette in day mode */
+:root[data-theme="light"] .console,:root[data-theme="light"] .phone,:root[data-theme="light"] .c-stage{
+  --ink:#06080E; --ink-2:#0A0E18; --panel:#0E1322; --panel-2:#121A2D; --line:rgba(170,190,230,.10); --line-2:rgba(170,190,230,.18);
+  --fg:#ECEFF6; --fg-2:#C3CADA; --muted:#8892A8; --faint:#5B6479; --mint:#3EE09A; --gold:#E3B95F; --red:#FF6B78; color-scheme:dark}
+:root[data-theme="light"] .tabsx a.on,:root[data-theme="light"] .subnav a.on{color:var(--fg);background:rgba(25,40,80,.08)}
+:root[data-theme="light"] .tbl2 tr:hover td{background:rgba(25,40,80,.04)}
+:root[data-theme="light"] .dc:hover{background:rgba(25,40,80,.05)}
+:root[data-theme="light"] .meter b{background:var(--fg)}
+:root[data-theme="light"] .cw em{color:var(--muted)}
+:root[data-theme="light"] .endpt{box-shadow:0 0 0 3px rgba(25,40,80,.12)}

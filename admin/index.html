@@ -211,6 +211,7 @@ function openLicense(id) {
   const l = data.licenses.find(x => x.id === id), d = $('#drawer'); d.classList.remove('hide');
   d.innerHTML = `<div class="row"><h3 class="mono">${esc(l.key)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
   <div class="mute">${esc(planName(l.plan_id))} · ${stPill(l.status)} · ${esc(l.owner_email || 'no owner')}</div>
+  <div class="row" style="margin-top:10px"><a class="b pri" style="text-decoration:none;display:inline-block" target="_blank" rel="noopener" href="../my-account.html?as=${esc(l.id)}">Open full account view (as the customer sees it)</a></div>
   <div class="grid" style="margin:12px 0"><div class="kpi">Account<b style="font-size:16px">${esc(l.bound_account || '-')}</b><span class="mute">${esc(l.bound_broker || '')}</span></div><div class="kpi">Funded<b style="font-size:16px">${usd(l.funded_usd)}</b><span class="mute">allowance ${usd(l.extra_allowance_usd)}</span></div><div class="kpi">Last heartbeat<b style="font-size:16px">${fmt(l.last_heartbeat)}</b><span class="mute">${esc(l.engine_state || '')} · v${esc(l.ea_version || '-')}</span></div><div class="kpi">Expires<b style="font-size:16px">${l.expires_at ? fmt(l.expires_at).slice(0, 10) : '-'}</b></div></div>
   ${(l.problems || []).length ? `<div class="msg">Problems: ${l.problems.map(esc).join(', ')}</div>` : ''}
   <label>Extend (days)</label><div class="row"><input id="ex" type="number" value="30" style="width:100px"><button class="b" data-a="extend" data-v="ex">Extend</button></div>
@@ -251,7 +252,25 @@ function vHealth() {
   $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openLicense(r.dataset.id));
 }
 function vCustomers() {
-  $('#view').innerHTML = `<div class="card"><div class="tblw"><table class="tbl"><tr><th>Email</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${data.customers.map(c => `<tr><td>${esc(c.email)}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('')}</table></div></div>`;
+  const q = (window._cq || '').toLowerCase(), rows = data.customers.filter(c => !q || String(c.email).toLowerCase().includes(q));
+  $('#view').innerHTML = `<div class="card"><div class="row"><input id="cq" placeholder="Search email" value="${esc(window._cq || '')}" style="flex:1;min-width:200px"><span class="mute">Click a customer to see everything about them</span></div><div class="tblw"><table class="tbl"><tr><th>Email</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${rows.map(c => `<tr class="click" data-u="${esc(c.user_id)}"><td>${esc(c.email)}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('') || '<tr><td colspan="4" class="mute">No customers match.</td></tr>'}</table></div></div>`;
+  $('#cq').oninput = e => { window._cq = e.target.value; clearTimeout(window._t); window._t = setTimeout(vCustomers, 200); };
+  const cq = $('#cq'); cq.focus(); cq.setSelectionRange(cq.value.length, cq.value.length);
+  $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openCustomer(r.dataset.u));
+}
+function openCustomer(uid) {
+  const c = data.customers.find(x => x.user_id === uid), d = $('#drawer'); d.classList.remove('hide');
+  const lics = data.licenses.filter(l => l.owner_email === c.email), ords = data.orders.filter(o => o.email === c.email);
+  d.innerHTML = `<div class="row"><h3>${esc(c.email)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
+  <div class="mute">Joined ${fmt(c.created_at)} · Telegram ${c.telegram ? 'connected' : 'not connected'}</div>
+  <label style="margin-top:14px">Licenses (${lics.length})</label>
+  ${lics.map(l => `<div class="card" style="margin:6px 0"><div class="row" style="margin:0"><b class="mono">${esc(l.key)}</b>${stPill(l.status)}${l.over_limit ? '<span class="pill p-bad">over limit</span>' : ''}</div>
+    <div class="mute">${esc(planName(l.plan_id))} · account ${esc(l.bound_account || 'not bound')} ${esc(l.bound_broker || '')} · equity ${usd(l.equity)} · ${l.online ? 'online' : 'offline'}${(l.problems || []).length ? ' · problems: ' + l.problems.map(esc).join(', ') : ''}</div>
+    <div class="row" style="margin:8px 0 0"><a class="b pri" style="text-decoration:none" target="_blank" rel="noopener" href="../my-account.html?as=${esc(l.id)}">Open full account view</a><button class="b" data-l="${esc(l.id)}">Manage</button></div></div>`).join('') || '<div class="mute">No licenses yet.</div>'}
+  <label style="margin-top:14px">Orders (${ords.length})</label>
+  <div class="tblw"><table class="tbl">${ords.map(o => `<tr><td class="mono">${esc(o.ref)}</td><td>${esc(o.kind)}</td><td>${usd(o.amount_usd)}</td><td>${stPill(o.status)}</td><td class="mute">${fmt(o.created_at).slice(0, 10)}</td></tr>`).join('') || '<tr><td class="mute">None</td></tr>'}</table></div>`;
+  $('#dc').onclick = closeDrawer;
+  d.querySelectorAll('[data-l]').forEach(b => b.onclick = () => openLicense(b.dataset.l));
 }
 function vSettings() {
   const c = data.config, fld = (k, label, area) => `<label>${label}</label>${area ? `<textarea id="c_${k}">${esc(c[k] || '')}</textarea>` : `<input id="c_${k}" value="${esc(c[k] || '')}" style="width:100%">`}`;

@@ -30,6 +30,18 @@
   .gc-f input:focus{outline:2px solid #3EE09A;outline-offset:1px}
   .gc-f button{height:42px;padding:0 16px;border-radius:12px;border:0;background:#3EE09A;color:#04120B;font:600 .92rem inherit;font-family:inherit;cursor:pointer}.gc-f button:disabled{opacity:.5}
   .gc-n{padding:7px 14px 10px;color:#7d88a3;font-size:.72rem;line-height:1.4}.gc-n a{color:#9db6f5}
+
+  :root[data-theme="light"] .gc-fab{background:#fff;color:#0d1424;border-color:rgba(11,138,92,.55);box-shadow:0 8px 28px rgba(20,30,60,.22)}
+  :root[data-theme="light"] .gc-box{background:#fff;color:#0d1424;border-color:rgba(25,40,80,.18);box-shadow:0 20px 60px rgba(20,30,60,.25)}
+  :root[data-theme="light"] .gc-h{background:linear-gradient(180deg,#f1f4fb,#fff);border-color:rgba(25,40,80,.12)}
+  :root[data-theme="light"] .gc-h small,:root[data-theme="light"] .gc-x,:root[data-theme="light"] .gc-n{color:#586379}
+  :root[data-theme="light"] .gc-b.a{background:#eef2f9;border-color:rgba(25,40,80,.1);color:#0d1424}
+  :root[data-theme="light"] .gc-b a,:root[data-theme="light"] .gc-n a{color:#1747c8}
+  :root[data-theme="light"] .gc-s button{background:#f1f4fb;color:#2b3650;border-color:rgba(25,40,80,.18)}
+  :root[data-theme="light"] .gc-s button:hover{color:#0d1424;border-color:#0b8a5c}
+  :root[data-theme="light"] .gc-f{border-color:rgba(25,40,80,.12)}
+  :root[data-theme="light"] .gc-f input{background:#f4f6fb;color:#0d1424;border-color:rgba(25,40,80,.2)}
+  :root[data-theme="light"] .gc-f button{background:#0b8a5c;color:#fff}
   @media (prefers-reduced-motion:reduce){.gc-fab i,.gc-box.on{animation:none}}`;
   document.head.appendChild(css);
   if (document.querySelector('.fab')) document.documentElement.style.setProperty('--gcb', window.innerWidth <= 600 ? '82px' : '86px');   // sit above the Contact button, never on top of it

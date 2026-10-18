@@ -8,7 +8,8 @@
   const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['alerts', 'Alerts'], ['billing', 'Orders & keys']];
   const NOTIFY = [['ea_started', 'EA started / stopped'], ['trade_open', 'Trade opened'], ['trade_close', 'Trade closed with result'], ['addon', 'Add-on filled / closed'], ['daily_report', 'Daily report'], ['offline', 'EA offline / back online']];
   const SEV = {error: 0, warning: 1, info: 2}, tradeCache = {};
-  let quiet = false, calM = null;                       // quiet = background refresh: no replayed animations
+  const AS = new URLSearchParams(location.search).get('as');       // admin "view as customer" (read-only), see admin panel
+  let quiet = false, calM = null;                      // quiet = background refresh: no replayed animations
   const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   // numbers count up from zero: any element with data-cu (target) and data-f (format)
   function countUp(root) {
@@ -27,13 +28,19 @@
     if (DEMO) return demoData();
     const q = async p => { const r = await p; if (r.error) throw r.error; return r.data; };
     const [profile, licenses, statuses, plans, catalog, orders, settings] = await Promise.all([
-      q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').maybeSingle()),
-      q(c.from('licenses').select('id,key,plan_id,status,activated_at,expires_at,bound_account,bound_broker,bound_is_demo,extra_allowance_usd,created_at').order('created_at')),
+      AS ? Promise.resolve(null) : q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').maybeSingle()),
+      q(c.from('licenses').select('id,key,plan_id,owner_user_id,status,activated_at,expires_at,bound_account,bound_broker,bound_is_demo,extra_allowance_usd,created_at').order('created_at')),
       q(c.from('license_status').select('*')), q(c.from('plans').select('*').order('sort')), q(c.from('message_catalog').select('*')),
       q(c.from('orders').select('*').order('created_at', {ascending: false})), gte.settings()]);
-    return {profile, licenses, statuses, plans, catalog, orders, settings};
+    if (!AS) return {profile, licenses, statuses, plans, catalog, orders, settings};
+    // Admin view: the database lets an admin (with the authenticator step done) read everything; show just this one customer's license
+    const lic = licenses.filter(l => l.id === AS), owner = lic[0] && lic[0].owner_user_id;
+    const prof = owner ? await q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').eq('user_id', owner).maybeSingle()) : null;
+    return {profile: prof || {email: null, telegram_chat_id: null, notify_prefs: {}}, licenses: lic, statuses: statuses.filter(s => s.license_id === AS), plans, catalog,
+            orders: orders.filter(o => o.license_id === AS || (owner && o.user_id === owner)), settings};
   }
   async function rpc(fn, args) {
+    if (AS) throw new Error('This is the admin view of a customer account: it is read-only.');
     if (DEMO) { toast('Demo mode: ' + fn); return {id: 'demo', ref: 'GTE-DEMO01', amountUsd: 1700}; }
     const {data, error} = await c.rpc(fn, args || {}); if (error) throw error; return data;
   }
@@ -83,6 +90,8 @@
   async function render() {
     const lic = S.licenses.find(l => l.id === cur) || S.licenses[0]; cur = lic ? lic.id : null;
     const parts = [];
+    if (AS) parts.push(`<div class="msg" style="border-color:var(--gold);color:var(--gold);margin-bottom:12px"><b>Admin view.</b> This is ${esc(S.profile.email || 'this customer')}'s account exactly as they see it. Read-only: nothing here can be changed. <a href="admin/" style="color:inherit;text-decoration:underline">Back to admin</a></div>`);
+    if (AS && !S.licenses.length) { parts.push('<div class="panel"><h2>Not found</h2><p class="sub">No such license, or this login is not an admin with the authenticator step completed.</p></div>'); A.innerHTML = parts.join(''); return; }
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
     if (!lic) { parts.push(emptyPanel(), claimPanel(), telegramPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
@@ -269,7 +278,7 @@
         drawQr(el);
       } catch (e) { el.textContent = 'Could not load payment details.'; }
     });
-    A.querySelectorAll('[data-pref]').forEach(i => i.onchange = guard(async () => { if (DEMO) return; const prefs = {...(S.profile.notify_prefs || {})}; prefs[i.dataset.pref] = i.checked; const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; S.profile.notify_prefs = prefs; toast('Saved'); }));
+    A.querySelectorAll('[data-pref]').forEach(i => i.onchange = guard(async () => { if (AS) { i.checked = !i.checked; throw new Error('Read-only admin view.'); } if (DEMO) return; const prefs = {...(S.profile.notify_prefs || {})}; prefs[i.dataset.pref] = i.checked; const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; S.profile.notify_prefs = prefs; toast('Saved'); }));
     const on = $('#tgOn'); if (on) on.onclick = guard(async () => {
       const bot = S.settings.botUsername || 'GoldTriEngine_Bot'; const tok = DEMO ? 'demo' : await rpc('create_telegram_link');
       window.open('https://t.me/' + bot + '?start=' + tok, '_blank', 'noopener'); $('#tgHint').textContent = 'Waiting for you to tap Start in Telegram...';
