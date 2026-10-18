@@ -59,6 +59,8 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
     <div id="stepEmail">
       <label>Email</label><input id="email" type="email" style="width:100%" autocomplete="email">
       <div class="row" style="margin-top:12px"><button class="b pri" id="sendLink">Email me a sign-in link</button></div>
+      <div class="mute" style="margin:14px 0 6px;text-align:center">or</div>
+      <div class="row"><button class="b" id="gLogin" style="width:100%">Continue with Google</button></div>
     </div>
     <div id="stepMfa" class="hide">
       <div id="mfaEnroll" class="hide"><div class="mute">Scan this with an authenticator app (Google Authenticator, Authy, 1Password...).</div><div id="qr" style="background:#fff;display:inline-block;margin:10px 0;padding:6px"></div><div class="mono mute" id="secret" style="word-break:break-all;font-size:12px"></div></div>
@@ -132,6 +134,10 @@ $('#sendLink').onclick = async () => {
   const email = $('#email').value.trim(); if (!email) return;
   const {error} = await sb.auth.signInWithOtp({email, options: {emailRedirectTo: location.origin + location.pathname}});
   say('#loginMsg', error ? error.message : 'Check your email and open the link on this device.', !!error);
+};
+$('#gLogin').onclick = async () => {
+  const {error} = await sb.auth.signInWithOAuth({provider: 'google', options: {redirectTo: location.origin + location.pathname}});
+  if (error) say('#loginMsg', error.message, true);
 };
 $('#verifyMfa').onclick = async () => {
   const {data: ch, error: e1} = await sb.auth.mfa.challenge({factorId: window._factor});
