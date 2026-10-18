@@ -271,3 +271,11 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 .yr .meter i{position:relative;overflow:hidden;transform-origin:left;animation:growX 1.2s cubic-bezier(.2,.8,.2,1) backwards}
 .yr .meter i::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.6) 50%,transparent 65%);transform:translateX(-120%);animation:yrsSheen 3.4s 1.3s ease-in-out infinite}
 @media (prefers-reduced-motion:reduce){.yr .meter i,.yr .meter i::after{animation:none}}
+
+/* official broker logos, each on a plate that suits it (Fusion on white, IC's white lettering on dark) */
+.bk-logo{flex:none;display:grid;place-items:center;width:150px;height:64px;padding:10px 16px;border-radius:16px;background:#fff;border:1px solid rgba(0,0,0,.08);box-shadow:0 10px 26px -14px rgba(0,0,0,.45);transition:transform .3s}
+.bk-logo.dk{background:#0b1020;border-color:rgba(255,255,255,.12)}
+.bk-logo img{display:block;max-width:100%;height:auto;max-height:40px;object-fit:contain}
+.bk:hover .bk-logo,.fb-broker:hover .bk-logo{transform:scale(1.06) rotate(-1.5deg)}
+.fb-broker .bk-logo{width:140px;height:56px;margin-bottom:12px}
+@media (max-width:760px){.bk-logo{width:130px;height:56px}}
