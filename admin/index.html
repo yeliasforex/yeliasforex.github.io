@@ -243,6 +243,7 @@ function openLicense(id) {
   <div class="row" style="margin-top:10px"><button class="b pri" data-view="${esc(l.id)}">Open full account view (as the customer sees it)</button></div>
   <div class="grid" style="margin:12px 0"><div class="kpi">Account<b style="font-size:16px">${esc(l.bound_account || '-')}</b><span class="mute">${esc(l.bound_broker || '')}</span></div><div class="kpi">Funded<b style="font-size:16px">${usd(l.funded_usd)}</b><span class="mute">allowance ${usd(l.extra_allowance_usd)}</span></div><div class="kpi">Last heartbeat<b style="font-size:16px">${fmt(l.last_heartbeat)}</b><span class="mute">${esc(l.engine_state || '')} · v${esc(l.ea_version || '-')}</span></div><div class="kpi">Expires<b style="font-size:16px">${l.expires_at ? fmt(l.expires_at).slice(0, 10) : '-'}</b></div></div>
   ${(l.problems || []).length ? `<div class="msg">Problems: ${l.problems.map(esc).join(', ')}</div>` : ''}
+  ${l.owner_email ? '' : `<label>Give this key to a customer (their email; they must have signed in to the website once)</label><div class="row"><input id="as" type="email" placeholder="customer@email.com" style="flex:1;min-width:180px"><button class="b pri" id="asb">Assign</button></div>`}
   <label>Extend (days)</label><div class="row"><input id="ex" type="number" value="30" style="width:100px"><button class="b" data-a="extend" data-v="ex">Extend</button></div>
   <label>Change plan</label><div class="row"><select id="pl">${data.plans.map(p => `<option value="${p.id}" ${p.id === l.plan_id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select><button class="b" data-a="plan" data-v="pl">Apply</button></div>
   <label>Extra deposit allowance (USD) + reason</label><div class="row"><input id="al" type="number" value="${l.extra_allowance_usd || 0}" style="width:110px"><input id="ar" placeholder="reason" style="flex:1"><button class="b" data-a="allowance" data-v="al" data-r="ar">Grant</button></div>
@@ -251,6 +252,7 @@ function openLicense(id) {
   ${l.bound_account ? '<button class="b dng" data-a="unbind" data-conf="Unbind this license from its account? Only do this after the 100 USD unbind fee was confirmed.">Unbind</button>' : ''}<button class="b" id="tm">Send test message</button></div>`;
   $('#dc').onclick = closeDrawer;
   d.querySelectorAll('[data-view]').forEach(b => b.onclick = () => accountView(b.dataset.view));
+  const asb = $('#asb'); if (asb) asb.onclick = async () => { const em = $('#as').value.trim(); if (!em) return; await call('admin_assign_key', {p_license: l.id, p_email: em}); toast('Key assigned to ' + em + '. They can see it in their account now.'); await load(); render(); openLicense(l.id); };
   $('#tm').onclick = async () => { await call('admin_send_test', {p_license: l.id}); toast('Test message queued'); };
   d.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
     if (b.dataset.conf && !confirm(b.dataset.conf)) return;

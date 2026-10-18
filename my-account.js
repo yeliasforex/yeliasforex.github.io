@@ -67,7 +67,7 @@
       plans: gte.fallbackPlans.map((p, i) => ({...p, sort: i, active: true})),
       catalog: [{code: 'OVER_LIMIT', severity: 'warning', title: 'Deposits above your plan limit', explanation: 'The money deposited on this account is above your plan size. New trades are paused; open trades are still managed and nothing is closed.', solution: 'Upgrade your plan on your account page, or withdraw the excess. Trading resumes by itself within minutes.'},
         {code: 'TELEGRAM_NOT_CONNECTED', severity: 'info', title: 'Telegram not connected', explanation: 'You will not get notifications on Telegram.', solution: 'Open your account page and tap Connect Telegram.'}],
-      orders: [], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5}};
+      orders: [], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5, latestVersion: '1.09'}};
   }
   function toast(t, err) { const e = document.createElement('div'); e.className = 'msg ' + (err ? 'err' : 'ok'); e.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:99;min-width:260px;max-width:92vw'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 4000); }
   const guard = f => async (...a) => { try { await f(...a); } catch (e) { toast(e.message || String(e), true); } };
@@ -100,6 +100,8 @@
     if (!lic) { parts.push(emptyPanel(), claimPanel(), telegramPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · ${esc(l.key)}</option>`).join('')}</select></div>`);
+    const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
+    if (lv && cv && lic.status === 'active' && vc(lv, cv) > 0) parts.push(`<div class="msg" style="border-color:var(--gold);margin-bottom:12px"><b>A new EA version is available: v${esc(lv)}.</b> Your EA reports v${esc(cv)}. <a href="download.html">Download the new file</a>, replace the old one in MetaTrader's MQL5 &rarr; Experts folder, and restart MT5. Open trades are not affected.</div>`);
     parts.push(hero(lic, trades));
     parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</a>`).join('')}</div><div id="tabbody"></div>`);
     A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A);
