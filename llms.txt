@@ -8,7 +8,7 @@ Key facts:
 - Method: rule-based and algorithmic, with three independent engines called Alpha, Beta and Gamma. The AI is only the stream host; it never places, changes or closes trades.
 - Risk: every trade has a stop loss. No martingale and no grid trading.
 - Notifications: GoldTriEngine sends Telegram alerts to the user: EA start/stop, "EA offline detected" / "EA back online" heartbeat alerts, trades opened and closed, pending orders, drawdown alerts at chosen levels, risk-limit blocks, and a daily report. Each alert type can be switched on or off.
-- Brokers: built, tested and supported on Fusion Markets and IC Markets Raw accounts.
+- Brokers: a Fusion Markets or IC Markets Raw account is required. GoldTriEngine is built, tested and supported only on these two brokers.
 - Transparency: every live trade is shown on the YouTube stream; the track record (account type, deposits, balance, every trade) is on Myfxbook and in the live account section of the website.
 - Backtest (MT5 Strategy Tester, simulated): GoldTriEngine v1.08 on XAUUSD, 1 Jan 2024 to 17 Oct 2026, Fusion Markets data, $5,000 start, 1:100 leverage: 1,302 trades, profit factor 2.00, 52.2% winning trades, average win 1.84 times average loss, largest relative equity drawdown 17.7%, 29 of 34 months positive.
 - Live on YouTube since October 2026. The host is an animated AI presenter whose face reacts to each trade event; it explains trades but never tells viewers to buy or sell.
