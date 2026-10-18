@@ -251,3 +251,7 @@ ol.steps li::after{content:"";position:absolute;left:16px;top:34px;bottom:-16px;
 .ma-quick{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.ma-quick a{display:inline-flex;gap:8px;align-items:center;padding:9px 14px;border-radius:99px;border:1px solid var(--line-2);background:var(--panel-2);color:var(--fg);text-decoration:none;font-size:14px;transition:transform .2s,border-color .2s}.ma-quick a:hover{transform:translateY(-3px);border-color:var(--gold)}.ma-quick svg{width:16px;height:16px;color:var(--gold)}
 @media (max-width:860px){.fz.ma .fz-right{order:2}.ma-grid{grid-template-columns:1fr}.ma-hero{padding:20px 16px}.ma-av{width:52px;height:52px}.nav a.acct-pill{align-self:flex-start}}
 @media (prefers-reduced-motion:reduce){.nav a.acct-pill::after,.acct-pill .ap-dot,.ma-lic i,.ma-av{animation:none}.ma-cells i,.ma-note{animation:none;transform:none;opacity:1}}
+
+/* phones: never let anything widen the page */
+html{overflow-x:hidden;overflow-x:clip;max-width:100%}
+@media (max-width:640px){.nav a.acct-pill{width:max-content}.ma-quick a{padding:8px 12px}.fz-strip{font-size:14px}}
