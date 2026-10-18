@@ -117,6 +117,24 @@
     new MutationObserver(update).observe(host, {childList: true});         // plan cards may be drawn after the finder
   }
 
-  const start = () => { try { atmosphere(); tilt(); glow(); liveStrip(); finder(); } catch (e) { console.error('wow', e); } };
+
+  // "My account" in the menu becomes a prominent pill; it shows who is signed in (read from the local session only)
+  function acctNav() {
+    const links = [...document.querySelectorAll('header .nav a[href="my-account.html"]')]; if (!links.length) return;
+    let email = '';
+    try {
+      const k = Object.keys(localStorage).find(x => /^sb-.*-auth-token$/.test(x));
+      if (k) { const s = JSON.parse(localStorage.getItem(k)) || {}, t = s.access_token;
+        if (t) { const p = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); if (p.exp * 1000 > Date.now()) email = p.email || (s.user && s.user.email) || 'you'; } }
+    } catch (e) {}
+    const user = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.6-4 3.5-6 7.5-6s6.9 2 7.5 6"/></svg>';
+    links.forEach(a => {
+      a.classList.add('acct-pill');
+      a.innerHTML = '<span class="ap-av">' + (email ? String(email).charAt(0).toUpperCase().replace(/[<>&]/g, '') : user) + '</span><span class="ap-t">My account</span>' + (email ? '<i class="ap-dot" aria-hidden="true"></i>' : '');
+      a.title = email ? 'Signed in as ' + email : 'Sign in or create your free account';
+    });
+  }
+
+  const start = () => { try { acctNav(); atmosphere(); tilt(); glow(); liveStrip(); finder(); } catch (e) { console.error('wow', e); } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
