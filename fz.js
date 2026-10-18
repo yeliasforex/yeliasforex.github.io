@@ -8,8 +8,6 @@
       var d = line.getAttribute('d');
       document.querySelectorAll('.fz-line').forEach(function (p) { p.setAttribute('d', d); });
       document.querySelectorAll('.fz-area').forEach(function (p) { p.setAttribute('d', d + ' L632 292 L8 292 Z'); });
-      var m = d.match(/L([0-9.]+) ([0-9.]+)\s*$/);
-      if (m) document.querySelectorAll('.fz-dot').forEach(function (c) { c.setAttribute('cy', '270'); });
     }
     var get = function (label) { var r = ''; doc.querySelectorAll('.stat').forEach(function (s) { var sp = s.querySelector('span'); if (sp && sp.textContent.trim().indexOf(label) === 0) r = (s.querySelector('b') || {}).textContent || ''; }); return r.trim(); };
     var pf = get('Profit factor'), dd = get('Largest equity drawdown');

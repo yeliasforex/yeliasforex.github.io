@@ -139,12 +139,12 @@
 .fz-dot{filter:drop-shadow(0 0 8px #E3B95F)}
 .fz-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:6px 14px 0}.fz-stats div{padding:10px 8px;border-radius:12px;background:var(--panel);border:1px solid var(--line);text-align:center}.fz-stats b{display:block;font-size:1.25rem;color:var(--mint);font-variant-numeric:tabular-nums}.fz-stats span{font-size:11px;color:var(--muted)}
 .fz-note{padding:8px 16px 0;font-size:11px;color:var(--muted);text-align:center}
-.fz-file{position:absolute;right:-14px;top:-18px;display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:14px;background:var(--fg);color:var(--ink);box-shadow:0 18px 40px -14px rgba(0,0,0,.6);animation:fzBob 4s ease-in-out infinite}
+.fz-file{position:absolute;right:-12px;bottom:-24px;display:flex;gap:10px;align-items:center;padding:10px 14px;border-radius:14px;background:var(--fg);color:var(--ink);box-shadow:0 18px 40px -14px rgba(0,0,0,.6);animation:fzBob 4s ease-in-out infinite}
 .fz-file svg{width:26px;height:26px;color:#0b8f5a}.fz-file b{display:block;font-size:13px}.fz-file small{display:block;font-size:11px;opacity:.7}
-@keyframes fzBob{50%{transform:translateY(-8px) rotate(1.5deg)}}
+@keyframes fzBob{50%{transform:translateY(-8px) rotate(1.5deg)}}.fz-card{margin-bottom:22px}
 .fz-feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:26px 0 8px}
 .fz-feat{padding:20px;border-radius:18px;border:1px solid var(--line-2);background:var(--panel);transition:transform .25s,border-color .25s,box-shadow .25s}.fz-feat:hover{transform:translateY(-6px);border-color:var(--gold);box-shadow:0 22px 50px -26px rgba(227,185,95,.7)}
 .fz-feat svg{width:34px;height:34px;color:var(--gold);margin-bottom:10px;transition:transform .35s}.fz-feat:hover svg{transform:scale(1.15) rotate(-6deg)}.fz-feat b{display:block;margin-bottom:4px}.fz-feat span{font-size:14px;color:var(--fg-2)}
 .fz-page .fz-hero{margin-top:6px}
-@media (max-width:860px){.fz{grid-template-columns:1fr;padding:26px 20px;gap:28px}.fz-file{right:6px;top:-22px}}
+@media (max-width:860px){.fz{grid-template-columns:1fr;padding:26px 20px;gap:28px}.fz-file{right:6px;bottom:-26px}}
 @media (prefers-reduced-motion:reduce){.fz-orb,.fz-cta,.fz-file,.fz-badge i{animation:none}.fz-line{stroke-dashoffset:0;animation:none!important}.fz-area{opacity:1;transition:none}.fz-steps li{opacity:1;transform:none}}
