@@ -35,7 +35,7 @@
       q(c.from('license_status').select('*')), q(c.from('plans').select('*').order('sort')), q(c.from('message_catalog').select('*')),
       q(c.from('orders').select('*').order('created_at', {ascending: false})), gte.settings()]);
     if (!AS) return {profile, licenses, statuses, plans, catalog, orders, settings};
-    // Admin view: the database lets an admin (with the authenticator step done) read everything; show just this one customer's license
+    // Admin view: the database lets an admin (signed in and verified with the Telegram code) read everything; show just this one customer's license
     const lic = licenses.filter(l => l.id === AS), owner = lic[0] && lic[0].owner_user_id;
     const prof = owner ? await q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').eq('user_id', owner).maybeSingle()) : null;
     return {profile: prof || {email: null, telegram_chat_id: null, notify_prefs: {}}, licenses: lic, statuses: statuses.filter(s => s.license_id === AS), plans, catalog,
@@ -95,7 +95,7 @@
     const lic = S.licenses.find(l => l.id === cur) || S.licenses[0]; cur = lic ? lic.id : null;
     const parts = [];
     if (AS) parts.push(`<div class="msg" style="border-color:var(--gold);color:var(--gold);margin-bottom:12px"><b>Admin view.</b> This is ${esc(S.profile.email || 'this customer')}'s account exactly as they see it. Read-only: nothing here can be changed.${INJ ? '' : ' <a href="admin/" style="color:inherit;text-decoration:underline">Back to admin</a>'}</div>`);
-    if (AS && !S.licenses.length) { parts.push('<div class="panel"><h2>Not found</h2><p class="sub">No such license, or this login is not an admin with the authenticator step completed.</p></div>'); A.innerHTML = parts.join(''); return; }
+    if (AS && !S.licenses.length) { parts.push('<div class="panel"><h2>Not found</h2><p class="sub">No such license, or this login is not a verified admin.</p></div>'); A.innerHTML = parts.join(''); return; }
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
     if (!lic) { parts.push(emptyPanel(), claimPanel(), telegramPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }

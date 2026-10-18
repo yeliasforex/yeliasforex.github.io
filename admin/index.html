@@ -63,9 +63,10 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
       <div class="row"><button class="b" id="gLogin" style="width:100%">Continue with Google</button></div>
     </div>
     <div id="stepMfa" class="hide">
-      <div id="mfaEnroll" class="hide"><div class="mute">Scan this with an authenticator app (Google Authenticator, Authy, 1Password...).</div><div id="qr" style="background:#fff;display:inline-block;margin:10px 0;padding:6px"></div><div class="mono mute" id="secret" style="word-break:break-all;font-size:12px"></div></div>
-      <label>6-digit authenticator code</label><input id="code" inputmode="numeric" maxlength="6" style="width:100%;font-size:20px;letter-spacing:.3em">
-      <div class="row" style="margin-top:12px"><button class="b pri" id="verifyMfa">Verify</button></div>
+      <div class="mute" style="margin-bottom:10px">Second step: we send a 6-digit code to the owner's Telegram.</div>
+      <div class="row"><button class="b" id="sendTg">Send the code to my Telegram</button></div>
+      <label>6-digit code from Telegram</label><input id="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="width:100%;font-size:20px;letter-spacing:.3em">
+      <div class="row" style="margin-top:12px"><button class="b pri" id="verifyMfa">Verify</button><button class="b" id="tgOut">Sign out</button></div>
     </div>
     <div id="loginMsg"></div>
   </div>
@@ -109,7 +110,7 @@ function demoClient() {
   return {rpc, from: q, auth: {getSession: async () => ({data: {session: {user: {email: 'demo@admin'}}}}), mfa: {}}};
 }
 
-// ---------- sign-in: email link + authenticator code (required: the database refuses admin calls below aal2) ----------
+// ---------- sign-in: email link or Google, then a 6-digit code sent to the owner Telegram (the database refuses admin calls until this login session is verified) ----------
 async function start() {
   if (DEMO) { sb = demoClient(); return enter(); }
   sb = supabase.createClient(SB_URL, SB_KEY, {auth: {detectSessionInUrl: true, persistSession: true}});
@@ -119,16 +120,10 @@ async function start() {
 }
 async function mfaGate() {
   $('#login').classList.remove('hide'); $('#stepEmail').classList.add('hide'); $('#stepMfa').classList.remove('hide'); $('#app').classList.add('hide');
-  const {data: aal} = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (aal.currentLevel === 'aal2') return enter();
-  const {data: f} = await sb.auth.mfa.listFactors();
-  const verified = (f.totp || []).find(x => x.status === 'verified');
-  if (verified) { window._factor = verified.id; $('#mfaEnroll').classList.add('hide'); return; }
-  for (const x of (f.totp || [])) await sb.auth.mfa.unenroll({factorId: x.id});          // leftover unverified enrolment
-  const {data: e, error} = await sb.auth.mfa.enroll({factorType: 'totp'});
+  const {data: g, error} = await sb.rpc('admin_gate');
   if (error) return say('#loginMsg', error.message, true);
-  window._factor = e.id; $('#mfaEnroll').classList.remove('hide');
-  $('#qr').innerHTML = e.totp.qr_code; $('#secret').textContent = e.totp.secret;
+  if (g && g.verified) return enter();
+  if (!g || !g.flag) return say('#loginMsg', 'This account is not an admin. Sign out and use the admin account.', true);
 }
 $('#sendLink').onclick = async () => {
   const email = $('#email').value.trim(); if (!email) return;
@@ -139,14 +134,18 @@ $('#gLogin').onclick = async () => {
   const {error} = await sb.auth.signInWithOAuth({provider: 'google', options: {redirectTo: location.origin + location.pathname}});
   if (error) say('#loginMsg', error.message, true);
 };
+$('#sendTg').onclick = async () => {
+  const {error} = await sb.rpc('admin_otp_request');
+  say('#loginMsg', error ? error.message : 'Code sent. Open Telegram and type the 6 digits here.', !!error);
+};
 $('#verifyMfa').onclick = async () => {
-  const {data: ch, error: e1} = await sb.auth.mfa.challenge({factorId: window._factor});
-  if (e1) return say('#loginMsg', e1.message, true);
-  const {error} = await sb.auth.mfa.verify({factorId: window._factor, challengeId: ch.id, code: $('#code').value.trim()});
+  const {data: ok, error} = await sb.rpc('admin_otp_verify', {p_code: $('#code').value.trim()});
   if (error) return say('#loginMsg', error.message, true);
+  if (!ok) return say('#loginMsg', 'Wrong code. Try again, or ask for a new one.', true);
   enter();
 };
-$('#out').onclick = async () => { if (!DEMO) await sb.auth.signOut(); location.href = location.pathname; };
+$('#tgOut').onclick = async () => { try { await sb.auth.signOut(); } catch (e) {} location.href = location.pathname; };
+$('#out').onclick = async () => { if (!DEMO) { try { await sb.rpc('admin_sign_out'); } catch (e) {} await sb.auth.signOut(); } location.href = location.pathname; };
 function say(sel, text, err) { $(sel).innerHTML = '<div class="msg ' + (err ? 'err' : 'okk') + '">' + esc(text) + '</div>'; }
 
 // ---------- data ----------
@@ -165,7 +164,7 @@ async function load() {
 async function enter() {
   $('#login').classList.add('hide'); $('#app').classList.remove('hide');
   const {data: {session}} = await sb.auth.getSession(); $('#who').textContent = session?.user?.email || '';
-  try { await load(); } catch (e) { $('#view').innerHTML = '<div class="msg err">Not allowed: this account is not an admin, or the authenticator step is missing. ' + esc(e.message || '') + '</div>'; return; }
+  try { await load(); } catch (e) { $('#view').innerHTML = '<div class="msg err">Not allowed: this account is not an admin, or the Telegram code step is missing. ' + esc(e.message || '') + '</div>'; return; }
   render();
 }
 
