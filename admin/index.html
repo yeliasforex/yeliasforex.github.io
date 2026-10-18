@@ -257,7 +257,10 @@ function openLicense(id) {
   ${l.bound_account ? '<button class="b dng" data-a="unbind" data-conf="Unbind this license from its account? Only do this after the 100 USD unbind fee was confirmed.">Unbind</button>' : ''}<button class="b" id="tm">Send test message</button></div>`;
   $('#dc').onclick = closeDrawer;
   d.querySelectorAll('[data-view]').forEach(b => b.onclick = () => accountView(b.dataset.view));
-  const asb = $('#asb'); if (asb) asb.onclick = async () => { const em = $('#as').value.trim(); if (!em) return; await call('admin_assign_key', {p_license: l.id, p_email: em}); toast('Key assigned to ' + em + '. They can see it in their account now.'); await load(); render(); openLicense(l.id); };
+  const asb = $('#asb'); if (asb) asb.onclick = async () => { const em = $('#as').value.trim(); if (!em) return; await call('admin_assign_key', {p_license: l.id, p_email: em});
+    let mail = '';
+    try { const {data: sess} = await sb.auth.getSession(); const r = await fetch(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.session.access_token, apikey: SB_KEY}, body: JSON.stringify({license_id: l.id, kind: 'key_assigned'})}); const j = await r.json().catch(() => ({})); mail = r.ok ? ' Email sent to the customer.' : ' Email NOT sent: ' + (j.error || r.status); } catch (e) { mail = ' Email NOT sent: ' + (e.message || e); }
+    toast('Key assigned to ' + em + '.' + mail, mail.includes('NOT')); await load(); render(); openLicense(l.id); };
   $('#tm').onclick = async () => { await call('admin_send_test', {p_license: l.id}); toast('Test message queued'); };
   d.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
     if (b.dataset.conf && !confirm(b.dataset.conf)) return;
