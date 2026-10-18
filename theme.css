@@ -2,7 +2,7 @@
 :root[data-theme="light"]{
   --ink:#F4F6FB; --ink-2:#EBEFF7; --panel:#FFFFFF; --panel-2:#EDF1F9;
   --line:rgba(25,40,80,.10); --line-2:rgba(25,40,80,.18);
-  --fg:#0D1424; --fg-2:#2B3650; --muted:#586379; --faint:#8993A8;
+  --fg:#0D1424; --fg-2:#2B3650; --muted:#586379; --faint:#6A7590;
   --blue:#1747C8; --blue-hi:#2A55D9; --mint:#0B8A5C; --gold:#9A6E10; --red:#D0364A;
   color-scheme:light;
 }

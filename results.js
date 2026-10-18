@@ -106,7 +106,7 @@
     const n = w + l, Rr = 48, C = 2 * Math.PI * Rr, wf = n ? w / n : 0;
     return `<svg class="donut" viewBox="0 0 120 120"><circle cx="60" cy="60" r="${Rr}" fill="none" stroke="${l ? 'var(--red)' : 'var(--panel-2)'}" stroke-width="12" opacity=".8"/>
       ${w ? `<circle class="arc" cx="60" cy="60" r="${Rr}" fill="none" stroke="var(--mint)" stroke-width="12" stroke-linecap="${wf >= 1 ? 'butt' : 'round'}" stroke-dasharray="${(C * wf).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 60 60)" style="--c:${C.toFixed(1)}"/>` : ''}
-      <text x="60" y="63" text-anchor="middle" font-size="25" font-weight="600" fill="#fff" data-cu="${(wf * 100).toFixed(2)}" data-f="pct">${(wf * 100).toFixed(0)}%</text>
+      <text x="60" y="63" text-anchor="middle" font-size="25" font-weight="600" style="fill:var(--fg)" data-cu="${(wf * 100).toFixed(2)}" data-f="pct">${(wf * 100).toFixed(0)}%</text>
       <text x="60" y="80" text-anchor="middle" font-size="9" fill="currentColor" opacity=".6" letter-spacing="1.2">WIN RATE</text></svg>`;
   }
 
