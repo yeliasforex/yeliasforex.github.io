@@ -58,6 +58,7 @@ button.dng{border-color:var(--bad);color:var(--bad)}
 @media (prefers-reduced-motion:reduce){#view.enter,.sg i,.mb i,.te{animation:none}.sg i{width:var(--w)}}
 .sw{position:relative;display:inline-block;width:42px;height:24px}.sw input{opacity:0;width:0;height:0;position:absolute}.sw i{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:.25s}.sw i::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#8b95a3;transition:.25s}.sw input:checked+i{background:rgba(63,178,127,.25);border-color:var(--ok)}.sw input:checked+i::after{left:21px;background:var(--ok)}
 .auto.live{border-color:var(--ok);box-shadow:0 0 0 0 rgba(63,178,127,.4);animation:hotp2 3s infinite}@keyframes hotp2{70%{box-shadow:0 0 0 10px rgba(63,178,127,0)}100%{box-shadow:0 0 0 0 rgba(63,178,127,0)}}
+.seqs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.seq{border:1px solid var(--line);border-top:3px solid var(--c);border-radius:10px;padding:10px 12px;background:var(--panel2)}.seq>b{display:block;margin-bottom:6px;color:var(--c);font-size:13px}.sq{display:flex;gap:9px;align-items:flex-start;padding:5px 0;border-top:1px solid var(--line);font-size:13px}.sq u{flex:none;width:20px;height:20px;border-radius:50%;background:var(--c);color:#0e1116;display:grid;place-items:center;font-size:11px;font-weight:700;text-decoration:none}.sq small{display:block;color:var(--mute);font-size:11px}
 .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:22px}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);padding:16px;overflow:auto;z-index:10;box-shadow:-10px 0 30px #0006}
 .drawer h3{margin:0 0 4px}
@@ -336,31 +337,28 @@ async function vFunnel() {
 function autoCard() {
   const a = crm.auto; if (!a) return '';
   const on = a.enabled, fmtT = s => s ? new Date(s).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'never';
-  const nm = k => (a.rules.find(r => r.key === k) || {}).name || k;
-  return `<div class="card auto ${on ? 'live' : ''}"><div class="row" style="margin:0 0 8px"><b>Automatic follow-up</b><span class="pill ${on ? 'p-ok' : 'p-mute'}">${on ? 'ON: running every hour' : 'OFF'}</span><span style="flex:1"></span>
+  const nm = k => ((a.sequence.find(r => r.template === k) || {}).name) || k;
+  const TR = {lead: ['Signed up, has not downloaded', '#4f8ff7'], dl: ['Downloaded the EA, has not bought', '#e0a03a'], ord: ['Started an order, has not paid', '#f0c35a']};
+  const col = k => `<div class="seq" style="--c:${TR[k][1]}"><b>${TR[k][0]}</b>${a.sequence.filter(r => r.track === k).map(r => `<div class="sq"><u>${r.step}</u><span>${esc(r.subject)}<small>${r.step === 1 ? 'first email, ' + r.delay + ' day(s) after they ' + (k === 'lead' ? 'sign up' : k === 'dl' ? 'download' : 'start the order') : r.delay + ' days after the previous email'}</small></span></div>`).join('')}</div>`;
+  return `<div class="card auto ${on ? 'live' : ''}"><div class="row" style="margin:0 0 8px"><b>Automatic follow-up</b><span class="pill ${on ? 'p-ok' : 'p-mute'}">${on ? 'ON' : 'OFF'}</span><span style="flex:1"></span>
     <label class="sw"><input type="checkbox" id="au_on" ${on ? 'checked' : ''}><i></i></label></div>
-    <div class="mute" style="margin-bottom:10px">When ON, the system checks every hour, finds people who are due, and sends the right template by itself. Only potential customers are followed up (nobody who already has or had a license). Each person gets each template once, never more than ${a.min_gap_days} day(s) apart for promotional emails, and never after they unsubscribed, were marked "Do not contact", or are Won/Lost. Sent today: <b>${a.sent_today}</b> of ${a.daily_cap}. Last check: ${fmtT(a.last_run)}.</div>
-    <div class="tblw"><table class="tbl"><tr><th>Template</th><th>Who gets it</th><th>Run by itself</th><th>After (days)</th></tr>
-    ${a.rules.filter(r => r.marketing).map(r => `<tr><td>${esc(r.name)}${r.marketing ? '' : ' <span class="pill p-info">service</span>'}</td><td class="mute">${esc({welcome: 'Signed up, has not downloaded', downloaded: 'Downloaded, has not bought', order_waiting: 'Order not paid', cold: 'Quiet for 14+ days', key_unused: 'Has a key, has not started', expiring: 'License ends within 30 days', expired: 'License ended'}[r.key] || r.audience)}</td>
-      <td><label class="sw"><input type="checkbox" data-ar="${esc(r.key)}" ${r.auto_on ? 'checked' : ''}><i></i></label></td>
-      <td><input type="number" min="0" max="365" value="${r.days}" data-ad="${esc(r.key)}" style="width:70px" ${r.key === 'expiring' ? 'disabled title="sent when 30 days remain"' : ''}></td></tr>`).join('')}</table></div>
-    <div class="row"><span class="mute">Daily limit</span><input type="number" id="au_cap" min="1" max="400" value="${a.daily_cap}" style="width:80px"><span class="mute">Days between promotional emails</span><input type="number" id="au_gap" min="0" max="30" value="${a.min_gap_days}" style="width:70px"><button class="b pri" id="au_save">Save</button><button class="b" id="au_run" title="Runs the check right now">Run now</button></div>
+    <div class="mute" style="margin-bottom:12px">Every potential customer automatically gets the series for their status, 4 to 6 emails, 3 to 7 days apart. It stops when they buy, unsubscribe, or you mark them Won, Lost or Do not contact. People who already have a license are never emailed. Checked once a day. Sent today: <b>${a.sent_today}</b>. Last check: ${fmtT(a.last_run)}.</div>
+    <div class="seqs">${col('lead')}${col('dl')}${col('ord')}</div>
+    <div class="row" style="margin-top:12px"><button class="b" id="au_run" title="Runs the daily check right now">Run the check now</button><button class="b" id="tp2">Edit email wording</button></div>
     <div class="mute" style="margin-top:10px"><b>Would be sent in the next check (${a.due.length}${a.due.length >= 60 ? '+' : ''}):</b> ${a.due.length ? a.due.slice(0, 12).map(d => `<span class="pill">${esc(d.email)} &rarr; ${esc(nm(d.template))}</span>`).join(' ') : 'nobody right now'}</div>
     ${a.recent.length ? `<div class="mute" style="margin-top:8px"><b>Sent automatically (latest):</b> ${a.recent.slice(0, 8).map(d => `<span class="pill ${d.ok ? 'p-ok' : 'p-bad'}">${esc(d.email)} &middot; ${esc(nm(d.template))} &middot; ${fmtT(d.sent_at)}</span>`).join(' ')}</div>` : ''}</div>`;
 }
 async function autoWire() {
-  const v = $('#view'); if (!$('#au_save')) return;
+  const v = $('#view'); if (!$('#au_on')) return;
   const refresh = async () => { crm.auto = await call('admin_auto_get'); crmDraw(); };
   $('#au_on').onchange = async e => {
-    if (e.target.checked && !confirm('Switch automatic follow-up ON? From now on, people who are due will get emails by themselves (up to the daily limit). Make sure the templates say what you want. Everyone currently due is listed below the switch.')) { e.target.checked = false; return; }
+    if (e.target.checked && !confirm('Switch automatic follow-up ON? From now on every potential customer gets the email series for their status, 3 to 7 days apart. Everyone due right now is listed under the switch.')) { e.target.checked = false; return; }
     await call('admin_auto_set', {p_enabled: e.target.checked, p_cap: null, p_gap: null}); toast(e.target.checked ? 'Automatic follow-up is ON' : 'Automatic follow-up is OFF'); await refresh();
   };
-  v.querySelectorAll('[data-ar]').forEach(c => c.onchange = async () => { await call('admin_template_auto', {p_key: c.dataset.ar, p_on: c.checked, p_days: null}); await refresh(); });
-  v.querySelectorAll('[data-ad]').forEach(i => i.onchange = async () => { await call('admin_template_auto', {p_key: i.dataset.ad, p_on: null, p_days: Math.max(0, Math.min(365, +i.value || 0))}); await refresh(); });
-  $('#au_save').onclick = async () => { await call('admin_auto_set', {p_enabled: null, p_cap: Math.max(1, Math.min(400, +$('#au_cap').value || 30)), p_gap: Math.max(0, Math.min(30, +$('#au_gap').value || 0))}); toast('Saved'); await refresh(); };
+  $('#tp2').onclick = () => templatesEditor();
   $('#au_run').onclick = async () => {
     if (!crm.auto.enabled) return toast('Switch automatic follow-up ON first.', true);
-    if (!confirm('Run the check now? It sends the emails that are due (up to the daily limit).')) return;
+    if (!confirm('Run the check now? It sends the emails that are due.')) return;
     try { const {data: sess} = await sb.auth.getSession(); const r = await fetch(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.session.access_token, apikey: SB_KEY}, body: JSON.stringify({kind: 'auto_sweep', force: true})}); const j = await r.json().catch(() => ({}));
       toast(r.ok ? `Sent ${j.sent}, skipped ${j.skipped}, failed ${j.failed}${j.capped ? ' (daily limit reached)' : ''}` : 'Failed: ' + (j.error || r.status), !r.ok || j.failed > 0); } catch (e) { toast('Failed: ' + (e.message || e), true); }
     await refresh();
