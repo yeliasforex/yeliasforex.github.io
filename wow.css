@@ -283,3 +283,8 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 /* performance: paused while off screen; lighter glow on phones */
 .anim-off,.anim-off *,.anim-off::before,.anim-off::after{animation-play-state:paused!important}
 @media (max-width:640px){.fz-orb{filter:blur(40px)}.fz-orb.o2{display:none}.page-head::after{display:none}}
+
+/* broker cards: logo on top, details below, button at the bottom (reads well at any width) */
+.bk{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:14px}
+.bk-body{width:100%;min-width:0;flex:none}
+.bk-go{margin-top:2px}
