@@ -303,3 +303,28 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 .bk-logo.fu img{width:56px;height:56px;max-height:none;border-radius:50%}
 .bk-logo.dk img{width:58px;height:auto;max-height:none}
 @media (max-width:760px){.bk-logo,.fb-broker .bk-logo{width:64px;height:64px}.bk-logo.fu img{width:48px;height:48px}.bk-logo.dk img{width:50px}}
+
+/* ---- App install page ---- */
+.ap-hero{display:flex;gap:20px;align-items:center;margin:26px 0;padding:22px;border:1px solid var(--line,rgba(127,140,170,.25));border-radius:20px;background:linear-gradient(135deg,rgba(62,224,154,.10),rgba(227,185,95,.08));position:relative;overflow:hidden}
+.ap-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.12) 50%,transparent 65%);transform:translateX(-120%);animation:apShine 5s ease-in-out infinite;pointer-events:none}
+@keyframes apShine{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.ap-ico{border-radius:22px;box-shadow:0 10px 30px rgba(20,70,200,.35);flex:none;animation:apFloat 4s ease-in-out infinite}
+@keyframes apFloat{50%{transform:translateY(-5px)}}
+.ap-hero b{display:block;font-size:1.3rem}.ap-hero span{color:var(--mute,#9AA4B8);font-size:.92rem;display:block}
+.ap-hero .ap-ok{color:#3EE09A;font-weight:600;margin-top:4px}
+.ap-hero [hidden]{display:none!important}
+.ap-tabs{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px}
+.ap-os{padding:18px;border:1px solid var(--line,rgba(127,140,170,.25));border-radius:16px;transition:transform .25s,border-color .25s,box-shadow .25s}
+.ap-os h2{margin:0 0 8px;font-size:1.15rem}
+.ap-os.on{border-color:#3EE09A;box-shadow:0 0 0 3px rgba(62,224,154,.15)}
+.ap-os:hover{transform:translateY(-3px)}
+.ap-os .steps{margin:0;padding-left:1.1em;font-size:.93rem}
+.ap-feats{display:grid;gap:12px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.ap-feats div{padding:16px;border-radius:14px;border:1px solid var(--line,rgba(127,140,170,.25))}
+.ap-feats b{display:block;margin-bottom:4px}.ap-feats span{font-size:.88rem;color:var(--mute,#9AA4B8)}
+@media(max-width:900px){.ap-tabs{grid-template-columns:1fr}.ap-feats{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.ap-hero{flex-direction:column;text-align:center}.ap-feats{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.ap-hero::after,.ap-ico{animation:none}}
+/* inside the installed app */
+.is-app .skip{display:none}
+.is-app body{overscroll-behavior-y:contain}

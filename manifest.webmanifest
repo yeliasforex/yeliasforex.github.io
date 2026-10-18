@@ -1,0 +1,24 @@
+{
+  "name": "GoldTriEngine",
+  "short_name": "GoldTriEngine",
+  "description": "Your GoldTriEngine account, live results and downloads in one app.",
+  "id": "/?app=gte",
+  "start_url": "my-account.html?src=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06080E",
+  "theme_color": "#06080E",
+  "categories": ["finance", "business"],
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "My account", "url": "my-account.html?src=app", "icons": [{"src": "icon-192.png", "sizes": "192x192"}]},
+    {"name": "Live account", "url": "index.html?src=app#account", "icons": [{"src": "icon-192.png", "sizes": "192x192"}]},
+    {"name": "Plans", "url": "pricing.html?src=app", "icons": [{"src": "icon-192.png", "sizes": "192x192"}]},
+    {"name": "Free backtest EA", "url": "free-backtest.html?src=app", "icons": [{"src": "icon-192.png", "sizes": "192x192"}]}
+  ]
+}
