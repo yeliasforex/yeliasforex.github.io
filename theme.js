@@ -1,8 +1,8 @@
-/* Day / night switch. Loaded in <head> so the chosen theme is applied before the page paints (no flash). Dark is the default. */
+/* Day / night switch. Loaded in <head> so the chosen theme is applied before the page paints (no flash). Day mode is the default until the visitor switches; the choice is remembered. */
 (function () {
-  var KEY = 'gte_theme', root = document.documentElement, t = null;
+  var KEY = 'gte_theme_v2', root = document.documentElement, t = null;
   try { t = localStorage.getItem(KEY); } catch (e) {}
-  if (t !== 'light' && t !== 'dark') t = 'dark';
+  if (t !== 'light' && t !== 'dark') t = 'light';
   function apply(v) {
     root.setAttribute('data-theme', v);
     var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', v === 'light' ? '#F4F6FB' : '#06080E');
