@@ -46,6 +46,16 @@ button.dng{border-color:var(--bad);color:var(--bad)}
 .av{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;margin-right:8px;font-size:12px;font-weight:700;color:#0e1116;background:var(--c);vertical-align:middle}.tbl tr[data-u]{transition:background .15s}.tbl tr[data-u]:hover{background:var(--panel2)}
 @media (max-width:600px){.fr{grid-template-columns:100px 1fr 36px 38px}}
 @media (prefers-reduced-motion:reduce){.hot,.spark i,.ft i{animation:none}.ft i{width:var(--w)}}
+#view.enter{animation:vin .45s cubic-bezier(.2,.8,.2,1)}@keyframes vin{from{opacity:0;transform:translateY(10px)}}
+.card>b:first-child{display:inline-block;padding-left:10px;border-left:3px solid var(--gold);margin-bottom:6px}
+.sg{display:flex;height:16px;border-radius:9px;overflow:hidden;background:var(--panel2);gap:2px}.sg i{display:block;width:0;background:var(--c);animation:sgw 1s cubic-bezier(.2,.8,.2,1) forwards}@keyframes sgw{to{width:var(--w)}}
+.sgl{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:12px;color:var(--mute)}.sgl u{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}.sgl b{color:var(--text)}
+.mb{display:flex;align-items:flex-end;gap:12px;height:150px}.mb>div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px}.mb i{display:block;width:100%;max-width:56px;height:var(--h);background:linear-gradient(var(--gold2),var(--gold));border-radius:6px 6px 0 0;transform-origin:bottom;animation:sg .7s both}.mb b{font-size:11px}.mb small{color:var(--mute);font-size:11px}
+.ring{display:flex;align-items:center;gap:22px;flex-wrap:wrap}@keyframes rg{to{stroke-dashoffset:var(--to)}}
+.th{width:104px;height:58px;object-fit:cover;border-radius:8px;display:block;transition:transform .2s}.th:hover{transform:scale(1.06)}
+.tl{margin-top:12px;padding-left:6px}.te{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);animation:vin .4s both}.te u{flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 22%,transparent)}
+.card{transition:border-color .2s}.card:hover{border-color:#3a4553}#tabs button{transition:transform .15s,background .15s}#tabs button:hover{transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){#view.enter,.sg i,.mb i,.te{animation:none}.sg i{width:var(--w)}}
 .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:22px}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);padding:16px;overflow:auto;z-index:10;box-shadow:-10px 0 30px #0006}
 .drawer h3{margin:0 0 4px}
@@ -208,14 +218,26 @@ function render() {
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
   ({orders: vOrders, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
+  const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw);
 }
+const kx = (label, val, sub, color, hot, pre) => `<div class="kpi kx ${hot ? 'hot' : ''}">${label}<b ${color ? `style="color:${color}"` : ''} ${pre ? `data-pre="${pre}"` : ''} data-n="${val}">${val}</b>${sub ? `<span class="mute">${sub}</span>` : ''}</div>`;
+const countUp = root => root.querySelectorAll('[data-n]').forEach(el => { const to = +el.dataset.n, t0 = performance.now(), pre = el.dataset.pre || ''; (function f(now) { const k = Math.min(1, (now - t0) / 800); el.textContent = pre + Math.round(to * (1 - Math.pow(1 - k, 3))).toLocaleString('en-US'); if (k < 1) requestAnimationFrame(f); })(t0); });
+const seg = (parts, tot) => `<div class="sg">${parts.filter(x => x[1] > 0).map(([n, v, c], i) => `<i style="--w:${v / Math.max(tot, 1) * 100}%;--c:${c};animation-delay:${i * 90}ms" title="${esc(n)}: ${v}"></i>`).join('')}</div><div class="sgl">${parts.map(([n, v, c]) => `<span><u style="background:${c}"></u>${esc(n)} <b>${v}</b></span>`).join('')}</div>`;
+const initial = e => esc(String(e || '?').trim().charAt(0).toUpperCase());
+const hue = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 60% 62%)`; };
 const planName = id => (data.plans.find(p => p.id === id) || {}).name || id || '-';
 const stPill = s => `<span class="pill ${ {active:'p-ok',unused:'p-info',expired:'p-warn',disabled:'p-bad',paid:'p-ok',paid_claimed:'p-warn',pending:'p-info',cancelled:'p-mute'}[s] || 'p-mute'}">${esc(s.replace('_', ' '))}</span>`;
 
 function vOrders() {
   let f = window._of || 'open';
   const rows = data.orders.filter(o => f === 'all' || (f === 'open' ? (o.status === 'pending' || o.status === 'paid_claimed') : o.status === f));
-  $('#view').innerHTML = `<div class="card"><div class="row"><b>Orders</b><span class="sp" style="flex:1"></span><select id="of">${['open','paid','cancelled','all'].map(x => `<option ${x === f ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+  const paidO = data.orders.filter(o => o.status === 'paid'), usdSum = a => a.reduce((s, o) => s + Number(o.amount_usd || 0), 0);
+  const mo = {}; paidO.forEach(o => { const k = String(o.created_at).slice(0, 7); mo[k] = (mo[k] || 0) + Number(o.amount_usd || 0); });
+  const mk = Object.keys(mo).sort().slice(-8), mm = Math.max(1, ...mk.map(k => mo[k]));
+  const opn = data.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed');
+  const head = `<div class="grid" style="margin-bottom:14px">${kx('Waiting for you', opn.length, opn.length ? 'check the money, then press Payment received' : 'all caught up', 'var(--warn)', opn.length > 0)}${kx('Money received', Math.round(usdSum(paidO)), paidO.length + ' paid orders', 'var(--ok)', false, '$')}${kx('Orders in total', data.orders.length, data.orders.filter(o => o.status === 'cancelled').length + ' cancelled')}</div>
+  ${mk.length ? `<div class="card"><div class="mute" style="font-weight:600;margin-bottom:8px">Money received per month (USD)</div><div class="mb">${mk.map((k, i) => `<div><i style="--h:${Math.max(6, mo[k] / mm * 100)}%;animation-delay:${i * 70}ms"></i><b>$${Math.round(mo[k]).toLocaleString('en-US')}</b><small>${k.slice(2)}</small></div>`).join('')}</div></div>` : ''}`;
+  $('#view').innerHTML = head + `<div class="card"><div class="row"><b>Orders</b><span class="sp" style="flex:1"></span><select id="of">${['open','paid','cancelled','all'].map(x => `<option ${x === f ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
   <div class="tblw"><table class="tbl"><tr><th>Ref</th><th>Customer</th><th>Type</th><th>Plan</th><th>Amount</th><th>Status</th><th>Their reference</th><th>Created</th><th></th></tr>
   ${rows.map(o => `<tr><td class="mono">${esc(o.ref)}</td><td>${esc(o.email)}</td><td>${esc(o.kind)}</td><td>${esc(planName(o.plan_id))}</td><td><b>${usd(o.amount_usd)}</b></td><td>${stPill(o.status)}</td><td>${esc(o.paid_ref || '')}</td><td class="mute">${fmt(o.created_at)}</td>
   <td style="white-space:nowrap">${o.status === 'paid' || o.status === 'cancelled' ? (o.license_key ? `<span class="mono mute">${esc(o.license_key)}</span>` : '') : `<button class="b pri" data-c="${o.id}">Payment received</button> <button class="b dng" data-x="${o.id}">Cancel</button>`}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">Nothing here.</td></tr>'}
@@ -235,7 +257,9 @@ function licFilter(l, f) {
 function vLicenses() {
   const f = window._lf || 'all', q = (window._lq || '').toLowerCase();
   const rows = data.licenses.filter(l => licFilter(l, f) && (!q || [l.key, l.owner_email, l.bound_account, l.notes].join(' ').toLowerCase().includes(q)));
-  $('#view').innerHTML = `<div class="card"><div class="row"><input id="lq" placeholder="Search key, email, account" value="${esc(window._lq || '')}" style="flex:1;min-width:200px">
+  const cn = s => data.licenses.filter(l => l.status === s).length, onl = data.licenses.filter(l => l.online).length;
+  const head = `<div class="grid" style="margin-bottom:14px">${kx('Licenses', data.licenses.length, cn('unused') + ' not used yet')}${kx('Active', cn('active'), onl + ' online now', 'var(--ok)')}${kx('Over plan limit', data.licenses.filter(l => l.over_limit).length, 'needs a look', 'var(--warn)')}${kx('Disabled or expired', cn('disabled') + cn('expired'), '', 'var(--bad)')}</div><div class="card">${seg([['Active', cn('active'), '#3fb27f'], ['Unused', cn('unused'), '#4f8ff7'], ['Expired', cn('expired'), '#e0a03a'], ['Disabled', cn('disabled'), '#e5534b']], data.licenses.length)}</div>`;
+  $('#view').innerHTML = head + `<div class="card"><div class="row"><input id="lq" placeholder="Search key, email, account\" value="${esc(window._lq || '')}" style="flex:1;min-width:200px">
   <select id="lf">${['all','active','unused','expired','disabled','over','online','offline'].map(x => `<option value="${x}" ${x === f ? 'selected' : ''}>${x === 'over' ? 'over plan limit' : x}</option>`).join('')}</select>
   <button class="b" id="mk">Create keys</button></div>
   <div class="tblw"><table class="tbl"><tr><th></th><th>Key</th><th>Plan</th><th>Status</th><th>Customer</th><th>Account</th><th>Funded</th><th>Equity</th><th>Expires</th></tr>
@@ -414,12 +438,17 @@ function vHealth() {
   const act = data.licenses.filter(l => l.status === 'active');
   const off = act.filter(l => l.online === false), over = data.licenses.filter(l => l.over_limit), exp = act.filter(l => l.expires_at && (new Date(l.expires_at) - Date.now()) < 7 * 864e5);
   const box = (t, arr) => `<div class="card"><b>${t} (${arr.length})</b><div class="tblw"><table class="tbl">${arr.map(l => `<tr class="click" data-id="${l.id}"><td class="mono">${esc(l.key)}</td><td>${esc(l.owner_email || '-')}</td><td class="mute">${fmt(l.last_heartbeat)}</td><td>${usd(l.funded_usd)}</td></tr>`).join('') || '<tr><td class="mute">None</td></tr>'}</table></div></div>`;
-  $('#view').innerHTML = `<div class="grid" style="margin-bottom:14px"><div class="kpi">Active licenses<b>${act.length}</b></div><div class="kpi">Online<b style="color:var(--ok)">${act.length - off.length}</b></div><div class="kpi">Offline<b style="color:var(--bad)">${off.length}</b></div><div class="kpi">Over plan limit<b style="color:var(--warn)">${over.length}</b></div></div>` + box('Offline', off) + box('Over plan limit', over) + box('Expiring within 7 days', exp);
+  const okp = act.length ? Math.round((act.length - off.length) / act.length * 100) : 100, C = 2 * Math.PI * 52;
+  $('#view').innerHTML = `<div class="card ring"><svg viewBox="0 0 120 120" width="130" height="130"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--panel2)" stroke-width="12"/><circle cx="60" cy="60" r="52" fill="none" stroke="${okp >= 80 ? '#3fb27f' : okp >= 50 ? '#e0a03a' : '#e5534b'}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 60 60)" style="--to:${C * (1 - okp / 100)};animation:rg 1.2s .2s cubic-bezier(.2,.8,.2,1) forwards"/><text x="60" y="66" text-anchor="middle" font-size="24" font-weight="700" fill="currentColor">${okp}%</text></svg>
+    <div><b style="font-size:18px">${okp >= 80 ? 'Everything looks healthy' : okp >= 50 ? 'Some EAs are offline' : 'Many EAs are offline'}</b><div class="mute">${act.length - off.length} of ${act.length} active EAs sent a heartbeat recently.</div></div></div>
+  <div class="grid" style="margin-bottom:14px">${kx('Active licenses', act.length)}${kx('Online', act.length - off.length, '', 'var(--ok)')}${kx('Offline', off.length, '', 'var(--bad)', off.length > 0)}${kx('Over plan limit', over.length, '', 'var(--warn)')}</div>` + box('Offline', off) + box('Over plan limit', over) + box('Expiring within 7 days', exp);
   $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openLicense(r.dataset.id));
 }
 function vCustomers() {
   const q = (window._cq || '').toLowerCase(), rows = data.customers.filter(c => !q || String(c.email).toLowerCase().includes(q));
-  $('#view').innerHTML = `<div class="card"><div class="row"><input id="cq" placeholder="Search email" value="${esc(window._cq || '')}" style="flex:1;min-width:200px"><span class="mute">Click a customer to see everything about them</span></div><div class="tblw"><table class="tbl"><tr><th>Email</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${rows.map(c => `<tr class="click" data-u="${esc(c.user_id)}"><td>${esc(c.email)}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('') || '<tr><td colspan="4" class="mute">No customers match.</td></tr>'}</table></div></div>`;
+  const tg = data.customers.filter(c => c.telegram).length, wl = data.customers.filter(c => c.licenses > 0).length;
+  const head = `<div class="grid" style="margin-bottom:14px">${kx('People', data.customers.length)}${kx('With a license', wl, Math.round(wl / Math.max(1, data.customers.length) * 100) + '%', 'var(--ok)')}${kx('Telegram connected', tg, Math.round(tg / Math.max(1, data.customers.length) * 100) + '%', 'var(--info)')}</div>`;
+  $('#view').innerHTML = head + `<div class="card"><div class="row"><input id="cq" placeholder="Search email" value="${esc(window._cq || '')}" style="flex:1;min-width:200px"><span class="mute">Click a customer to see everything about them</span></div><div class="tblw"><table class="tbl"><tr><th>Email</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${rows.map(c => `<tr class="click" data-u="${esc(c.user_id)}"><td><span class="av" style="--c:${hue(c.email)}">${initial(c.email)}</span>${esc(c.email)}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('') || '<tr><td colspan="4" class="mute">No customers match.</td></tr>'}</table></div></div>`;
   $('#cq').oninput = e => { window._cq = e.target.value; clearTimeout(window._t); window._t = setTimeout(vCustomers, 200); };
   const cq = $('#cq'); cq.focus(); cq.setSelectionRange(cq.value.length, cq.value.length);
   $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openCustomer(r.dataset.u));
@@ -480,12 +509,16 @@ function vSettings() {
 function vVideos() {
   $('#view').innerHTML = `<div class="card"><b>Videos</b> <span class="mute">paste YouTube links; nothing is hosted here</span>
   <div class="row" style="margin-top:10px"><input id="vt" placeholder="Title" style="flex:1;min-width:160px"><input id="vu" placeholder="https://www.youtube.com/watch?v=..." style="flex:2;min-width:200px"><button class="b pri" id="va">Add</button></div>
-  <div class="tblw"><table class="tbl">${data.videos.map(v => `<tr><td>${esc(v.title)}</td><td class="mono mute">${esc(v.url)}</td><td><button class="b dng" data-v="${v.id}">Remove</button></td></tr>`).join('') || '<tr><td class="mute">No videos yet. The website shows a clean placeholder.</td></tr>'}</table></div></div>`;
+  <div class="tblw"><table class="tbl">${data.videos.map(v => `<tr><td style="width:120px">${(m => m ? `<img class="th" loading="lazy" src="https://i.ytimg.com/vi/${m[1]}/mqdefault.jpg" alt="">` : '')(String(v.url).match(/(?:v=|youtu\.be\/)([\w-]{11})/))}</td><td>${esc(v.title)}</td><td class="mono mute">${esc(v.url)}</td><td><button class="b dng" data-v="${v.id}">Remove</button></td></tr>`).join('') || '<tr><td class="mute">No videos yet. The website shows a clean placeholder.</td></tr>'}</table></div></div>`;
   $('#va').onclick = async () => { if (!/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test($('#vu').value)) return toast('Use a YouTube link', true); await call('admin_video', {p_action: 'add', p_title: $('#vt').value, p_url: $('#vu').value}); await load(); vVideos(); };
   $('#view').querySelectorAll('[data-v]').forEach(b => b.onclick = async () => { await call('admin_video', {p_action: 'delete', p_id: +b.dataset.v}); await load(); vVideos(); });
 }
 function vAudit() {
-  $('#view').innerHTML = `<div class="card"><div class="tblw"><table class="tbl"><tr><th>When (UTC)</th><th>Actor</th><th>Action</th><th>Details</th></tr>${data.audit.map(a => `<tr><td class="mute">${fmt(a.at)}</td><td class="mono mute">${esc(String(a.actor).slice(0, 8))}</td><td>${esc(a.action)}</td><td class="mono mute" style="font-size:12px">${esc(JSON.stringify(a.detail || {}))}</td></tr>`).join('')}</table></div></div>`;
+  const q = (window._aq || '').toLowerCase(), A = data.audit.filter(a => !q || (a.action + JSON.stringify(a.detail || {})).toLowerCase().includes(q));
+  const ac = a => /delete|disable|cancel|unbind|reject/.test(a) ? '#e5534b' : /create|assign|publish|confirm|enable/.test(a) ? '#3fb27f' : /save|set|update|extend|plan|allowance/.test(a) ? '#4f8ff7' : '#8b95a3';
+  $('#view').innerHTML = `<div class="card"><div class="row"><input id="aq" placeholder="Search the log (action or details)" value="${esc(window._aq || '')}" style="flex:1"><span class="mute">${A.length} entries</span></div>
+  <div class="tl">${A.map((a, i) => `<div class="te" style="--c:${ac(a.action)};animation-delay:${Math.min(i, 20) * 25}ms"><u></u><div><b>${esc(a.action)}</b> <span class="mute">${fmt(a.at)} · ${esc(String(a.actor).slice(0, 8))}</span><div class="mono mute" style="font-size:12px;word-break:break-all">${esc(JSON.stringify(a.detail || {}))}</div></div></div>`).join('') || '<div class="mute">Nothing matches.</div>'}</div></div>`;
+  $('#aq').oninput = e => { window._aq = e.target.value; clearTimeout(window._t); window._t = setTimeout(() => { vAudit(); const i = $('#aq'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 200); };
 }
 start();
 </script>
