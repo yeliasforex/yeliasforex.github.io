@@ -288,3 +288,11 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 .bk{flex-direction:column;flex-wrap:nowrap;align-items:flex-start;gap:14px}
 .bk-body{width:100%;min-width:0;flex:none}
 .bk-go{margin-top:2px}
+
+/* broker cards on wide screens: logo | details | button in one row */
+@media (min-width:1000px){
+  .bk{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:22px;padding:26px 28px}
+  .bk-body{width:auto}
+  .bk-go{margin:0;white-space:nowrap}
+  .bk-chips{margin-top:2px}
+}
