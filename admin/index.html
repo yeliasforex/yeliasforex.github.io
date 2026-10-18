@@ -56,6 +56,8 @@ button.dng{border-color:var(--bad);color:var(--bad)}
 .tl{margin-top:12px;padding-left:6px}.te{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);animation:vin .4s both}.te u{flex:none;width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 22%,transparent)}
 .card{transition:border-color .2s}.card:hover{border-color:#3a4553}#tabs button{transition:transform .15s,background .15s}#tabs button:hover{transform:translateY(-2px)}
 @media (prefers-reduced-motion:reduce){#view.enter,.sg i,.mb i,.te{animation:none}.sg i{width:var(--w)}}
+.sw{position:relative;display:inline-block;width:42px;height:24px}.sw input{opacity:0;width:0;height:0;position:absolute}.sw i{position:absolute;inset:0;background:var(--panel2);border:1px solid var(--line);border-radius:14px;cursor:pointer;transition:.25s}.sw i::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#8b95a3;transition:.25s}.sw input:checked+i{background:rgba(63,178,127,.25);border-color:var(--ok)}.sw input:checked+i::after{left:21px;background:var(--ok)}
+.auto.live{border-color:var(--ok);box-shadow:0 0 0 0 rgba(63,178,127,.4);animation:hotp2 3s infinite}@keyframes hotp2{70%{box-shadow:0 0 0 10px rgba(63,178,127,0)}100%{box-shadow:0 0 0 0 rgba(63,178,127,0)}}
 .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:22px}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);padding:16px;overflow:auto;z-index:10;box-shadow:-10px 0 30px #0006}
 .drawer h3{margin:0 0 4px}
@@ -326,9 +328,43 @@ const isLead = l => !['customer', 'expiring', 'expired', 'key_unused'].includes(
 const due = l => isLead(l) && !l.optout && ['new', 'contacted', 'replied'].includes(l.status) && ((l.next_followup && l.next_followup <= todayStr()) || (l.status === 'new' && ['downloaded', 'order_waiting'].includes(l.grp)));
 async function vFunnel() {
   $('#view').innerHTML = '<div class="card mute">Loading...</div>';
-  try { [crm.stats, crm.leads, crm.tpls] = await Promise.all([call('admin_stats'), call('admin_leads'), call('admin_templates')]); } catch (e) { return; }
+  try { [crm.stats, crm.leads, crm.tpls, crm.auto] = await Promise.all([call('admin_stats'), call('admin_leads'), call('admin_templates'), call('admin_auto_get')]); } catch (e) { return; }
   if (!crm.stats) { $('#view').innerHTML = '<div class="card mute">No data in demo mode.</div>'; return; }
   crmDraw();
+}
+
+function autoCard() {
+  const a = crm.auto; if (!a) return '';
+  const on = a.enabled, fmtT = s => s ? new Date(s).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'}) : 'never';
+  const nm = k => (a.rules.find(r => r.key === k) || {}).name || k;
+  return `<div class="card auto ${on ? 'live' : ''}"><div class="row" style="margin:0 0 8px"><b>Automatic follow-up</b><span class="pill ${on ? 'p-ok' : 'p-mute'}">${on ? 'ON: running every hour' : 'OFF'}</span><span style="flex:1"></span>
+    <label class="sw"><input type="checkbox" id="au_on" ${on ? 'checked' : ''}><i></i></label></div>
+    <div class="mute" style="margin-bottom:10px">When ON, the system checks every hour, finds people who are due, and sends the right template by itself. Each person gets each template once, never more than ${a.min_gap_days} day(s) apart for promotional emails, and never after they unsubscribed, were marked "Do not contact", or are Won/Lost. Sent today: <b>${a.sent_today}</b> of ${a.daily_cap}. Last check: ${fmtT(a.last_run)}.</div>
+    <div class="tblw"><table class="tbl"><tr><th>Template</th><th>Who gets it</th><th>Run by itself</th><th>After (days)</th></tr>
+    ${a.rules.map(r => `<tr><td>${esc(r.name)}${r.marketing ? '' : ' <span class="pill p-info">service</span>'}</td><td class="mute">${esc({welcome: 'Signed up, has not downloaded', downloaded: 'Downloaded, has not bought', order_waiting: 'Order not paid', cold: 'Quiet for 14+ days', key_unused: 'Has a key, has not started', expiring: 'License ends within 30 days', expired: 'License ended'}[r.key] || r.audience)}</td>
+      <td><label class="sw"><input type="checkbox" data-ar="${esc(r.key)}" ${r.auto_on ? 'checked' : ''}><i></i></label></td>
+      <td><input type="number" min="0" max="365" value="${r.days}" data-ad="${esc(r.key)}" style="width:70px" ${r.key === 'expiring' ? 'disabled title="sent when 30 days remain"' : ''}></td></tr>`).join('')}</table></div>
+    <div class="row"><span class="mute">Daily limit</span><input type="number" id="au_cap" min="1" max="400" value="${a.daily_cap}" style="width:80px"><span class="mute">Days between promotional emails</span><input type="number" id="au_gap" min="0" max="30" value="${a.min_gap_days}" style="width:70px"><button class="b pri" id="au_save">Save</button><button class="b" id="au_run" title="Runs the check right now">Run now</button></div>
+    <div class="mute" style="margin-top:10px"><b>Would be sent in the next check (${a.due.length}${a.due.length >= 60 ? '+' : ''}):</b> ${a.due.length ? a.due.slice(0, 12).map(d => `<span class="pill">${esc(d.email)} &rarr; ${esc(nm(d.template))}</span>`).join(' ') : 'nobody right now'}</div>
+    ${a.recent.length ? `<div class="mute" style="margin-top:8px"><b>Sent automatically (latest):</b> ${a.recent.slice(0, 8).map(d => `<span class="pill ${d.ok ? 'p-ok' : 'p-bad'}">${esc(d.email)} &middot; ${esc(nm(d.template))} &middot; ${fmtT(d.sent_at)}</span>`).join(' ')}</div>` : ''}</div>`;
+}
+async function autoWire() {
+  const v = $('#view'); if (!$('#au_save')) return;
+  const refresh = async () => { crm.auto = await call('admin_auto_get'); crmDraw(); };
+  $('#au_on').onchange = async e => {
+    if (e.target.checked && !confirm('Switch automatic follow-up ON? From now on, people who are due will get emails by themselves (up to the daily limit). Make sure the templates say what you want. Everyone currently due is listed below the switch.')) { e.target.checked = false; return; }
+    await call('admin_auto_set', {p_enabled: e.target.checked, p_cap: null, p_gap: null}); toast(e.target.checked ? 'Automatic follow-up is ON' : 'Automatic follow-up is OFF'); await refresh();
+  };
+  v.querySelectorAll('[data-ar]').forEach(c => c.onchange = async () => { await call('admin_template_auto', {p_key: c.dataset.ar, p_on: c.checked, p_days: null}); await refresh(); });
+  v.querySelectorAll('[data-ad]').forEach(i => i.onchange = async () => { await call('admin_template_auto', {p_key: i.dataset.ad, p_on: null, p_days: Math.max(0, Math.min(365, +i.value || 0))}); await refresh(); });
+  $('#au_save').onclick = async () => { await call('admin_auto_set', {p_enabled: null, p_cap: Math.max(1, Math.min(400, +$('#au_cap').value || 30)), p_gap: Math.max(0, Math.min(30, +$('#au_gap').value || 0))}); toast('Saved'); await refresh(); };
+  $('#au_run').onclick = async () => {
+    if (!crm.auto.enabled) return toast('Switch automatic follow-up ON first.', true);
+    if (!confirm('Run the check now? It sends the emails that are due (up to the daily limit).')) return;
+    try { const {data: sess} = await sb.auth.getSession(); const r = await fetch(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.session.access_token, apikey: SB_KEY}, body: JSON.stringify({kind: 'auto_sweep', force: true})}); const j = await r.json().catch(() => ({}));
+      toast(r.ok ? `Sent ${j.sent}, skipped ${j.skipped}, failed ${j.failed}${j.capped ? ' (daily limit reached)' : ''}` : 'Failed: ' + (j.error || r.status), !r.ok || j.failed > 0); } catch (e) { toast('Failed: ' + (e.message || e), true); }
+    await refresh();
+  };
 }
 function crmDraw() {
   const st = crm.stats, n = x => Number(x || 0), L = crm.leads, q = crm.q.toLowerCase();
@@ -353,6 +389,7 @@ function crmDraw() {
     <div class="kpi kx hot">To follow up now<b style="color:var(--warn)" data-n="${count(due)}">${count(due)}</b><span class="mute">due or hot</span></div></div>
   <div class="card"><div class="mute" style="margin-bottom:8px;font-weight:600">Journey: from sign-up to customer</div>
     <div class="fn">${fun.map(([name, v, c], i) => `<div class="fr"><span>${name}</span><div class="ft"><i style="--w:${Math.round(v / tot * 100)}%;--c:${c};animation-delay:${i * 120}ms"></i></div><b>${v}</b><em>${Math.round(v / tot * 100)}%</em></div>`).join('')}</div></div>
+  ${autoCard()}
   <div class="gts">${tiles}</div>
   <div class="card">
     <div class="row"><input id="cq" placeholder="Search email or note" value="${esc(crm.q)}" style="flex:1;min-width:200px">
@@ -374,7 +411,7 @@ function crmDraw() {
   v.querySelectorAll('[data-nx]').forEach(i => i.onchange = () => saveLead(i.dataset.nx, {next: i.value || null}));
   v.querySelectorAll('[data-o]').forEach(b => b.onclick = () => openLead(b.dataset.o));
   v.querySelectorAll('tr[data-u] td.click').forEach(td => td.onclick = () => openLead(td.parentElement.dataset.u));
-  $('#bs').onclick = () => bulkSend(); $('#tp').onclick = () => templatesEditor();
+  $('#bs').onclick = () => bulkSend(); $('#tp').onclick = () => templatesEditor(); autoWire();
   if (!crm.anim) { crm.anim = 1; v.querySelectorAll('[data-n]').forEach(el => { const to = +el.dataset.n, t0 = performance.now(); (function f(now) { const k = Math.min(1, (now - t0) / 900); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); })(t0); }); }
 }
 async function saveLead(uid, ch) {
@@ -473,7 +510,7 @@ function vSettings() {
   $('#view').innerHTML = `<div class="card"><b>Plans</b><div class="tblw"><table class="tbl"><tr><th>Name</th><th>Covers up to (USD, blank = no limit)</th><th>Price / year (USD)</th><th>Most popular</th><th>Active</th><th></th></tr>
   ${data.plans.map(p => `<tr data-p="${p.id}"><td><input class="n" value="${esc(p.name)}" style="width:130px"></td><td><input class="l" type="number" value="${p.limit_usd ?? ''}" style="width:120px"></td><td><input class="pr" type="number" value="${p.price_usd}" style="width:110px"></td><td><input class="po" type="checkbox" ${p.popular ? 'checked' : ''}></td><td><input class="ac" type="checkbox" ${p.active ? 'checked' : ''}></td><td><button class="b">Save</button></td></tr>`).join('')}</table></div></div>
   <div class="card"><b>Payment instructions (shown only to a signed-in customer with an order)</b>${fld('payment_network', 'Network and coin (shown to customers)')}${fld('payment_address', 'Wallet address (customers see it with a QR code)')}${fld('payment_instructions', 'Extra instructions', true)}${fld('payment_link', 'Optional payment link')}<div class="row" style="margin-top:10px"><button class="b pri" data-k="payment_network,payment_address,payment_instructions,payment_link">Save payment details</button></div></div>
-  <div class="card"><b>General</b><label>Sales</label><select id="c_sales_open" style="width:100%"><option value="true" ${c.sales_open !== 'false' ? 'selected' : ''}>Open: customers can buy new licenses</option><option value="false" ${c.sales_open === 'false' ? 'selected' : ''}>Paused: new purchases blocked (renewals, upgrades and unbinds still work)</option></select>${fld('support_url', 'Support link (Telegram)')}${fld('latest_version', 'Latest EA version')}${fld('unbind_fee_usd', 'Unbind fee (USD)')}${fld('limit_tolerance_pct', 'Deposit tolerance over plan size (%)')}${fld('offline_minutes', 'Minutes without heartbeat = offline')}<div class="row" style="margin-top:10px"><button class="b pri" data-k="sales_open,support_url,latest_version,unbind_fee_usd,limit_tolerance_pct,offline_minutes">Save</button></div></div>
+  <div class="card"><b>General</b><label>Sales</label><select id="c_sales_open" style="width:100%"><option value="true" ${c.sales_open !== 'false' ? 'selected' : ''}>Open: customers can buy new licenses</option><option value="false" ${c.sales_open === 'false' ? 'selected' : ''}>Paused: new purchases blocked (renewals, upgrades and unbinds still work)</option></select>${fld('support_url', 'Support link (Telegram)')}${fld('aff_fusion_url', 'Fusion Markets affiliate link (https://...)')}${fld('aff_icmarkets_url', 'IC Markets affiliate link (https://...)')}${fld('latest_version', 'Latest EA version')}${fld('unbind_fee_usd', 'Unbind fee (USD)')}${fld('limit_tolerance_pct', 'Deposit tolerance over plan size (%)')}${fld('offline_minutes', 'Minutes without heartbeat = offline')}<div class="row" style="margin-top:10px"><button class="b pri" data-k="sales_open,support_url,aff_fusion_url,aff_icmarkets_url,latest_version,unbind_fee_usd,limit_tolerance_pct,offline_minutes">Save</button></div></div>
   <div class="card"><b>Backup</b><div class="mute">Downloads licenses, orders, trades and customers as JSON. Do this regularly on the free plan.</div><div class="row" style="margin-top:8px"><button class="b" id="exp">Download export</button></div></div>
   <div class="card"><b>EA release</b> <span class="mute">current version: ${esc(c.latest_version || '-')}</span>
     <div class="mute" style="margin:6px 0 10px">Upload the new customer file (GoldTriEngine.ex5 from build/customer). The Download page then serves it, every customer with an active license gets a notice in My account and a Telegram message, and their account page shows "new version available".</div>
