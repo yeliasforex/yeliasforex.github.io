@@ -266,3 +266,8 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 /* My account: the license-year line uses the gold-to-mint colours and is drawn at once (no late fill) */
 .yr .meter i{background:linear-gradient(90deg,#E3B95F,#3EE09A);animation:none;transform:none}
 .yr .meter.warn i{background:var(--gold)}.yr .meter.bad i{background:var(--red)}
+
+/* My account: the license-year line grows in right away (same gold-to-mint colours) and carries a soft moving shine */
+.yr .meter i{position:relative;overflow:hidden;transform-origin:left;animation:growX 1.2s cubic-bezier(.2,.8,.2,1) backwards}
+.yr .meter i::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.6) 50%,transparent 65%);transform:translateX(-120%);animation:yrsSheen 3.4s 1.3s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.yr .meter i,.yr .meter i::after{animation:none}}
