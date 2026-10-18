@@ -39,6 +39,13 @@ button.dng{border-color:var(--bad);color:var(--bad)}
 .mono{font-family:ui-monospace,Consolas,monospace}
 .mute{color:var(--mute)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.kx{position:relative;overflow:hidden;transition:transform .2s,border-color .2s}.kx:hover{transform:translateY(-3px);border-color:var(--gold)}.kpi.kx b{font-size:30px}.hot{box-shadow:0 0 0 0 rgba(224,160,58,.5);animation:hotp 2.2s infinite}@keyframes hotp{70%{box-shadow:0 0 0 10px rgba(224,160,58,0)}100%{box-shadow:0 0 0 0 rgba(224,160,58,0)}}
+.spark{display:flex;align-items:flex-end;gap:2px;height:34px;margin-top:8px}.spark i{flex:1;background:linear-gradient(var(--gold2),var(--gold));border-radius:2px 2px 0 0;opacity:.85;transform-origin:bottom;animation:sg .6s both}@keyframes sg{from{transform:scaleY(0)}}
+.fn{display:grid;gap:8px}.fr{display:grid;grid-template-columns:150px 1fr 48px 44px;gap:10px;align-items:center;font-size:13px}.ft{height:14px;background:var(--panel2);border-radius:8px;overflow:hidden}.ft i{display:block;height:100%;width:0;min-width:3px;background:linear-gradient(90deg,var(--c),color-mix(in srgb,var(--c) 55%,#fff));border-radius:8px;animation:fw 1.1s cubic-bezier(.2,.8,.2,1) forwards}@keyframes fw{to{width:var(--w)}}.fr em{font-style:normal;color:var(--mute);text-align:right}.fr b{text-align:right}
+.gts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:14px}.gt{position:relative;overflow:hidden;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 12px 16px;color:var(--text);cursor:pointer;transition:transform .18s,border-color .18s,background .18s}.gt:hover{transform:translateY(-3px);border-color:var(--c)}.gt.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--panel))}.gt b{display:block;font-size:26px;color:var(--c)}.gt span{font-size:12px;color:var(--mute)}.gt u{position:absolute;left:0;bottom:0;height:3px;width:var(--p);background:var(--c);transition:width .8s}
+.av{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;margin-right:8px;font-size:12px;font-weight:700;color:#0e1116;background:var(--c);vertical-align:middle}.tbl tr[data-u]{transition:background .15s}.tbl tr[data-u]:hover{background:var(--panel2)}
+@media (max-width:600px){.fr{grid-template-columns:100px 1fr 36px 38px}}
+@media (prefers-reduced-motion:reduce){.hot,.spark i,.ft i{animation:none}.ft i{width:var(--w)}}
 .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:22px}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);padding:16px;overflow:auto;z-index:10;box-shadow:-10px 0 30px #0006}
 .drawer h3{margin:0 0 4px}
@@ -289,7 +296,7 @@ const GRP = {new: ['New, not downloaded', 'p-info'], downloaded: ['Downloaded, n
   key_unused: ['Has key, not started', 'p-info'], customer: ['Customer', 'p-ok'], expiring: ['Expiring soon', 'p-warn'], expired: ['License ended', 'p-bad']};
 const STATUS = [['new', 'New'], ['contacted', 'Contacted'], ['replied', 'Replied'], ['won', 'Won'], ['lost', 'Lost'], ['dont_contact', 'Do not contact']];
 const SUGGEST = {new: 'welcome', downloaded: 'downloaded', order_waiting: 'order_waiting', cold: 'cold', key_unused: 'key_unused', expiring: 'expiring', expired: 'expired'};
-const crm = {leads: [], tpls: [], stats: null, view: 'todo', q: '', sel: new Set()};
+const crm = {anim: 0, leads: [], tpls: [], stats: null, view: 'todo', q: '', sel: new Set()};
 const todayStr = () => new Date().toISOString().slice(0, 10);
 const isLead = l => !['customer', 'expiring', 'expired', 'key_unused'].includes(l.grp);
 const due = l => isLead(l) && !l.optout && ['new', 'contacted', 'replied'].includes(l.status) && ((l.next_followup && l.next_followup <= todayStr()) || (l.status === 'new' && ['downloaded', 'order_waiting'].includes(l.grp)));
@@ -306,18 +313,30 @@ function crmDraw() {
   const chips = [['todo', 'To follow up', count(due)], ['all', 'All sign-ups', L.length], ...Object.entries(GRP).map(([k, v]) => [k, v[0], count(l => l.grp === k)]), ['optout', 'Unsubscribed', count(l => l.optout)]];
   const rows = L.filter(l => (crm.view === 'todo' ? due(l) : crm.view === 'all' ? true : crm.view === 'optout' ? l.optout : l.grp === crm.view) && (!q || String(l.email).toLowerCase().includes(q) || String(l.note).toLowerCase().includes(q)));
   const since = st.first_download ? fmt(st.first_download).slice(0, 10) : null;
+  const GC = {new: '#4f8ff7', downloaded: '#e0a03a', order_waiting: '#f0c35a', cold: '#8b95a3', key_unused: '#7aa7ff', customer: '#3fb27f', expiring: '#e0a03a', expired: '#e5534b'};
+  const dl = L.filter(l => l.last_download).length, od = L.filter(l => l.open_order || l.licenses > 0).length, tot = Math.max(L.length, 1);
+  const fun = [['Signed up', L.length, '#4f8ff7'], ['Downloaded the EA', dl, '#e0a03a'], ['Ordered', od, '#f0c35a'], ['Own a license', buyers, '#3fb27f']];
+  const days = [...Array(30)].map((_, i) => { const d = new Date(Date.now() - (29 - i) * 864e5).toISOString().slice(0, 10); return L.filter(l => String(l.created_at).slice(0, 10) === d).length; });
+  const mx = Math.max(1, ...days), spark = days.map((v, i) => `<i style="height:${Math.max(6, v / mx * 100)}%;animation-delay:${i * 18}ms" title="${v} sign-up${v === 1 ? '' : 's'}"></i>`).join('');
+  const init = e => esc(String(e || '?').trim().charAt(0).toUpperCase());
+  const tiles = [['todo', 'To follow up', count(due), '#e0a03a'], ...Object.entries(GRP).map(([k, v]) => [k, v[0], count(l => l.grp === k), GC[k]]), ['optout', 'Unsubscribed', count(l => l.optout), '#8b95a3']]
+    .map(([k, name, c, color]) => `<button class="gt ${crm.view === k ? 'on' : ''}" data-v="${k}" style="--c:${color}"><b data-n="${c}">${c}</b><span>${esc(name)}</span><u style="--p:${Math.round(c / tot * 100)}%"></u></button>`).join('')
+    + `<button class="gt ${crm.view === 'all' ? 'on' : ''}" data-v="all" style="--c:#e0b24a"><b data-n="${L.length}">${L.length}</b><span>All sign-ups</span><u style="--p:100%"></u></button>`;
   $('#view').innerHTML = `<div class="grid" style="margin-bottom:14px">
-    <div class="kpi">Sign-ups<b>${n(st.signups)}</b><span class="mute">${n(st.signups_7d)} in 7 days · ${n(st.signups_30d)} in 30 days</span></div>
-    <div class="kpi">EA downloads<b>${n(st.downloads)}</b><span class="mute">${n(st.downloads_7d)} in 7 days · ${n(st.downloaders_signed_in)} signed-in people</span></div>
-    <div class="kpi">Have a license<b style="color:var(--ok)">${buyers}</b><span class="mute">${pct}% of sign-ups</span></div>
-    <div class="kpi">To follow up now<b style="color:var(--warn)">${count(due)}</b><span class="mute">due or hot</span></div></div>
-  <div class="card"><div class="row" style="gap:6px">${chips.map(([k, name, c]) => `<button class="b ${crm.view === k ? 'pri' : ''}" data-v="${k}">${esc(name)} <span style="opacity:.7">${c}</span></button>`).join('')}</div>
+    <div class="kpi kx">Sign-ups<b data-n="${n(st.signups)}">${n(st.signups)}</b><span class="mute">${n(st.signups_7d)} in 7 days · ${n(st.signups_30d)} in 30 days</span><div class="spark">${spark}</div></div>
+    <div class="kpi kx">EA downloads<b data-n="${n(st.downloads)}">${n(st.downloads)}</b><span class="mute">${n(st.downloads_7d)} in 7 days · ${n(st.downloaders_signed_in)} signed-in people</span></div>
+    <div class="kpi kx">Have a license<b style="color:var(--ok)" data-n="${buyers}">${buyers}</b><span class="mute">${pct}% of sign-ups</span></div>
+    <div class="kpi kx hot">To follow up now<b style="color:var(--warn)" data-n="${count(due)}">${count(due)}</b><span class="mute">due or hot</span></div></div>
+  <div class="card"><div class="mute" style="margin-bottom:8px;font-weight:600">Journey: from sign-up to customer</div>
+    <div class="fn">${fun.map(([name, v, c], i) => `<div class="fr"><span>${name}</span><div class="ft"><i style="--w:${Math.round(v / tot * 100)}%;--c:${c};animation-delay:${i * 120}ms"></i></div><b>${v}</b><em>${Math.round(v / tot * 100)}%</em></div>`).join('')}</div></div>
+  <div class="gts">${tiles}</div>
+  <div class="card">
     <div class="row"><input id="cq" placeholder="Search email or note" value="${esc(crm.q)}" style="flex:1;min-width:200px">
       <select id="bt" title="Email template">${crm.tpls.map(t => `<option value="${esc(t.key)}">${esc(t.name)}</option>`).join('')}</select>
       <button class="b pri" id="bs">Email selected (<span id="bn">${crm.sel.size}</span>)</button><button class="b" id="tp">Edit email templates</button></div>
     <div class="mute" style="margin:2px 0 8px">Downloads are counted from ${since || 'now on'} (earlier ones were not tracked). Promotional emails skip people who unsubscribed or are marked "Do not contact". Gmail allows about 500 emails a day: send in small batches.</div>
     <div class="tblw"><table class="tbl"><tr><th></th><th>Email</th><th>Signed up</th><th>Group</th><th>Status</th><th>Next follow-up</th><th>Last email</th><th></th></tr>
-    ${rows.map(l => `<tr data-u="${esc(l.user_id)}"><td><input type="checkbox" data-s="${esc(l.user_id)}" ${crm.sel.has(l.user_id) ? 'checked' : ''}></td><td class="click">${esc(l.email)}${l.optout ? ' <span class="pill p-mute">unsubscribed</span>' : ''}${l.note ? ' <span class="mute" title="' + esc(l.note) + '">&#9998;</span>' : ''}</td><td class="mute">${fmt(l.created_at).slice(0, 10)}</td>
+    ${rows.map(l => `<tr data-u="${esc(l.user_id)}"><td><input type="checkbox" data-s="${esc(l.user_id)}" ${crm.sel.has(l.user_id) ? 'checked' : ''}></td><td class="click"><span class="av" style="--c:${GC[l.grp]}">${init(l.email)}</span>${esc(l.email)}${l.optout ? ' <span class="pill p-mute">unsubscribed</span>' : ''}${l.note ? ' <span class="mute" title="' + esc(l.note) + '">&#9998;</span>' : ''}</td><td class="mute">${fmt(l.created_at).slice(0, 10)}</td>
       <td><span class="pill ${GRP[l.grp][1]}">${GRP[l.grp][0]}</span></td>
       <td><select data-st="${esc(l.user_id)}">${STATUS.map(([k, v]) => `<option value="${k}" ${k === l.status ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
       <td><input type="date" data-nx="${esc(l.user_id)}" value="${esc(l.next_followup || '')}" style="width:140px"></td>
@@ -332,6 +351,7 @@ function crmDraw() {
   v.querySelectorAll('[data-o]').forEach(b => b.onclick = () => openLead(b.dataset.o));
   v.querySelectorAll('tr[data-u] td.click').forEach(td => td.onclick = () => openLead(td.parentElement.dataset.u));
   $('#bs').onclick = () => bulkSend(); $('#tp').onclick = () => templatesEditor();
+  if (!crm.anim) { crm.anim = 1; v.querySelectorAll('[data-n]').forEach(el => { const to = +el.dataset.n, t0 = performance.now(); (function f(now) { const k = Math.min(1, (now - t0) / 900); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); })(t0); }); }
 }
 async function saveLead(uid, ch) {
   const l = crm.leads.find(x => x.user_id === uid); if (!l) return;

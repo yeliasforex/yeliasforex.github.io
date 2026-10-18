@@ -63,3 +63,21 @@
   .wow-sl{grid-template-columns:1fr}.wow-amt{text-align:left}
 }
 @media (prefers-reduced-motion:reduce){.wow-aurora i,.wow-tag i,.wow-live .wow-box,.wow-live .wow-box::after,.wow-spark .wow-line,.wow-pick{animation:none!important}.wow-dust{display:none}.wow-tilt{transform:none!important}}
+
+/* yearly backtest return card (hero) */
+.yrs{margin:22px 0 4px;padding:16px 18px;border-radius:18px;background:linear-gradient(135deg,rgba(227,185,95,.14),rgba(62,224,154,.08));border:1px solid rgba(227,185,95,.35);position:relative;overflow:hidden;max-width:560px}
+.yrs::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.12) 50%,transparent 60%);transform:translateX(-120%);animation:yrsSheen 5s ease-in-out infinite;pointer-events:none}
+@keyframes yrsSheen{to{transform:translateX(120%)}}
+.yrs-h{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.yrs-h em{font-style:normal;font-weight:500;text-transform:none;letter-spacing:0;opacity:.7}
+.yrs-dot{width:8px;height:8px;border-radius:50%;background:#3EE09A;box-shadow:0 0 0 0 rgba(62,224,154,.6);animation:yrsPing 1.8s infinite}
+@keyframes yrsPing{70%{box-shadow:0 0 0 9px rgba(62,224,154,0)}100%{box-shadow:0 0 0 0 rgba(62,224,154,0)}}
+.yrs-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 8px}
+.yr{position:relative;padding-bottom:10px}
+.yr small{display:block;font-size:11px;opacity:.7}
+.yr b{font-size:clamp(22px,4.6vw,32px);line-height:1.1;color:#3EE09A;font-variant-numeric:tabular-nums}
+.yr i{position:absolute;left:0;bottom:0;height:4px;border-radius:4px;background:linear-gradient(90deg,#E3B95F,#3EE09A);width:0;animation:yrBar 1.4s .5s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes yrBar{to{width:var(--w)}}
+.yrs p{font-size:12px;line-height:1.5;margin:0;opacity:.75}
+.yrs p a{text-decoration:underline}
+@media (prefers-reduced-motion:reduce){.yrs::after,.yrs-dot{animation:none}.yr i{animation-duration:.01s}}
