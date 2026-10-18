@@ -170,8 +170,7 @@
       <div class="panel"><h3 class="rh" style="margin-top:0">Drawdown <span class="hint">distance below the highest result so far</span></h3><div id="rs-dd"></div></div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Profit calendar <span class="hint">result of each day, by closing time</span></h3><div id="calhost">${R.calendar(all, calM.y, calM.m)}</div></div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Daily result <span class="hint">last 30 days, amounts in USD</span></h3>${R.bars(R.dayItems(all, 30), 210)}</div>
-      <div class="grid2"><div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">closing day</span></h3>${R.weekdayBars(t)}</div>
-        <div class="panel"><h3 class="rh" style="margin-top:0">By hour of day <span class="hint">closing hour, your local time</span></h3>${R.hourStrip(t)}</div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">closing day</span></h3>${R.weekdayBars(t)}</div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 230, {full: true})}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
   }
   function tTrades(l, all) {
