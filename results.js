@@ -118,8 +118,8 @@
     const upH = top / rg * 100, dnH = -bot / rg * 100, lab = v => opt.full ? sgn(v, 0) : csgn(v);
     const cols = items.map((it, i) => {
       const hasV = it.v !== 0 || it.has;
-      const up = it.v > 0 ? `<div class="bar up" style="height:${(it.v / top * 100).toFixed(2)}%;--i:${i}"><u></u><b>${lab(it.v)}</b></div>` : (it.v === 0 && hasV ? `<div class="bar z" style="--i:${i}"><u></u></div>` : '');
-      const dn = it.v < 0 ? `<div class="bar dn" style="height:${(it.v / bot * 100).toFixed(2)}%;--i:${i}"><u></u><b>${lab(it.v)}</b></div>` : '';
+      const up = it.v > 0 ? `<div class="xbar xup" style="height:${(it.v / top * 100).toFixed(2)}%;--i:${i}"><u></u><b>${lab(it.v)}</b></div>` : (it.v === 0 && hasV ? `<div class="xbar z" style="--i:${i}"><u></u></div>` : '');
+      const dn = it.v < 0 ? `<div class="xbar dn" style="height:${(it.v / bot * 100).toFixed(2)}%;--i:${i}"><u></u><b>${lab(it.v)}</b></div>` : '';
       return `<div class="dc ${it.v > 0 ? 'p' : it.v < 0 ? 'n' : 'e'}" title="${esc(it.label)}: ${it.v === 0 && !hasV ? 'no closed trades' : sgn(it.v)}"><div class="u" style="height:${upH}%">${up}</div><div class="d" style="height:${dnH}%">${dn}</div><span class="dx">${esc(it.short)}</span></div>`;
     }).join('');
     return `<div class="db ${bot < 0 ? 'neg' : ''} ${opt.full ? 'wide' : ''} ${items.length > 16 ? 'dense' : ''}" style="height:${h || 190}px"><div class="dbi">${cols}</div></div>`;

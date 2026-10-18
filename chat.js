@@ -10,10 +10,10 @@
 
   const css = document.createElement('style');
   css.textContent = `
-  .gc-fab{position:fixed;right:18px;bottom:18px;z-index:90;display:flex;align-items:center;gap:8px;height:50px;padding:0 18px;border-radius:999px;border:1px solid rgba(62,224,154,.5);background:#0c1322;color:#fff;font:600 .95rem/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.5);transition:transform .2s}
+  .gc-fab{position:fixed;right:18px;bottom:var(--gcb,18px);z-index:90;display:flex;align-items:center;gap:8px;height:50px;padding:0 18px;border-radius:999px;border:1px solid rgba(62,224,154,.5);background:#0c1322;color:#fff;font:600 .95rem/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.5);transition:transform .2s}
   .gc-fab:hover{transform:translateY(-2px)}.gc-fab i{width:9px;height:9px;border-radius:50%;background:#3EE09A;box-shadow:0 0 0 0 rgba(62,224,154,.6);animation:gcp 2s infinite}
   @keyframes gcp{to{box-shadow:0 0 0 10px rgba(62,224,154,0)}}
-  .gc-box{position:fixed;right:18px;bottom:78px;z-index:91;width:min(380px,calc(100vw - 24px));height:min(560px,calc(100vh - 100px));display:none;flex-direction:column;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:#0a0f1c;color:#e8edf8;box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden;font-size:.93rem}
+  .gc-box{position:fixed;right:18px;bottom:calc(var(--gcb,18px) + 60px);z-index:91;width:min(380px,calc(100vw - 24px));height:min(560px,calc(100vh - var(--gcb,18px) - 90px));display:none;flex-direction:column;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:#0a0f1c;color:#e8edf8;box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden;font-size:.93rem}
   .gc-box.on{display:flex;animation:gcu .25s ease-out}@keyframes gcu{from{opacity:0;transform:translateY(12px)}}
   .gc-h{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,#111a2f,#0a0f1c)}
   .gc-h b{font-size:1rem}.gc-h small{display:block;color:#8d98b3;font-size:.76rem;margin-top:2px}
@@ -32,6 +32,7 @@
   .gc-n{padding:7px 14px 10px;color:#7d88a3;font-size:.72rem;line-height:1.4}.gc-n a{color:#9db6f5}
   @media (prefers-reduced-motion:reduce){.gc-fab i,.gc-box.on{animation:none}}`;
   document.head.appendChild(css);
+  if (document.querySelector('.fab')) document.documentElement.style.setProperty('--gcb', window.innerWidth <= 600 ? '82px' : '86px');   // sit above the Contact button, never on top of it
 
   const fab = document.createElement('button'); fab.className = 'gc-fab'; fab.setAttribute('aria-label', 'Open support chat'); fab.innerHTML = '<i></i>Ask us';
   const box = document.createElement('div'); box.className = 'gc-box'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Support assistant');
