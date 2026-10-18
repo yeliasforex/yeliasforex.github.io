@@ -296,3 +296,10 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
   .bk-go{margin:0;white-space:nowrap}
   .bk-chips{margin-top:2px}
 }
+
+/* round broker marks */
+.bk-logo,.fb-broker .bk-logo{width:76px;height:76px;padding:0;border-radius:50%;overflow:hidden}
+.bk-logo.fu{background:#fff;padding:0}
+.bk-logo.fu img{width:56px;height:56px;max-height:none;border-radius:50%}
+.bk-logo.dk img{width:58px;height:auto;max-height:none}
+@media (max-width:760px){.bk-logo,.fb-broker .bk-logo{width:64px;height:64px}.bk-logo.fu img{width:48px;height:48px}.bk-logo.dk img{width:50px}}
