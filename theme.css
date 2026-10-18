@@ -9,7 +9,7 @@
 :root[data-theme="light"] ::selection{background:rgba(23,71,200,.2);color:var(--fg)}
 :root[data-theme="light"] a:hover{color:#1747C8}
 :root[data-theme="light"] .top.scrolled{background:rgba(244,246,251,.78)}
-@media (max-width:1200px){:root[data-theme="light"] .nav{background:rgba(244,246,251,.97)}}
+@media (max-width:1320px){:root[data-theme="light"] .nav{background:rgba(244,246,251,.97)}}
 :root[data-theme="light"] .brand:hover,:root[data-theme="light"] .nav a:hover,:root[data-theme="light"] .nav a[aria-current="page"],
 :root[data-theme="light"] .btn:hover,:root[data-theme="light"] .broker:hover,:root[data-theme="light"] .faq summary:hover,:root[data-theme="light"] .foot a:hover,
 :root[data-theme="light"] .mood:hover,:root[data-theme="light"] .seg button:hover,:root[data-theme="light"] .contact-r a:hover{color:var(--fg)}

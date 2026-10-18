@@ -40,7 +40,7 @@ a:hover{color:#8EADFF}
 .nav .pill:hover{background:#6BF0B6;color:#04120B}
 .menu-btn{display:none;background:none;border:1px solid var(--line-2);color:var(--fg);border-radius:10px;width:42px;height:38px;cursor:pointer}
 .menu-btn span{display:block;width:16px;height:1.5px;background:currentColor;margin:4px auto;transition:transform .3s var(--ease),opacity .2s}
-@media (max-width:1200px){
+@media (max-width:1320px){
   .menu-btn{display:block}
   .nav{position:fixed;inset:68px 0 auto 0;flex-direction:column;align-items:stretch;gap:2px;padding:12px 16px 20px;
     background:rgba(6,8,14,.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line);

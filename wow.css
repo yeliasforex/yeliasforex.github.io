@@ -73,14 +73,14 @@
 .yrs-dot{width:8px;height:8px;border-radius:50%;background:#3EE09A;box-shadow:0 0 0 0 rgba(62,224,154,.6);animation:yrsPing 1.8s infinite}
 @keyframes yrsPing{70%{box-shadow:0 0 0 9px rgba(62,224,154,0)}100%{box-shadow:0 0 0 0 rgba(62,224,154,0)}}
 .yrs-g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 8px}
-.yr{position:relative;padding-bottom:10px}
-.yr small{display:block;font-size:11px;opacity:.7}
-.yr b{font-size:clamp(22px,4.6vw,32px);line-height:1.1;color:#3EE09A;font-variant-numeric:tabular-nums}
-.yr i{position:absolute;left:0;bottom:0;height:4px;border-radius:4px;background:linear-gradient(90deg,#E3B95F,#3EE09A);width:0;animation:yrBar 1.4s .5s cubic-bezier(.2,.8,.2,1) forwards}
+.yrc{position:relative;padding-bottom:10px}
+.yrc small{display:block;font-size:11px;opacity:.7}
+.yrc b{font-size:clamp(22px,4.6vw,32px);line-height:1.1;color:#3EE09A;font-variant-numeric:tabular-nums}
+.yrc i{position:absolute;left:0;bottom:0;height:4px;border-radius:4px;background:linear-gradient(90deg,#E3B95F,#3EE09A);width:0;animation:yrBar 1.4s .5s cubic-bezier(.2,.8,.2,1) forwards}
 @keyframes yrBar{to{width:var(--w)}}
 .yrs p{font-size:12px;line-height:1.5;margin:0;opacity:.75}
 .yrs p a{text-decoration:underline}
-@media (prefers-reduced-motion:reduce){.yrs::after,.yrs-dot{animation:none}.yr i{animation-duration:.01s}}
+@media (prefers-reduced-motion:reduce){.yrs::after,.yrs-dot{animation:none}.yrc i{animation-duration:.01s}}
 
 /* free backtest page */
 .fb-track{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:26px 0 18px;padding-top:22px}
@@ -255,3 +255,7 @@ ol.steps li::after{content:"";position:absolute;left:16px;top:34px;bottom:-16px;
 /* phones: never let anything widen the page */
 html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 @media (max-width:640px){.nav a.acct-pill{width:max-content}.ma-quick a{padding:8px 12px}.fz-strip{font-size:14px}}
+
+/* menu: never wraps onto two lines */
+.nav a{white-space:nowrap}
+@media (max-width:1500px){.nav a{padding:8px 9px;font-size:.88rem}.nav .pill{margin-left:2px}}
