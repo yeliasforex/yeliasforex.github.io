@@ -63,7 +63,7 @@
   function demoData() {
     const d = n => new Date(Date.now() + n * 864e5).toISOString();
     return {profile: {email: 'amina@example.com', telegram_chat_id: null, notify_prefs: {}},
-      licenses: [{id: '1', key: 'GTE-7QK2-XM9A-D4PF', plan_id: 'investor', status: 'active', activated_at: d(-30), expires_at: d(335), bound_account: 51234567, bound_broker: 'IC Markets', bound_is_demo: false, extra_allowance_usd: 0}],
+      licenses: [{id: '1', key: 'GTE-7QK2-XM9A-D4PF', plan_id: 'investor', status: 'active', activated_at: d(-30), expires_at: d(335), bound_account: 51234567, bound_broker: 'IC Markets', bound_is_demo: false, extra_allowance_usd: 0}, {id: '2', key: 'GTE-NEW1-ABCD-EFGH', plan_id: 'tycoon', status: 'unused', activated_at: null, expires_at: null, bound_account: null, bound_broker: null, bound_is_demo: false, extra_allowance_usd: 0}],
       statuses: [{license_id: '1', online: true, last_heartbeat: d(-0.002), balance: 6120.4, equity: 6188.9, open_positions: 1, engine_state: 'IN TRADE', funded_usd: 5900, over_limit: true, ea_version: '1.08', problems: ['OVER_LIMIT', 'TELEGRAM_NOT_CONNECTED']}],
       plans: gte.fallbackPlans.map((p, i) => ({...p, sort: i, active: true})),
       catalog: [{code: 'OVER_LIMIT', severity: 'warning', title: 'Deposits above your plan limit', explanation: 'The money deposited on this account is above your plan size. New trades are paused; open trades are still managed and nothing is closed.', solution: 'Upgrade your plan on your account page, or withdraw the excess. Trading resumes by itself within minutes.'},
@@ -149,12 +149,18 @@
     wire(); afterDraw(lic, trades); countUp(body);
     if (tab === 'inbox' && unread() && !DEMO && !AS) markRead();
   }
+  function keysPanel(cur) {
+    if (!S.licenses.length) return '';
+    return `<div class="panel"><h2>Your license keys</h2><p class="sub">Each key works on one MT5 account. Paste a key into the EA's only setting.</p>
+      <div style="overflow-x:auto"><table class="tbl2"><tr><th>Key</th><th>Plan</th><th>Status</th><th>MT5 account</th><th>Valid until</th><th></th></tr>
+      ${S.licenses.map(l => { const [pc, pt] = statePill(l.status); return `<tr><td><span class="key" style="font-size:.85rem;padding:3px 7px">${esc(l.key)}</span> <button class="btn sm" data-copy="${esc(l.key)}">Copy</button></td><td>${esc(planOf(l.plan_id).name)}</td><td><span class="pill ${pc}">${pt}</span></td><td>${l.bound_account ? esc(l.bound_account) + (l.bound_is_demo ? ' (demo)' : '') : 'Not used yet'}</td><td>${l.expires_at ? date(l.expires_at) : 'Starts when first used'}</td><td>${l.id === cur ? '<span class="hint">shown above</span>' : `<button class="btn sm" data-lic="${l.id}">View</button>`}</td></tr>`; }).join('')}</table></div></div>`;
+  }
   function tOverview(l, trades) {
     const st = stOf(l.id), pl = planOf(l.plan_id), probs = problems(l, st);
     const tol = S.settings.toleranceActive ?? 5, lim = pl.limit_usd, allowed = lim == null ? null : lim * (1 + tol / 100) + Number(l.extra_allowance_usd || 0);
     const funded = Number(st.funded_usd || 0), pct = allowed ? Math.min(100, funded / allowed * 100) : 0, mark = allowed ? Math.min(100, lim / allowed * 100) : 0, over = st.over_limit, near = allowed && funded > lim * 0.9;
     const recent = trades.slice().sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at)).slice(0, 6);
-    return `<div class="grid2">
+    return `${S.licenses.length > 1 ? keysPanel(l.id) : ''}<div class="grid2">
       <div class="panel"><h2>Status</h2><p class="sub">What the EA reports for this license.</p>
         ${probs.length ? '<div class="prob">' + probs.map(p => `<div class="it ${p.severity}"><div class="t">${esc(p.title)}</div><div class="e">${esc(fill(p.explanation))}</div><div class="s">What to do: ${esc(fill(p.solution))}</div></div>`).join('') + '</div>' : '<div class="allgood">&#10003; Everything looks good. No problems reported.</div>'}</div>
       <div class="panel"><h2>Account &amp; limit</h2><p class="sub">The account this key is bound to.</p>
@@ -197,7 +203,7 @@
   function tInbox() {
     const list = S.notices || [];
     return `<div class="panel"><div class="row sp"><div><h2>Notifications</h2><p class="sub" style="margin:0">Important messages about your license, deposits, orders and EA updates. Trade alerts go to Telegram.</p></div></div>
-      ${list.length ? list.map(n => `<div class="nt ${n.read_at ? '' : 'new'}"><div class="row sp"><b>${esc(n.title)}</b><span class="hint">${ago(n.created_at)}</span></div>${n.body ? `<div class="nb2">${esc(n.body).replace(/\n/g, '<br>')}</div>` : ''}${n.link ? `<a class="btn sm" href="${esc(n.link)}" style="margin-top:8px">${n.kind === 'update' ? 'Download the update' : 'Open'}</a>` : ''}</div>`).join('') : '<div class="empty">No notifications yet. Important messages appear here.</div>'}</div>`;
+      ${list.length ? list.map(n => `<div class="nt ${n.read_at ? '' : 'new'}"><div class="row sp"><b>${esc(n.title)}</b><span class="hint">${ago(n.created_at)}</span></div>${n.body ? `<div class="nb2">${esc(n.body).replace(/\n/g, '<br>')}</div>` : ''}${n.link ? `<a class="btn sm" href="${esc(n.link)}" style="margin-top:8px">${n.kind === 'update' ? 'Download the update' : 'Open'}</a>` : ''}${/^A license key was added/.test(n.title) ? '<a class="btn sm mint" href="#tab=billing" data-go="billing" style="margin-top:8px">See your keys</a>' : ''}</div>`).join('') : '<div class="empty">No notifications yet. Important messages appear here.</div>'}</div>`;
   }
   function tTrades(l, all) {
     if (!all.length) return `<div class="panel"><h2>Trades</h2><div class="empty">No closed trades yet.</div></div>`;
@@ -214,7 +220,7 @@
   }
   function tBilling(l) {
     const pl = planOf(l.plan_id), higher = S.plans.filter(p => p.active && Number(p.price_usd) > Number(pl.price_usd)), days = l.expires_at ? Math.ceil((new Date(l.expires_at) - Date.now()) / 864e5) : null;
-    return `<div class="panel"><h2>Upgrade or renew</h2><p class="sub">Upgrading costs the price difference and keeps your expiry date. Renewing adds a year. Payments are confirmed by us, usually within a few hours.</p>
+    return `${keysPanel(l.id)}<div class="panel"><h2>Upgrade or renew</h2><p class="sub">Upgrading costs the price difference and keeps your expiry date. Renewing adds a year. Payments are confirmed by us, usually within a few hours.</p>
       <div class="row">${higher.length ? `<select id="up-${l.id}" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${higher.map(p => `<option value="${p.id}">Upgrade to ${esc(p.name)} (+${usd(Number(p.price_usd) - Number(pl.price_usd))})</option>`).join('')}</select><button class="btn sm mint" data-upgrade="${l.id}">Upgrade</button>` : '<span class="hint">You are on the highest plan.</span>'}
       <button class="btn sm ${days != null && (days <= 45 || l.status === 'expired') ? 'mint' : ''}" data-renew="${l.id}">Renew for ${usd(pl.price_usd)}</button></div></div>
       ${claimPanel()}
@@ -288,6 +294,7 @@
   // ---------- actions ----------
   function wire() {
     A.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); });
+    A.querySelectorAll('[data-lic]').forEach(b => b.onclick = () => { cur = b.dataset.lic; tab = 'overview'; history.replaceState(null, '', '#tab=overview'); render(); window.scrollTo({top: 0, behavior: 'smooth'}); });
     A.querySelectorAll('[data-upgrade]').forEach(b => b.onclick = guard(async () => { const o = await rpc('create_order', {p_kind: 'upgrade', p_plan_id: $('#up-' + b.dataset.upgrade).value, p_license_id: b.dataset.upgrade}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-renew]').forEach(b => b.onclick = guard(async () => { const o = await rpc('create_order', {p_kind: 'renewal', p_license_id: b.dataset.renew}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-unbind]').forEach(b => b.onclick = guard(async () => { if (!confirm('Unbinding costs ' + usd(S.settings.unbindFeeUsd ?? 100) + ' and needs support. Start the request?')) return; const o = await rpc('create_order', {p_kind: 'unbind', p_license_id: b.dataset.unbind}); await refresh('#order=' + o.id); }));
