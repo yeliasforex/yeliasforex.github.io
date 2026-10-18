@@ -8,7 +8,8 @@
   const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['alerts', 'Alerts'], ['billing', 'Orders & keys']];
   const NOTIFY = [['ea_started', 'EA started / stopped'], ['trade_open', 'Trade opened'], ['trade_close', 'Trade closed with result'], ['addon', 'Add-on filled / closed'], ['daily_report', 'Daily report'], ['offline', 'EA offline / back online']];
   const SEV = {error: 0, warning: 1, info: 2}, tradeCache = {};
-  const AS = new URLSearchParams(location.search).get('as');       // admin "view as customer" (read-only), see admin panel
+  const QS = new URLSearchParams(location.search), INJ = QS.has('inject');
+  const AS = QS.get('as') || (INJ ? 'inject' : null);      // admin "view as customer" (read-only). inject = the admin panel posts the data in
   let quiet = false, calM = null;                      // quiet = background refresh: no replayed animations
   const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   // numbers count up from zero: any element with data-cu (target) and data-f (format)
@@ -26,6 +27,7 @@
   // ---------- data ----------
   async function load() {
     if (DEMO) return demoData();
+    if (INJ) return window.__inj.S;
     const q = async p => { const r = await p; if (r.error) throw r.error; return r.data; };
     const [profile, licenses, statuses, plans, catalog, orders, settings] = await Promise.all([
       AS ? Promise.resolve(null) : q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').maybeSingle()),
@@ -47,6 +49,8 @@
   async function tradesFor(id) {
     const hit = tradeCache[id]; if (hit && Date.now() - hit.at < 120000) return hit.rows;
     let rows = [];
+    if (INJ) rows = window.__inj.trades.map(t => ({...t}));
+    else
     if (DEMO) rows = R.demo();
     else for (let from = 0; from < 20000; from += 1000) {
       const {data, error} = await c.from('trades').select('engine,dir,is_add,opened_at,closed_at,open_price,close_price,lots,result_r,profit').eq('license_id', id).order('closed_at').range(from, from + 999);
@@ -290,6 +294,12 @@
   async function refresh(hash) { S = await load(); Object.keys(tradeCache).forEach(k => delete tradeCache[k]); if (hash) history.replaceState(null, '', hash); await render(); }
 
   // ---------- start ----------
+  if (INJ) {                                                        // admin panel: wait for the customer's data, then draw the same page the customer sees
+    document.body.classList.add('inject'); A.innerHTML = '<div class="empty">Loading customer account...</div>';
+    await new Promise(res => { addEventListener('message', e => { if (e.source === window.parent && e.data && e.data.gteAdminView) { window.__inj = e.data; res(); } }); window.parent.postMessage({gteReady: true}, '*'); });
+    try { S = await load(); await render(); } catch (e) { A.innerHTML = '<div class="msg err">Could not show this account: ' + esc(e.message || e) + '</div>'; }
+    return;
+  }
   c = DEMO ? null : await gte.client();
   const sess = DEMO ? {user: {email: 'amina@example.com'}} : await gte.session();
   if (!sess) { $('#gate').classList.remove('hide'); return; }

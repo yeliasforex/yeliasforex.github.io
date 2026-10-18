@@ -42,6 +42,7 @@ button.dng{border-color:var(--bad);color:var(--bad)}
 .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:22px}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);padding:16px;overflow:auto;z-index:10;box-shadow:-10px 0 30px #0006}
 .drawer h3{margin:0 0 4px}
+.acv{position:fixed;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column}.acv-h{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--panel)}.acv iframe{flex:1;border:0;width:100%;background:#06080e}
 .login{max-width:420px;margin:12vh auto;padding:0 16px}
 .msg{padding:10px 12px;border-radius:8px;margin:10px 0;border:1px solid var(--line);background:var(--panel2)}
 .msg.err{border-color:var(--bad);color:var(--bad)}.msg.okk{border-color:var(--ok);color:var(--ok)}
@@ -74,6 +75,7 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
   <main id="view"></main>
 </div>
 <div id="drawer" class="drawer hide"></div>
+<div id="acv" class="acv hide"><div class="acv-h"><b id="acvt"></b><span style="flex:1"></span><button class="b" id="acvx">Close</button></div><iframe id="acvf" title="Customer account view"></iframe></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -161,6 +163,32 @@ async function enter() {
   render();
 }
 
+
+// ---------- full customer account view: the live customer page is shown in a frame and fed this customer's data, read with the admin's own login ----------
+const SITE_LIVE = 'https://yeliasforex.github.io/';
+async function accountView(id) {
+  const l = data.licenses.find(x => x.id === id); if (!l) return;
+  $('#acv').classList.remove('hide'); $('#acvt').textContent = 'Account view: ' + (l.owner_email || 'no owner') + ' · ' + l.key + ' (read-only, as the customer sees it)';
+  const f = $('#acvf'), c = data.customers.find(x => x.email === l.owner_email);
+  let status = null, trades = [], catalog = [];
+  try {
+    const st = await sb.from('license_status').select('*').eq('license_id', id).maybeSingle(); status = st.data;
+    for (let from = 0; from < 20000; from += 1000) { const r = await sb.from('trades').select('engine,dir,is_add,opened_at,closed_at,open_price,close_price,lots,result_r,profit').eq('license_id', id).order('closed_at').range(from, from + 999); if (r.error) throw r.error; trades = trades.concat(r.data); if (r.data.length < 1000) break; }
+    const cat = await sb.from('message_catalog').select('*'); catalog = cat.data || [];
+  } catch (e) { toast('Could not read this customer: ' + (e.message || e), true); }
+  const cf = data.config || {}, orders = data.orders.filter(o => o.license_key === l.key || (l.owner_email && o.email === l.owner_email));
+  const payload = {gteAdminView: true, trades, S: {
+    profile: {email: l.owner_email, telegram_chat_id: c && c.telegram ? 1 : null, notify_prefs: {}},
+    licenses: [{id: l.id, key: l.key, plan_id: l.plan_id, status: l.status, activated_at: l.activated_at, expires_at: l.expires_at, bound_account: l.bound_account, bound_broker: l.bound_broker, bound_is_demo: l.bound_is_demo, extra_allowance_usd: l.extra_allowance_usd, created_at: l.created_at}],
+    statuses: [status || {license_id: l.id, online: l.online, last_heartbeat: l.last_heartbeat, balance: l.balance, equity: l.equity, funded_usd: l.funded_usd, over_limit: l.over_limit, engine_state: l.engine_state, ea_version: l.ea_version, problems: l.problems || []}],
+    plans: data.plans, catalog, orders,
+    settings: {salesOpen: true, supportUrl: cf.support_url, botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: +cf.unbind_fee_usd || 100, toleranceActive: +cf.limit_tolerance_pct || 5}}};
+  const onMsg = e => { if (e.source === f.contentWindow && e.data && e.data.gteReady) { f.contentWindow.postMessage(payload, SITE_LIVE.replace(/\/$/, '')); } };
+  window.removeEventListener('message', window._acvm || (() => {})); window._acvm = onMsg; window.addEventListener('message', onMsg);
+  f.src = SITE_LIVE + 'my-account.html?inject=1&t=' + Date.now();
+}
+$('#acvx').onclick = () => { $('#acv').classList.add('hide'); $('#acvf').src = 'about:blank'; };
+
 // ---------- views ----------
 const TABS = [['orders', 'Orders'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['videos', 'Videos'], ['audit', 'Audit log']];
 function render() {
@@ -212,7 +240,7 @@ function openLicense(id) {
   const l = data.licenses.find(x => x.id === id), d = $('#drawer'); d.classList.remove('hide');
   d.innerHTML = `<div class="row"><h3 class="mono">${esc(l.key)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
   <div class="mute">${esc(planName(l.plan_id))} · ${stPill(l.status)} · ${esc(l.owner_email || 'no owner')}</div>
-  <div class="row" style="margin-top:10px"><a class="b pri" style="text-decoration:none;display:inline-block" target="_blank" rel="noopener" href="${SITE}my-account.html?as=${esc(l.id)}">Open full account view (as the customer sees it)</a></div>
+  <div class="row" style="margin-top:10px"><button class="b pri" data-view="${esc(l.id)}">Open full account view (as the customer sees it)</button></div>
   <div class="grid" style="margin:12px 0"><div class="kpi">Account<b style="font-size:16px">${esc(l.bound_account || '-')}</b><span class="mute">${esc(l.bound_broker || '')}</span></div><div class="kpi">Funded<b style="font-size:16px">${usd(l.funded_usd)}</b><span class="mute">allowance ${usd(l.extra_allowance_usd)}</span></div><div class="kpi">Last heartbeat<b style="font-size:16px">${fmt(l.last_heartbeat)}</b><span class="mute">${esc(l.engine_state || '')} · v${esc(l.ea_version || '-')}</span></div><div class="kpi">Expires<b style="font-size:16px">${l.expires_at ? fmt(l.expires_at).slice(0, 10) : '-'}</b></div></div>
   ${(l.problems || []).length ? `<div class="msg">Problems: ${l.problems.map(esc).join(', ')}</div>` : ''}
   <label>Extend (days)</label><div class="row"><input id="ex" type="number" value="30" style="width:100px"><button class="b" data-a="extend" data-v="ex">Extend</button></div>
@@ -222,6 +250,7 @@ function openLicense(id) {
   <div class="row" style="margin-top:14px">${l.status === 'disabled' ? '<button class="b" data-a="enable">Enable</button>' : '<button class="b dng" data-a="disable">Disable</button>'}
   ${l.bound_account ? '<button class="b dng" data-a="unbind" data-conf="Unbind this license from its account? Only do this after the 100 USD unbind fee was confirmed.">Unbind</button>' : ''}<button class="b" id="tm">Send test message</button></div>`;
   $('#dc').onclick = closeDrawer;
+  d.querySelectorAll('[data-view]').forEach(b => b.onclick = () => accountView(b.dataset.view));
   $('#tm').onclick = async () => { await call('admin_send_test', {p_license: l.id}); toast('Test message queued'); };
   d.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
     if (b.dataset.conf && !confirm(b.dataset.conf)) return;
@@ -267,11 +296,12 @@ function openCustomer(uid) {
   <label style="margin-top:14px">Licenses (${lics.length})</label>
   ${lics.map(l => `<div class="card" style="margin:6px 0"><div class="row" style="margin:0"><b class="mono">${esc(l.key)}</b>${stPill(l.status)}${l.over_limit ? '<span class="pill p-bad">over limit</span>' : ''}</div>
     <div class="mute">${esc(planName(l.plan_id))} · account ${esc(l.bound_account || 'not bound')} ${esc(l.bound_broker || '')} · equity ${usd(l.equity)} · ${l.online ? 'online' : 'offline'}${(l.problems || []).length ? ' · problems: ' + l.problems.map(esc).join(', ') : ''}</div>
-    <div class="row" style="margin:8px 0 0"><a class="b pri" style="text-decoration:none" target="_blank" rel="noopener" href="${SITE}my-account.html?as=${esc(l.id)}">Open full account view</a><button class="b" data-l="${esc(l.id)}">Manage</button></div></div>`).join('') || '<div class="mute">No licenses yet.</div>'}
+    <div class="row" style="margin:8px 0 0"><button class="b pri" data-view="${esc(l.id)}">Open full account view</button><button class="b" data-l="${esc(l.id)}">Manage</button></div></div>`).join('') || '<div class="mute">No licenses yet.</div>'}
   <label style="margin-top:14px">Orders (${ords.length})</label>
   <div class="tblw"><table class="tbl">${ords.map(o => `<tr><td class="mono">${esc(o.ref)}</td><td>${esc(o.kind)}</td><td>${usd(o.amount_usd)}</td><td>${stPill(o.status)}</td><td class="mute">${fmt(o.created_at).slice(0, 10)}</td></tr>`).join('') || '<tr><td class="mute">None</td></tr>'}</table></div>`;
   $('#dc').onclick = closeDrawer;
   d.querySelectorAll('[data-l]').forEach(b => b.onclick = () => openLicense(b.dataset.l));
+  d.querySelectorAll('[data-view]').forEach(b => b.onclick = () => accountView(b.dataset.view));
 }
 function vSettings() {
   const c = data.config, fld = (k, label, area) => `<label>${label}</label>${area ? `<textarea id="c_${k}">${esc(c[k] || '')}</textarea>` : `<input id="c_${k}" value="${esc(c[k] || '')}" style="width:100%">`}`;

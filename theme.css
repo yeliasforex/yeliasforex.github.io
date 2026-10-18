@@ -51,7 +51,7 @@
 html.theme-anim,html.theme-anim *,html.theme-anim *::before,html.theme-anim *::after{transition:background-color .35s,color .35s,border-color .35s,fill .35s,stroke .35s!important}
 
 /* parts that are dark by design (stream window, Telegram phone mock) keep the night palette in day mode */
-:root[data-theme="light"] .console,:root[data-theme="light"] .phone,:root[data-theme="light"] .c-stage{
+:root[data-theme="light"] .phone{
   --ink:#06080E; --ink-2:#0A0E18; --panel:#0E1322; --panel-2:#121A2D; --line:rgba(170,190,230,.10); --line-2:rgba(170,190,230,.18);
   --fg:#ECEFF6; --fg-2:#C3CADA; --muted:#8892A8; --faint:#5B6479; --mint:#3EE09A; --gold:#E3B95F; --red:#FF6B78; color-scheme:dark; color:#ECEFF6}
 :root[data-theme="light"] .tabsx a.on,:root[data-theme="light"] .subnav a.on{color:var(--fg);background:rgba(25,40,80,.08)}
@@ -79,3 +79,12 @@ html.theme-anim,html.theme-anim *,html.theme-anim *::before,html.theme-anim *::a
 :root[data-theme="light"] .host-ring::before{border-color:rgba(25,40,80,.14)}
 :root[data-theme="light"] .host-ring::after{border-color:rgba(25,40,80,.08)}
 :root[data-theme="light"] .acct[data-state="loading"] .kpi b,:root[data-theme="light"] .acct[data-state="loading"] .acct-meta b{background:linear-gradient(90deg,rgba(25,40,80,.05),rgba(25,40,80,.12),rgba(25,40,80,.05));background-size:200% 100%}
+
+/* the stream card is white in day mode */
+:root[data-theme="light"] .console{background:linear-gradient(160deg,rgba(25,40,80,.20),rgba(25,40,80,.05) 40%,rgba(11,138,92,.25));box-shadow:0 40px 100px -40px rgba(23,71,200,.35),0 0 0 1px rgba(25,40,80,.06)}
+:root[data-theme="light"] .console-in{background:linear-gradient(180deg,#FFFFFF,#F1F5FC)}
+:root[data-theme="light"] .c-live{color:var(--red)}
+:root[data-theme="light"] .c-host{background:rgba(255,255,255,.88);border-color:var(--line-2);box-shadow:0 8px 24px -10px rgba(20,30,60,.25)}
+:root[data-theme="light"] .c-play{background:rgba(255,255,255,.9);color:var(--fg);border-color:var(--line-2);box-shadow:0 6px 18px -8px rgba(20,30,60,.3)}
+:root[data-theme="light"] .c-play:hover{background:#E0445A;color:#fff}
+:root[data-theme="light"] .c-frame{background:#000}
