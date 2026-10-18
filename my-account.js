@@ -62,10 +62,11 @@
     const parts = [];
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
     if (!S.licenses.length) parts.push(emptyPanel());
-    S.licenses.forEach(l => parts.push(licensePanel(l)));
+    S.licenses.forEach(l => { parts.push(licensePanel(l)); if (l.status !== 'unused') parts.push(`<div class="panel" id="res-${l.id}"><span class="hint">Loading results...</span></div>`); });
     parts.push(telegramPanel(), claimPanel(), ordersPanel());
     A.innerHTML = parts.join('');
     wire();
+    S.licenses.forEach(l => { if (l.status !== 'unused') mountResults(l.id); });
     const h = location.hash.match(/^#order=(.+)$/); if (h) { const e = document.getElementById('ord-' + h[1]); if (e) e.scrollIntoView({behavior: 'smooth', block: 'start'}); }
   }
   function emptyPanel() {
@@ -147,6 +148,23 @@
       for (let i = 0; i < 40 && !DEMO; i++) { await new Promise(r => setTimeout(r, 3000)); const {data} = await c.from('profiles').select('telegram_chat_id').maybeSingle(); if (data && data.telegram_chat_id) { await refresh(); toast('Telegram connected'); return; } } });
     const off = $('#tgOff'); if (off) off.onclick = guard(async () => { await rpc('disconnect_telegram'); await refresh(); });
     const go = $('#ckGo'); if (go) go.onclick = guard(async () => { const k = $('#ck').value.trim(); if (!k) return; await rpc('claim_license', {p_key: k}); toast('Key added'); await refresh(); });
+  }
+  const tradeCache = {};
+  async function mountResults(id) {
+    const el = document.getElementById('res-' + id); if (!el || !window.gteResults) return;
+    const hit = tradeCache[id];
+    if (!hit || Date.now() - hit.at > 300000) {
+      let rows = [];
+      if (DEMO) rows = gteResults.demo();
+      else for (let from = 0; from < 20000; from += 1000) {
+        const {data, error} = await c.from('trades').select('engine,dir,is_add,closed_at,open_price,close_price,lots,result_r,profit').eq('license_id', id).order('closed_at').range(from, from + 999);
+        if (error) { el.innerHTML = '<div class="msg err">Could not load results.</div>'; return; }
+        rows = rows.concat(data); if (data.length < 1000) break;
+      }
+      rows.forEach(t => { t.profit = Number(t.profit); t.result_r = Number(t.result_r); });
+      tradeCache[id] = {at: Date.now(), rows};
+    }
+    gteResults.render(el, tradeCache[id].rows);
   }
   async function refresh(hash) { S = await load(); if (hash) history.replaceState(null, '', hash); render(); }
 

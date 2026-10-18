@@ -75,3 +75,5 @@
 .tabsx{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}.tabsx a{padding:8px 14px;border-radius:999px;color:var(--fg-2);text-decoration:none;border:1px solid transparent;font-size:.92rem}
 .tabsx a.on{background:rgba(255,255,255,.07);border-color:var(--line-2);color:#fff}
 @media (max-width:640px){.panel{padding:20px 18px}.key{font-size:1rem}}
+
+.rh{margin:26px 0 8px;font-size:1.05rem}.rh .hint{font-weight:400;margin-left:8px;font-size:.85rem}
