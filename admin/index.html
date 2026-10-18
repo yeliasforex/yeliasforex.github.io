@@ -195,12 +195,12 @@ async function accountView(id) {
 $('#acvx').onclick = () => { $('#acv').classList.add('hide'); $('#acvf').src = 'about:blank'; };
 
 // ---------- views ----------
-const TABS = [['orders', 'Orders'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['videos', 'Videos'], ['audit', 'Audit log']];
+const TABS = [['orders', 'Orders'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['videos', 'Videos'], ['audit', 'Audit log']];
 function render() {
   const waiting = data.orders.filter(o => o.status === 'paid_claimed' || o.status === 'pending').length;
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
-  ({orders: vOrders, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
+  ({orders: vOrders, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
 }
 const planName = id => (data.plans.find(p => p.id === id) || {}).name || id || '-';
 const stPill = s => `<span class="pill ${ {active:'p-ok',unused:'p-info',expired:'p-warn',disabled:'p-bad',paid:'p-ok',paid_claimed:'p-warn',pending:'p-info',cancelled:'p-mute'}[s] || 'p-mute'}">${esc(s.replace('_', ' '))}</span>`;
@@ -284,6 +284,22 @@ function createKeys() {
   };
 }
 
+async function vFunnel() {
+  $('#view').innerHTML = '<div class="card mute">Loading...</div>';
+  let st; try { st = await call('admin_stats'); } catch (e) { return; }
+  if (!st) { $('#view').innerHTML = '<div class="card mute">No data in demo mode.</div>'; return; }
+  const n = x => Number(x || 0), buyers = n(st.license_holders), pct = n(st.signups) ? Math.round(buyers / n(st.signups) * 100) : 0;
+  const since = st.first_download ? fmt(st.first_download).slice(0, 10) : null;
+  $('#view').innerHTML = `<div class="grid" style="margin-bottom:14px">
+    <div class="kpi">Sign-ups<b>${n(st.signups)}</b><span class="mute">${n(st.signups_7d)} in 7 days · ${n(st.signups_30d)} in 30 days</span></div>
+    <div class="kpi">EA downloads<b>${n(st.downloads)}</b><span class="mute">${n(st.downloads_7d)} in 7 days · ${n(st.downloaders_signed_in)} signed-in people</span></div>
+    <div class="kpi">Have a license<b style="color:var(--ok)">${buyers}</b><span class="mute">${pct}% of sign-ups · ${n(st.paid_buyers)} paid orders</span></div>
+    <div class="kpi">Signed up, no license<b style="color:var(--warn)">${(st.not_purchased || []).length}</b><span class="mute">follow these up</span></div></div>
+  <div class="card"><b>Signed up but not purchased</b>
+    <div class="mute" style="margin:4px 0 8px">Downloads are counted from ${since || 'now on'}; earlier downloads were not tracked, and visitors who are not signed in only add to the download total.</div>
+    <div class="tblw"><table class="tbl"><tr><th>Email</th><th>Signed up</th><th>Downloaded the EA</th><th>Open order</th></tr>
+    ${(st.not_purchased || []).map(r => `<tr><td>${esc(r.email)}</td><td class="mute">${fmt(r.created_at)}</td><td>${r.downloaded ? '<span class="pill p-ok">yes</span>' : '<span class="pill p-mute">not seen</span>'}</td><td>${r.open_order ? '<span class="pill p-warn">waiting for payment</span>' : ''}</td></tr>`).join('') || '<tr><td colspan="4" class="mute">Nobody. Everyone who signed up has a license.</td></tr>'}</table></div></div>`;
+}
 function vHealth() {
   const act = data.licenses.filter(l => l.status === 'active');
   const off = act.filter(l => l.online === false), over = data.licenses.filter(l => l.over_limit), exp = act.filter(l => l.expires_at && (new Date(l.expires_at) - Date.now()) < 7 * 864e5);

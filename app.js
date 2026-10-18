@@ -24,6 +24,15 @@
     return sb;
   };
   gte.session = async () => { const c = await gte.client(); const {data} = await c.auth.getSession(); return data.session; };
+  // counts a press on the Download button (works for visitors and signed-in customers; never blocks the download)
+  gte.trackDownload = () => {
+    try {
+      let tok = KEY_; const k = Object.keys(localStorage).find(x => /^sb-.*-auth-token$/.test(x));
+      if (k) { const t = (JSON.parse(localStorage.getItem(k)) || {}).access_token; if (t) { const ex = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).exp; if (ex * 1000 > Date.now() + 30000) tok = t; } }
+      const v = ((document.getElementById('dlv') || {}).textContent || '').replace(/^v/, '') || null;
+      fetch(URL_ + '/rest/v1/rpc/ea_track_download', {method: 'POST', keepalive: true, headers: {apikey: KEY_, Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json'}, body: JSON.stringify({p_version: v})}).catch(() => {});
+    } catch (e) {}
+  };
   gte.settings = async () => { try { const c = await gte.client(); const {data} = await c.rpc('public_settings'); return data || {}; } catch (e) { return {}; } };
   gte.plans = async () => { try { const c = await gte.client(); const {data} = await c.from('plans').select('*').eq('active', true).order('sort'); return data && data.length ? data : FALLBACK; } catch (e) { return FALLBACK; } };
 
