@@ -1,42 +1,50 @@
 /* My account page. Reads only the signed-in customer's own rows (enforced by database row-level security). */
 (async function () {
-  const {esc, usd, date, ago, DEMO} = gte, $ = s => document.querySelector(s), A = $('#acct');
-  let c, S = {};            // client, state
+  const {esc, date, ago, DEMO} = gte, R = window.gteResults, $ = s => document.querySelector(s), A = $('#acct');
+  const usd = (n, d) => d !== undefined ? R.usd(n, d) : (Number.isInteger(+n) ? R.usd(n, 0) : R.usd(n, 2));   // always two decimals unless a whole amount
+  let c, S = {}, cur = null, range = 'all';
+  const tflt = {eng: 'all', res: 'all', page: 1};
+  let tab = (location.hash.match(/tab=(\w+)/) || [])[1] || 'overview';
+  const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['alerts', 'Alerts'], ['billing', 'Orders & keys']];
   const NOTIFY = [['ea_started', 'EA started / stopped'], ['trade_open', 'Trade opened'], ['trade_close', 'Trade closed with result'], ['addon', 'Add-on filled / closed'], ['daily_report', 'Daily report'], ['offline', 'EA offline / back online']];
-  const SEV = {error: 0, warning: 1, info: 2};
+  const SEV = {error: 0, warning: 1, info: 2}, tradeCache = {};
 
   // ---------- data ----------
   async function load() {
     if (DEMO) return demoData();
-    const q = async (p) => { const r = await p; if (r.error) throw r.error; return r.data; };
+    const q = async p => { const r = await p; if (r.error) throw r.error; return r.data; };
     const [profile, licenses, statuses, plans, catalog, orders, settings] = await Promise.all([
       q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').maybeSingle()),
       q(c.from('licenses').select('id,key,plan_id,status,activated_at,expires_at,bound_account,bound_broker,bound_is_demo,extra_allowance_usd,created_at').order('created_at')),
-      q(c.from('license_status').select('*')),
-      q(c.from('plans').select('*').order('sort')),
-      q(c.from('message_catalog').select('*')),
-      q(c.from('orders').select('*').order('created_at', {ascending: false})),
-      gte.settings()]);
+      q(c.from('license_status').select('*')), q(c.from('plans').select('*').order('sort')), q(c.from('message_catalog').select('*')),
+      q(c.from('orders').select('*').order('created_at', {ascending: false})), gte.settings()]);
     return {profile, licenses, statuses, plans, catalog, orders, settings};
   }
   async function rpc(fn, args) {
     if (DEMO) { toast('Demo mode: ' + fn); return {id: 'demo', ref: 'GTE-DEMO01', amountUsd: 1700}; }
-    const {data, error} = await c.rpc(fn, args || {});
-    if (error) throw error;
-    return data;
+    const {data, error} = await c.rpc(fn, args || {}); if (error) throw error; return data;
+  }
+  async function tradesFor(id) {
+    const hit = tradeCache[id]; if (hit && Date.now() - hit.at < 120000) return hit.rows;
+    let rows = [];
+    if (DEMO) rows = R.demo();
+    else for (let from = 0; from < 20000; from += 1000) {
+      const {data, error} = await c.from('trades').select('engine,dir,is_add,opened_at,closed_at,open_price,close_price,lots,result_r,profit').eq('license_id', id).order('closed_at').range(from, from + 999);
+      if (error) throw error; rows = rows.concat(data); if (data.length < 1000) break;
+    }
+    rows.forEach(t => { t.profit = Number(t.profit); t.result_r = Number(t.result_r); t.lots = Number(t.lots); });
+    tradeCache[id] = {at: Date.now(), rows}; return rows;
   }
   function demoData() {
     const d = n => new Date(Date.now() + n * 864e5).toISOString();
     return {profile: {email: 'amina@example.com', telegram_chat_id: null, notify_prefs: {}},
       licenses: [{id: '1', key: 'GTE-7QK2-XM9A-D4PF', plan_id: 'investor', status: 'active', activated_at: d(-30), expires_at: d(335), bound_account: 51234567, bound_broker: 'IC Markets', bound_is_demo: false, extra_allowance_usd: 0}],
       statuses: [{license_id: '1', online: true, last_heartbeat: d(-0.002), balance: 6120.4, equity: 6188.9, open_positions: 1, engine_state: 'IN TRADE', funded_usd: 5900, over_limit: true, ea_version: '1.08', problems: ['OVER_LIMIT', 'TELEGRAM_NOT_CONNECTED']}],
-      plans: gte.fallbackPlans.map((p, i) => ({...p, sort: i})),
-      catalog: [
-        {code: 'OVER_LIMIT', severity: 'warning', title: 'Deposits above your plan limit', explanation: 'The money deposited on this account is above your plan size. New trades are paused; open trades are still managed and nothing is closed.', solution: 'Upgrade your plan on your account page, or withdraw the excess. Trading resumes by itself within minutes.'},
+      plans: gte.fallbackPlans.map((p, i) => ({...p, sort: i, active: true})),
+      catalog: [{code: 'OVER_LIMIT', severity: 'warning', title: 'Deposits above your plan limit', explanation: 'The money deposited on this account is above your plan size. New trades are paused; open trades are still managed and nothing is closed.', solution: 'Upgrade your plan on your account page, or withdraw the excess. Trading resumes by itself within minutes.'},
         {code: 'TELEGRAM_NOT_CONNECTED', severity: 'info', title: 'Telegram not connected', explanation: 'You will not get notifications on Telegram.', solution: 'Open your account page and tap Connect Telegram.'}],
-      orders: [{id: 'o1', ref: 'GTE-DEMO01', kind: 'upgrade', plan_id: 'mogul', amount_usd: 1700, status: 'pending', created_at: d(0)}], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5}};
+      orders: [], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5}};
   }
-
   function toast(t, err) { const e = document.createElement('div'); e.className = 'msg ' + (err ? 'err' : 'ok'); e.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:99;min-width:260px;max-width:92vw'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 4000); }
   const guard = f => async (...a) => { try { await f(...a); } catch (e) { toast(e.message || String(e), true); } };
 
@@ -44,77 +52,147 @@
   const planOf = id => S.plans.find(p => p.id === id) || {name: id};
   const stOf = id => S.statuses.find(s => s.license_id === id) || {};
   const fill = t => String(t || '').replace('{SUPPORT}', S.settings.supportUrl || 'the support link');
+  const statePill = s => ({active: ['ok', 'Active'], unused: ['info', 'Ready to activate'], expired: ['warn', 'Expired'], disabled: ['bad', 'Disabled']}[s] || ['', s]);
+  const inRange = (t, r) => r === 'all' ? t : t.filter(x => new Date(x.closed_at).getTime() >= Date.now() - (r === '1m' ? 30 : 90) * 864e5);
+  const prettyState = s => { s = String(s || ''); if (/^M:/.test(s)) return s.includes('IN') ? 'In trade' : 'Running'; return s ? s[0] + s.slice(1).toLowerCase() : 'Running'; };
   function problems(l, st) {
     const codes = new Set(st.problems || []);
     if (l.status === 'expired') codes.add('KEY_EXPIRED');
     if (l.status === 'disabled') codes.add('KEY_DISABLED');
     if (l.status === 'unused') codes.add('__unused');
     if (l.status === 'active' && st.online === false) codes.add('HEARTBEAT_MISSING');
-    const list = [...codes].map(code => code === '__unused'
+    return [...codes].map(code => code === '__unused'
       ? {severity: 'info', title: 'Not activated yet', explanation: 'Your key has not been attached to an MT5 account yet.', solution: 'Download the EA, paste this key into its only setting and attach it to a USD MT5 chart. See the setup steps on the Download page.'}
-      : S.catalog.find(m => m.code === code)).filter(Boolean);
-    return list.sort((a, b) => SEV[a.severity] - SEV[b.severity]);
+      : S.catalog.find(m => m.code === code)).filter(Boolean).sort((a, b) => SEV[a.severity] - SEV[b.severity]);
   }
-  const statePill = s => ({active: ['ok', 'Active'], unused: ['info', 'Ready to activate'], expired: ['warn', 'Expired'], disabled: ['bad', 'Disabled']}[s] || ['', s]);
 
   // ---------- render ----------
-  function render() {
+  async function render() {
+    const lic = S.licenses.find(l => l.id === cur) || S.licenses[0]; cur = lic ? lic.id : null;
     const parts = [];
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
-    if (!S.licenses.length) parts.push(emptyPanel());
-    S.licenses.forEach(l => { parts.push(licensePanel(l)); if (l.status !== 'unused') parts.push(`<div class="panel" id="res-${l.id}"><span class="hint">Loading results...</span></div>`); });
-    parts.push(telegramPanel(), claimPanel(), ordersPanel());
+    if (!lic) { parts.push(emptyPanel(), claimPanel(), telegramPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
+    let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
+    if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · ${esc(l.key)}</option>`).join('')}</select></div>`);
+    parts.push(hero(lic, trades));
+    parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}</a>`).join('')}</div><div id="tabbody"></div>`);
     A.innerHTML = parts.join('');
-    wire();
-    S.licenses.forEach(l => { if (l.status !== 'unused') mountResults(l.id); });
+    const sel = $('#licSel'); if (sel) sel.onchange = e => { cur = e.target.value; render(); };
+    A.querySelectorAll('#subnav a').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.tab; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x === a)); drawTab(lic, trades); });
+    drawTab(lic, trades);
     const h = location.hash.match(/^#order=(.+)$/); if (h) { const e = document.getElementById('ord-' + h[1]); if (e) e.scrollIntoView({behavior: 'smooth', block: 'start'}); }
   }
-  function emptyPanel() {
-    return `<div class="panel"><h2>You don't have a license yet</h2><p class="sub">Choose a plan by the account size you trade. If we sent you a key, add it below.</p><a class="btn mint" href="pricing.html">See plans</a></div>`;
-  }
-  function licensePanel(l) {
-    const st = stOf(l.id), pl = planOf(l.plan_id), [pc, pt] = statePill(l.status);
-    const tol = S.settings.toleranceActive ?? 5, lim = pl.limit_usd, allowed = lim == null ? null : lim * (1 + tol / 100) + Number(l.extra_allowance_usd || 0);
-    const funded = Number(st.funded_usd || 0), pct = allowed ? Math.min(100, funded / allowed * 100) : 0, mark = allowed ? Math.min(100, lim / allowed * 100) : 0;
-    const over = st.over_limit, near = allowed && funded > lim * 0.9;
-    const days = l.expires_at ? Math.ceil((new Date(l.expires_at) - Date.now()) / 864e5) : null;
-    const probs = problems(l, st);
-    const higher = S.plans.filter(p => p.active && Number(p.price_usd) > Number(pl.price_usd));
+  function hero(l, trades) {
+    const st = stOf(l.id), pl = planOf(l.plan_id), [pc, pt] = statePill(l.status), s = R.stats(trades);
+    const days = l.expires_at ? Math.ceil((new Date(l.expires_at) - Date.now()) / 864e5) : null, pct = days == null ? 0 : Math.max(0, Math.min(100, days / 365 * 100));
+    const today = trades.filter(t => new Date(t.closed_at).toDateString() === new Date().toDateString()).reduce((a, t) => a + t.profit, 0);
+    const week = trades.filter(t => new Date(t.closed_at).getTime() >= Date.now() - 7 * 864e5).reduce((a, t) => a + t.profit, 0);
     const online = l.status === 'active' ? (st.online ? 'on' : 'off') : '';
-    return `<div class="panel" data-lic="${l.id}">
-      <div class="row sp"><div><h2>${esc(pl.name)} license</h2><p class="sub" style="margin:0">${days != null ? (days >= 0 ? 'Valid until <b>' + date(l.expires_at) + '</b> (' + days + ' days left)' : 'Expired on ' + date(l.expires_at)) : 'The year starts when you first attach the key'}</p></div><span class="pill ${pc}">${pt}</span></div>
-      <div class="row" style="margin:16px 0"><span class="key" id="k-${l.id}">${esc(l.key)}</span><button class="btn sm" data-copy="${esc(l.key)}">Copy</button><a class="btn sm" href="download.html">Download EA</a></div>
-      <div class="tiles">
-        <div class="tile"><div class="l">MT5 account</div><div class="v" style="font-size:1.1rem">${l.bound_account ? esc(l.bound_account) : 'Not bound yet'}</div><div class="s">${l.bound_account ? esc(l.bound_broker || '') + (l.bound_is_demo ? ' · demo' : ' · real') : 'Binds on first start'}</div></div>
-        <div class="tile"><div class="l">EA status</div><div class="v" style="font-size:1.1rem"><span class="dot2 ${online}"></span> ${l.status !== 'active' ? 'Not running' : st.online ? esc(prettyState(st.engine_state)) : 'Offline'}</div><div class="s">${st.last_heartbeat ? 'Last report ' + ago(st.last_heartbeat) : 'No report yet'}${st.ea_version ? ' · v' + esc(st.ea_version) : ''}</div></div>
-        <div class="tile"><div class="l">Balance</div><div class="v">${st.balance != null ? usd(st.balance) : '-'}</div><div class="s">Equity ${st.equity != null ? usd(st.equity) : '-'}</div></div>
-        <div class="tile"><div class="l">Open positions</div><div class="v">${st.open_positions ?? '-'}</div></div>
+    const fl = (st.equity != null && st.balance != null) ? st.equity - st.balance : null;
+    return `<div class="hero">
+      <div class="hero-l">
+        <div class="row"><span class="plan-chip">${esc(pl.name)}</span><span class="pill ${pc}">${pt}</span><span class="pill ${l.bound_is_demo ? 'info' : ''}">${l.bound_account ? (l.bound_is_demo ? 'Demo account' : 'Real account') : 'Not bound'}</span></div>
+        <div class="eyebrow">EQUITY</div>
+        <div class="eqbig">${st.equity != null ? usd(st.equity) : '-'}</div>
+        <div class="hint">Balance ${st.balance != null ? usd(st.balance) : '-'}${fl != null ? ' · Floating <b style="color:' + R.col(fl) + '">' + R.sgn(fl) + '</b>' : ''} · ${st.open_positions ?? 0} open position${(st.open_positions ?? 0) === 1 ? '' : 's'}</div>
+        <div class="live"><span class="dot2 ${online}"></span> ${l.status !== 'active' ? 'EA not running' : st.online ? esc(prettyState(st.engine_state)) : 'EA offline'}<span class="hint"> · ${st.last_heartbeat ? 'last report ' + ago(st.last_heartbeat) : 'no report yet'}${st.ea_version ? ' · v' + esc(st.ea_version) : ''}</span></div>
       </div>
-      <div><div class="row sp"><b>Deposit limit</b><span class="hint">${lim == null ? 'No limit on your plan' : 'Plan covers ' + usd(lim) + ' · tolerance ' + tol + '%' + (Number(l.extra_allowance_usd) ? ' · +' + usd(l.extra_allowance_usd) + ' allowance' : '')}</span></div>
-        ${lim == null ? '' : `<div class="meter ${over ? 'bad' : near ? 'warn' : ''}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div>
-        <div class="row sp"><span class="hint">Deposited minus withdrawn: <b>${usd(funded)}</b></span><span class="hint">Profits never count</span></div>`}
-        ${over ? `<div class="msg err" style="margin-top:12px">Your deposits are above your plan. New trades are paused until you upgrade or withdraw the excess. Open trades keep being managed.</div>` : ''}
+      <div class="hero-r">
+        <div class="tile"><div class="l">Today (closed)</div><div class="v" style="color:${R.col(today)}">${R.sgn(today)}</div></div>
+        <div class="tile"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}">${R.sgn(week)}</div></div>
+        <div class="tile"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}">${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades</div></div>
+        <div class="tile"><div class="l">Win rate</div><div class="v">${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2)}</div></div>
       </div>
-      <h3 style="margin:24px 0 8px;font-size:1.05rem">Status and problems</h3>
-      ${probs.length ? '<div class="prob">' + probs.map(p => `<div class="it ${p.severity}"><div class="t">${esc(p.title)}</div><div class="e">${esc(fill(p.explanation))}</div><div class="s">What to do: ${esc(fill(p.solution))}</div></div>`).join('') + '</div>' : '<div class="allgood">&#10003; Everything looks good. No problems reported.</div>'}
-      <div class="row" style="margin-top:20px">
-        ${higher.length ? `<select id="up-${l.id}" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${higher.map(p => `<option value="${p.id}">Upgrade to ${esc(p.name)} (+${usd(Number(p.price_usd) - Number(pl.price_usd))})</option>`).join('')}</select><button class="btn sm ${over ? 'mint' : ''}" data-upgrade="${l.id}">Upgrade</button>` : ''}
-        ${days != null && (days <= 45 || l.status === 'expired') ? `<button class="btn sm mint" data-renew="${l.id}">Renew for ${usd(pl.price_usd)}</button>` : ''}
-      </div>
-      <details style="margin-top:18px"><summary style="cursor:pointer;color:var(--fg-2)">Move this key to another account</summary>
-        <p class="fine" style="margin-top:10px">A key is bound to the first MT5 account it was used on, demo or real. Moving it is not self-service: it costs <b>${usd(S.settings.unbindFeeUsd ?? 100)}</b>. Start a request below, pay the fee, then <b>contact support</b> on Telegram (<a href="${esc(S.settings.supportUrl || 'https://t.me/GoldTriEngine_Support')}" rel="noopener">@GoldTriEngine_Support</a>) and we unbind the key.</p>
-        ${l.bound_account ? `<button class="btn sm danger" data-unbind="${l.id}">Start unbind request (${usd(S.settings.unbindFeeUsd ?? 100)})</button>` : '<span class="hint">This key is not bound yet, so there is nothing to move.</span>'}
-      </details></div>`;
+      <div class="hero-f">
+        <div class="row"><span class="key" id="k-${l.id}">${esc(l.key)}</span><button class="btn sm" data-copy="${esc(l.key)}">Copy</button><a class="btn sm" href="download.html">Download EA</a></div>
+        <div class="yr"><div class="row sp"><span class="hint">${days != null ? (days >= 0 ? 'License valid until <b>' + date(l.expires_at) + '</b>' : 'Expired on ' + date(l.expires_at)) : 'The year starts when you first attach the key'}</span><span class="hint">${days != null && days >= 0 ? days + ' days left' : ''}</span></div><div class="meter ${days != null && days <= 30 ? 'warn' : ''}"><i style="width:${pct}%"></i></div></div>
+      </div></div>`;
   }
-  function prettyState(s) { s = String(s || ''); if (/^M:/.test(s)) return s.includes('IN') ? 'In trade' : 'Running'; return s ? s[0] + s.slice(1).toLowerCase() : 'Running'; }
+  function drawTab(lic, trades) {
+    const body = $('#tabbody'); if (!body) return;
+    body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, alerts: () => telegramPanel(), billing: tBilling}[tab] || tOverview)(lic, trades);
+    wire(); afterDraw(lic, trades);
+  }
+  function tOverview(l, trades) {
+    const st = stOf(l.id), pl = planOf(l.plan_id), probs = problems(l, st);
+    const tol = S.settings.toleranceActive ?? 5, lim = pl.limit_usd, allowed = lim == null ? null : lim * (1 + tol / 100) + Number(l.extra_allowance_usd || 0);
+    const funded = Number(st.funded_usd || 0), pct = allowed ? Math.min(100, funded / allowed * 100) : 0, mark = allowed ? Math.min(100, lim / allowed * 100) : 0, over = st.over_limit, near = allowed && funded > lim * 0.9;
+    const recent = trades.slice().sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at)).slice(0, 6);
+    return `<div class="grid2">
+      <div class="panel"><h2>Status</h2><p class="sub">What the EA reports for this license.</p>
+        ${probs.length ? '<div class="prob">' + probs.map(p => `<div class="it ${p.severity}"><div class="t">${esc(p.title)}</div><div class="e">${esc(fill(p.explanation))}</div><div class="s">What to do: ${esc(fill(p.solution))}</div></div>`).join('') + '</div>' : '<div class="allgood">&#10003; Everything looks good. No problems reported.</div>'}</div>
+      <div class="panel"><h2>Account &amp; limit</h2><p class="sub">The account this key is bound to.</p>
+        <div class="kv"><span>MT5 account</span><b>${l.bound_account ? esc(l.bound_account) : 'Not bound yet'}</b></div>
+        <div class="kv"><span>Broker</span><b>${esc(l.bound_broker || '-')}</b></div>
+        <div class="kv"><span>Plan covers</span><b>${lim == null ? 'No deposit limit' : usd(lim, 0)}</b></div>
+        <div class="kv"><span>Deposited minus withdrawn</span><b>${usd(funded)}</b></div>
+        ${lim == null ? '' : `<div class="meter ${over ? 'bad' : near ? 'warn' : ''}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div><div class="hint">Limit ${usd(lim, 0)} + ${tol}% tolerance${Number(l.extra_allowance_usd) ? ' + ' + usd(l.extra_allowance_usd, 0) + ' allowance' : ''}. Profits never count.</div>`}
+        ${over ? '<div class="msg err" style="margin-top:12px">Deposits are above your plan. New trades are paused until you upgrade or withdraw the excess. Open trades keep being managed.</div><div class="row" style="margin-top:10px"><a class="btn sm mint" href="#tab=billing" data-go="billing">Upgrade plan</a></div>' : ''}</div></div>
+      <div class="panel"><div class="row sp"><div><h2>Equity curve</h2><p class="sub" style="margin:0">Cumulative net result of closed trades.</p></div><a class="btn sm" href="#tab=results" data-go="results">All charts</a></div><div id="ov-eq"></div></div>
+      <div class="panel"><div class="row sp"><div><h2>Recent trades</h2><p class="sub" style="margin:0">Times in your local time.</p></div><a class="btn sm" href="#tab=trades" data-go="trades">All trades</a></div>
+        ${recent.length ? `<div style="overflow-x:auto"><table class="tbl2"><tr><th>Closed</th><th>Engine</th><th>Side</th><th>Lots</th><th>Open</th><th>Close</th><th>Held</th><th>Result</th></tr>${R.tradeRows(recent)}</table></div>` : '<div class="empty">The EA has not closed a trade on this account yet. Charts and history appear here automatically.</div>'}</div>`;
+  }
+  function rangeTabs() { return `<div class="tabsx" id="rs-tabs">${[['1m', '1 month'], ['3m', '3 months'], ['all', 'All']].map(([k, n]) => `<a href="#" data-r="${k}" class="${k === range ? 'on' : ''}">${n}</a>`).join('')}</div>`; }
+  function tResults(l, all) {
+    if (!all.length) return `<div class="panel"><h2>Results</h2><div class="empty">Charts appear here after the EA closes its first trade on your account.</div></div>`;
+    const t = inRange(all, range), s = R.stats(t), k = (lab, v, sub, clr) => `<div class="tile"><div class="l">${lab}</div><div class="v"${clr ? ` style="color:${clr}"` : ''}>${v}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
+    return `<div class="panel"><div class="row sp"><div><h2>Results</h2><p class="sub" style="margin:0">Closed trades recorded by the EA on your account. Source: your own trade records. Times in your local time.</p></div>${rangeTabs()}</div>
+      <div class="tiles">${k('Net result', s.n ? R.sgn(s.net) : '-', s.n + ' closed trades', R.col(s.net))}${k('Win rate', s.win.toFixed(0) + '%', s.wins + ' wins · ' + s.losses + ' losses')}${k('Profit factor', s.pf == null ? '-' : s.pf.toFixed(2), 'gross profit / gross loss')}${k('Largest drawdown', usd(s.maxDD, 2), 'below a result peak')}
+        ${k('Average win', R.sgn(s.avgWin), '')}${k('Average loss', R.sgn(s.avgLoss), '')}${k('Best trade', R.sgn(s.best), '', 'var(--mint)')}${k('Worst trade', R.sgn(s.worst), '', 'var(--red)')}</div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Equity curve <span class="hint">hover to read a point</span></h3><div id="rs-eq"></div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Drawdown <span class="hint">distance below the highest result so far</span></h3><div id="rs-dd"></div></div>
+      <div class="grid2"><div class="panel"><h3 class="rh" style="margin-top:0">By engine</h3>${R.engineBars(t)}</div>
+        <div class="panel"><h3 class="rh" style="margin-top:0">Profit calendar <span class="hint">last 16 weeks</span></h3>${R.calendar(all, 16)}</div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Daily result <span class="hint">last 30 days</span></h3>${R.bars(R.dayItems(all, 30), 170)}</div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 190)}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
+  }
+  function tTrades(l, all) {
+    if (!all.length) return `<div class="panel"><h2>Trades</h2><div class="empty">No closed trades yet.</div></div>`;
+    let t = all.slice().sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at));
+    if (tflt.eng !== 'all') t = t.filter(x => x.engine === tflt.eng);
+    if (tflt.res === 'win') t = t.filter(x => x.profit > 0);
+    if (tflt.res === 'loss') t = t.filter(x => x.profit < 0);
+    const per = 25, pages = Math.max(1, Math.ceil(t.length / per)); tflt.page = Math.min(tflt.page, pages);
+    const sel = (id, opts, cur) => `<select id="${id}" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${opts.map(([v, n]) => `<option value="${v}" ${cur === v ? 'selected' : ''}>${n}</option>`).join('')}</select>`;
+    return `<div class="panel"><div class="row sp"><div><h2>Trade history</h2><p class="sub" style="margin:0">${t.length} of ${all.length} closed trades. Times in your local time.</p></div>
+      <div class="row">${sel('f-eng', [['all', 'All engines'], ['M', 'Alpha'], ['I', 'Beta'], ['D', 'Gamma']], tflt.eng)}${sel('f-res', [['all', 'Wins and losses'], ['win', 'Wins'], ['loss', 'Losses']], tflt.res)}</div></div>
+      <div style="overflow-x:auto;margin-top:10px"><table class="tbl2"><tr><th>Closed</th><th>Engine</th><th>Side</th><th>Lots</th><th>Open</th><th>Close</th><th>Held</th><th>Result</th></tr>${R.tradeRows(t.slice((tflt.page - 1) * per, tflt.page * per)) || '<tr><td colspan="8" class="hint">No trades match.</td></tr>'}</table></div>
+      <div class="row sp" style="margin-top:12px"><button class="btn sm" id="pg-prev" ${tflt.page <= 1 ? 'disabled' : ''}>Previous</button><span class="hint">Page ${tflt.page} of ${pages}</span><button class="btn sm" id="pg-next" ${tflt.page >= pages ? 'disabled' : ''}>Next</button></div></div>`;
+  }
+  function tBilling(l) {
+    const pl = planOf(l.plan_id), higher = S.plans.filter(p => p.active && Number(p.price_usd) > Number(pl.price_usd)), days = l.expires_at ? Math.ceil((new Date(l.expires_at) - Date.now()) / 864e5) : null;
+    return `<div class="panel"><h2>Upgrade or renew</h2><p class="sub">Upgrading costs the price difference and keeps your expiry date. Renewing adds a year. Payments are confirmed by us, usually within a few hours.</p>
+      <div class="row">${higher.length ? `<select id="up-${l.id}" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${higher.map(p => `<option value="${p.id}">Upgrade to ${esc(p.name)} (+${usd(Number(p.price_usd) - Number(pl.price_usd))})</option>`).join('')}</select><button class="btn sm mint" data-upgrade="${l.id}">Upgrade</button>` : '<span class="hint">You are on the highest plan.</span>'}
+      <button class="btn sm ${days != null && (days <= 45 || l.status === 'expired') ? 'mint' : ''}" data-renew="${l.id}">Renew for ${usd(pl.price_usd)}</button></div></div>
+      ${claimPanel()}
+      <div class="panel"><h2>Move this key to another account</h2><p class="sub">A key is bound to the first MT5 account it was used on, demo or real. Moving it is not self-service: it costs <b>${usd(S.settings.unbindFeeUsd ?? 100)}</b>. Start a request, pay the fee, then <b>contact support</b> on Telegram (<a href="${esc(S.settings.supportUrl || 'https://t.me/GoldTriEngine_Support')}" rel="noopener">@GoldTriEngine_Support</a>) and we unbind the key.</p>
+        ${l.bound_account ? `<button class="btn sm danger" data-unbind="${l.id}">Start unbind request (${usd(S.settings.unbindFeeUsd ?? 100)})</button>` : '<span class="hint">This key is not bound yet, so there is nothing to move.</span>'}</div>
+      ${ordersPanel()}`;
+  }
+  function afterDraw(l, all) {
+    const t = inRange(all, range), cv = R.curve(t), cvAll = R.curve(all);
+    for (const [host, key, color, neg, pts] of [['ov-eq', 'c', '#3EE09A', false, cvAll], ['rs-eq', 'c', '#3EE09A', false, cv], ['rs-dd', 'dd', '#FF6B78', true, cv]]) {
+      const el = document.getElementById(host); if (!el) continue;
+      el.innerHTML = R.lineChart(host + 'c', pts, key, color, neg); R.bindHover(el, host + 'c', pts, key, neg);
+    }
+    A.querySelectorAll('#rs-tabs a').forEach(a => a.onclick = e => { e.preventDefault(); range = a.dataset.r; drawTab(l, all); });
+    const fe = $('#f-eng'), fr = $('#f-res');
+    if (fe) fe.onchange = () => { tflt.eng = fe.value; tflt.page = 1; drawTab(l, all); };
+    if (fr) fr.onchange = () => { tflt.res = fr.value; tflt.page = 1; drawTab(l, all); };
+    const pp = $('#pg-prev'), pn = $('#pg-next');
+    if (pp) pp.onclick = () => { tflt.page--; drawTab(l, all); };
+    if (pn) pn.onclick = () => { tflt.page++; drawTab(l, all); };
+    A.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.go; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x.dataset.tab === tab)); drawTab(l, all); });
+  }
+
+  function emptyPanel() { return `<div class="panel"><h2>You don't have a license yet</h2><p class="sub">Choose a plan by the account size you trade. If we sent you a key, add it below.</p><a class="btn mint" href="pricing.html">See plans</a></div>`; }
   function orderPanel(o) {
-    const pl = planOf(o.plan_id), kind = {purchase: 'New license', renewal: 'Renewal', upgrade: 'Upgrade', unbind: 'Unbind fee'}[o.kind];
-    const claimed = o.status === 'paid_claimed';
+    const pl = planOf(o.plan_id), kind = {purchase: 'New license', renewal: 'Renewal', upgrade: 'Upgrade', unbind: 'Unbind fee'}[o.kind], claimed = o.status === 'paid_claimed';
     return `<div class="paybox"><div class="row sp"><div><b>Order ${esc(o.ref)}</b> <span class="hint">${esc(kind)} · ${esc(pl.name || '')}</span></div><span class="pill ${claimed ? 'warn' : 'info'}">${claimed ? 'Confirming payment' : 'Waiting for payment'}</span></div>
       <div class="amt" style="margin:10px 0">${usd(o.amount_usd)} <span class="hint">USD</span></div>
       <div id="pay-${o.id}"><span class="hint">Loading payment details...</span></div>
       ${claimed ? '<p class="hint">Thanks. We are confirming your payment. Your key appears here and on Telegram once it is confirmed.</p>'
-      : `<div class="f" style="margin-top:14px"><label for="pr-${o.id}">After paying, enter your transaction ID or a note</label><input id="pr-${o.id}" placeholder="Transaction ID / reference"><div class="row"><button class="btn mint" data-paid="${o.id}">I have paid</button><button class="btn sm" data-cancel="${o.id}" style="display:none">Cancel</button></div></div>`}
+      : `<div class="f" style="margin-top:14px"><label for="pr-${o.id}">After paying, enter your transaction ID or a note</label><input id="pr-${o.id}" placeholder="Transaction ID / reference"><div class="row"><button class="btn mint" data-paid="${o.id}">I have paid</button></div></div>`}
       ${o.kind === 'unbind' ? '<p class="fine"><b>Next:</b> after paying, contact support on Telegram so we can unbind the key.</p>' : ''}</div>`;
   }
   function telegramPanel() {
@@ -124,20 +202,16 @@
         <p class="hint" style="margin-top:10px">License and deposit-limit warnings are always sent.</p><button class="btn sm danger" id="tgOff" style="margin-top:8px">Disconnect Telegram</button></div>`
       : '<div class="row" style="margin-top:14px"><button class="btn mint" id="tgOn">Connect Telegram</button><span class="hint" id="tgHint">Opens Telegram. Tap Start in the bot.</span></div>'}</div>`;
   }
-  function claimPanel() {
-    return `<div class="panel"><h2>Add a license key</h2><p class="sub">If we gave you a key (a gift or a manual sale), add it to your account here.</p><div class="f"><input id="ck" placeholder="GTE-XXXX-XXXX-XXXX" autocapitalize="characters"><button class="btn" id="ckGo">Add key</button></div></div>`;
-  }
+  function claimPanel() { return `<div class="panel"><h2>Add a license key</h2><p class="sub">If we gave you a key (a gift or a manual sale), add it to your account here.</p><div class="f"><input id="ck" placeholder="GTE-XXXX-XXXX-XXXX" autocapitalize="characters"><button class="btn" id="ckGo">Add key</button></div></div>`; }
   function ordersPanel() {
     if (!S.orders.length) return '';
     return `<div class="panel"><h2>Orders</h2><div style="overflow-x:auto"><table class="tbl2"><tr><th>Reference</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr>${S.orders.map(o => `<tr><td class="key" style="font-size:.85rem;padding:2px 6px">${esc(o.ref)}</td><td>${esc(o.kind)}</td><td>${usd(o.amount_usd)}</td><td>${esc(o.status.replace('_', ' '))}</td><td>${date(o.created_at)}</td></tr>`).join('')}</table></div></div>`;
   }
-
-  // ---------- actions ----------
   function addrHtml(d) {
     if (!d.address) return '';
     return `<div style="margin:6px 0 14px"><div class="hint">Send to this address (${esc(d.network || '')})</div>
       <div class="row" style="margin-top:6px"><span class="key" style="font-size:.88rem;word-break:break-all;line-height:1.4">${esc(d.address)}</span><button class="btn sm" data-copy="${esc(d.address)}">Copy address</button></div>
-      <div class="row" style="margin-top:12px;align-items:flex-start"><div id="qr-${esc(d.address.slice(0, 6))}" style="background:#fff;padding:8px;border-radius:10px;width:fit-content" data-qr="${esc(d.address)}"></div>
+      <div class="row" style="margin-top:12px;align-items:flex-start"><div style="background:#fff;padding:8px;border-radius:10px;width:fit-content" data-qr="${esc(d.address)}"></div>
       <div class="hint" style="max-width:26rem">Scan with your wallet or exchange app. Check that the network is <b>${esc(d.network || '')}</b>: coins sent on another network can be lost.</div></div></div>`;
   }
   async function drawQr(el) {
@@ -146,40 +220,32 @@
     if (window.QRCode) { q.dataset.done = '1'; new QRCode(q, {text: q.dataset.qr, width: 150, height: 150}); }
     el.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); });
   }
+
+  // ---------- actions ----------
   function wire() {
-    A.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); toast('Key copied'); });
+    A.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); });
     A.querySelectorAll('[data-upgrade]').forEach(b => b.onclick = guard(async () => { const o = await rpc('create_order', {p_kind: 'upgrade', p_plan_id: $('#up-' + b.dataset.upgrade).value, p_license_id: b.dataset.upgrade}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-renew]').forEach(b => b.onclick = guard(async () => { const o = await rpc('create_order', {p_kind: 'renewal', p_license_id: b.dataset.renew}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-unbind]').forEach(b => b.onclick = guard(async () => { if (!confirm('Unbinding costs ' + usd(S.settings.unbindFeeUsd ?? 100) + ' and needs support. Start the request?')) return; const o = await rpc('create_order', {p_kind: 'unbind', p_license_id: b.dataset.unbind}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-paid]').forEach(b => b.onclick = guard(async () => { const v = $('#pr-' + b.dataset.paid).value.trim(); if (!v) return toast('Enter your transaction ID or a short note', true); await rpc('claim_payment', {p_order: b.dataset.paid, p_paid_ref: v}); toast('Thank you. We will confirm your payment shortly.'); await refresh(); }));
-    A.querySelectorAll('[id^="pay-"]').forEach(async el => { const id = el.id.slice(4); try { const d = DEMO ? {instructions: 'Payment instructions appear here.', link: '', network: 'USDT on TRON (TRC20)', address: 'TDemoAddressOnlyForThePreview000000'} : await rpc('get_payment_details', {p_order: id});
-      el.innerHTML = addrHtml(d) + (d.instructions ? '<div style="white-space:pre-wrap">' + esc(d.instructions) + '</div>' : '<span class="hint">Payment details will be shown here. If nothing appears, contact support.</span>') + (d.link ? `<div class="row" style="margin-top:10px"><a class="btn sm mint" href="${esc(d.link)}" rel="noopener" target="_blank">Open payment link</a></div>` : '') + `<p class="hint">Use exactly <b>${usd(S.orders.find(o => o.id === id)?.amount_usd)}</b> and put <b>${esc(S.orders.find(o => o.id === id)?.ref)}</b> in the note if the payment method allows it.</p>`; drawQr(el); } catch (e) { el.textContent = 'Could not load payment details.'; } });
+    A.querySelectorAll('[id^="pay-"]').forEach(async el => {
+      if (el.dataset.done) return; el.dataset.done = '1'; const id = el.id.slice(4);
+      try {
+        const d = DEMO ? {instructions: 'Payment instructions appear here.', link: '', network: 'USDT on TRON (TRC20)', address: 'TDemoAddressOnlyForThePreview000000'} : await rpc('get_payment_details', {p_order: id}), o = S.orders.find(x => x.id === id);
+        el.innerHTML = addrHtml(d) + (d.instructions ? '<div style="white-space:pre-wrap">' + esc(d.instructions) + '</div>' : (d.address ? '' : '<span class="hint">Payment details will be shown here. If nothing appears, contact support.</span>')) + (d.link ? `<div class="row" style="margin-top:10px"><a class="btn sm mint" href="${esc(d.link)}" rel="noopener" target="_blank">Open payment link</a></div>` : '') + `<p class="hint">Send exactly <b>${usd(o?.amount_usd)}</b>. Order reference: <b>${esc(o?.ref)}</b>.</p>`;
+        drawQr(el);
+      } catch (e) { el.textContent = 'Could not load payment details.'; }
+    });
     A.querySelectorAll('[data-pref]').forEach(i => i.onchange = guard(async () => { if (DEMO) return; const prefs = {...(S.profile.notify_prefs || {})}; prefs[i.dataset.pref] = i.checked; const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; S.profile.notify_prefs = prefs; toast('Saved'); }));
     const on = $('#tgOn'); if (on) on.onclick = guard(async () => {
       const bot = S.settings.botUsername || 'GoldTriEngine_Bot'; const tok = DEMO ? 'demo' : await rpc('create_telegram_link');
       window.open('https://t.me/' + bot + '?start=' + tok, '_blank', 'noopener'); $('#tgHint').textContent = 'Waiting for you to tap Start in Telegram...';
-      for (let i = 0; i < 40 && !DEMO; i++) { await new Promise(r => setTimeout(r, 3000)); const {data} = await c.from('profiles').select('telegram_chat_id').maybeSingle(); if (data && data.telegram_chat_id) { await refresh(); toast('Telegram connected'); return; } } });
+      for (let i = 0; i < 40 && !DEMO; i++) { await new Promise(r => setTimeout(r, 3000)); const {data} = await c.from('profiles').select('telegram_chat_id').maybeSingle(); if (data && data.telegram_chat_id) { await refresh(); toast('Telegram connected'); return; } }
+    });
     const off = $('#tgOff'); if (off) off.onclick = guard(async () => { await rpc('disconnect_telegram'); await refresh(); });
     const go = $('#ckGo'); if (go) go.onclick = guard(async () => { const k = $('#ck').value.trim(); if (!k) return; await rpc('claim_license', {p_key: k}); toast('Key added'); await refresh(); });
   }
-  const tradeCache = {};
-  async function mountResults(id) {
-    const el = document.getElementById('res-' + id); if (!el || !window.gteResults) return;
-    const hit = tradeCache[id];
-    if (!hit || Date.now() - hit.at > 300000) {
-      let rows = [];
-      if (DEMO) rows = gteResults.demo();
-      else for (let from = 0; from < 20000; from += 1000) {
-        const {data, error} = await c.from('trades').select('engine,dir,is_add,closed_at,open_price,close_price,lots,result_r,profit').eq('license_id', id).order('closed_at').range(from, from + 999);
-        if (error) { el.innerHTML = '<div class="msg err">Could not load results.</div>'; return; }
-        rows = rows.concat(data); if (data.length < 1000) break;
-      }
-      rows.forEach(t => { t.profit = Number(t.profit); t.result_r = Number(t.result_r); });
-      tradeCache[id] = {at: Date.now(), rows};
-    }
-    gteResults.render(el, tradeCache[id].rows);
-  }
-  async function refresh(hash) { S = await load(); if (hash) history.replaceState(null, '', hash); render(); }
+  async function refresh(hash) { S = await load(); Object.keys(tradeCache).forEach(k => delete tradeCache[k]); if (hash) history.replaceState(null, '', hash); await render(); }
 
   // ---------- start ----------
   c = DEMO ? null : await gte.client();
@@ -188,6 +254,9 @@
   $('#who').textContent = sess.user.email || '';
   $('#out').onclick = async () => { if (!DEMO) await c.auth.signOut(); location.href = 'index.html'; };
   try { S = await load(); } catch (e) { A.innerHTML = '<div class="msg err">Could not load your account: ' + esc(e.message || e) + '</div>'; return; }
-  render();
-  if (!DEMO) setInterval(async () => { try { S = await load(); render(); } catch (e) {} }, 60000);
+  await render();
+  if (!DEMO) setInterval(async () => {
+    const ae = document.activeElement; if (document.hidden || (ae && /INPUT|SELECT|TEXTAREA/.test(ae.tagName))) return;
+    try { S = await load(); await render(); } catch (e) {}
+  }, 60000);
 })();
