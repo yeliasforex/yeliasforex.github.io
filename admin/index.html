@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>GoldTriEngine Admin</title>
+<style>
+:root{--bg:#0e1116;--panel:#161b22;--panel2:#1d242d;--line:#2a323d;--text:#e6e9ee;--mute:#8b95a3;--gold:#e0b24a;--gold2:#f5d27a;--ok:#3fb27f;--bad:#e5534b;--warn:#e0a03a;--info:#4f8ff7}
+@media (prefers-color-scheme:light){:root{--bg:#f4f5f7;--panel:#fff;--panel2:#f0f2f5;--line:#dfe3e8;--text:#17191c;--mute:#667180;--gold:#a87a14;--gold2:#8c6410;--ok:#1d8a5c;--bad:#c93c35;--warn:#b57a14;--info:#2e6fe0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+header h1{font-size:16px;margin:0;letter-spacing:.04em}
+header h1 b{color:var(--gold)}
+header .sp{flex:1}
+nav{display:flex;gap:4px;padding:8px 12px;overflow-x:auto;border-bottom:1px solid var(--line);background:var(--bg)}
+nav button{background:none;border:1px solid transparent;color:var(--mute);padding:8px 12px;border-radius:8px;cursor:pointer;white-space:nowrap;font:inherit}
+nav button.on{color:var(--text);background:var(--panel);border-color:var(--line)}
+nav .badge{background:var(--bad);color:#fff;border-radius:10px;padding:0 6px;font-size:11px;margin-left:6px}
+main{padding:16px;max-width:1280px;margin:0 auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+input,select,textarea,button{font:inherit;color:var(--text)}
+input,select,textarea{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+textarea{width:100%;min-height:90px}
+button.b{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer}
+button.b:hover{border-color:var(--gold)}
+button.pri{background:var(--gold);color:#1a1405;border-color:var(--gold);font-weight:600}
+button.dng{border-color:var(--bad);color:var(--bad)}
+.tbl{width:100%;border-collapse:collapse}
+.tblw{overflow-x:auto}
+.tbl th{text-align:left;color:var(--mute);font-weight:500;font-size:12px;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr.click{cursor:pointer}.tbl tr.click:hover td{background:var(--panel2)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;border:1px solid var(--line)}
+.p-ok{color:var(--ok);border-color:var(--ok)}.p-bad{color:var(--bad);border-color:var(--bad)}.p-warn{color:var(--warn);border-color:var(--warn)}.p-info{color:var(--info);border-color:var(--info)}.p-mute{color:var(--mute)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:var(--mute)}.dot.on{background:var(--ok)}.dot.off{background:var(--bad)}
+.mono{font-family:ui-monospace,Consolas,monospace}
+.mute{color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}.kpi b{display:block;font-size:22px}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--panel);border-left:1px solid var(--line);padding:16px;overflow:auto;z-index:10;box-shadow:-10px 0 30px #0006}
+.drawer h3{margin:0 0 4px}
+.login{max-width:420px;margin:12vh auto;padding:0 16px}
+.msg{padding:10px 12px;border-radius:8px;margin:10px 0;border:1px solid var(--line);background:var(--panel2)}
+.msg.err{border-color:var(--bad);color:var(--bad)}.msg.okk{border-color:var(--ok);color:var(--ok)}
+.hide{display:none!important}
+label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
+@media (max-width:640px){main{padding:10px}.tbl td,.tbl th{padding:7px 5px}}
+</style>
+</head>
+<body>
+<div id="login" class="login hide">
+  <div class="card">
+    <h1 style="margin:0 0 4px">Gold<b style="color:var(--gold)">Tri</b>Engine</h1>
+    <div class="mute" style="margin-bottom:14px">Admin sign-in</div>
+    <div id="stepEmail">
+      <label>Email</label><input id="email" type="email" style="width:100%" autocomplete="email">
+      <div class="row" style="margin-top:12px"><button class="b pri" id="sendLink">Email me a sign-in link</button></div>
+    </div>
+    <div id="stepMfa" class="hide">
+      <div id="mfaEnroll" class="hide"><div class="mute">Scan this with an authenticator app (Google Authenticator, Authy, 1Password...).</div><div id="qr" style="background:#fff;display:inline-block;margin:10px 0;padding:6px"></div><div class="mono mute" id="secret" style="word-break:break-all;font-size:12px"></div></div>
+      <label>6-digit authenticator code</label><input id="code" inputmode="numeric" maxlength="6" style="width:100%;font-size:20px;letter-spacing:.3em">
+      <div class="row" style="margin-top:12px"><button class="b pri" id="verifyMfa">Verify</button></div>
+    </div>
+    <div id="loginMsg"></div>
+  </div>
+</div>
+
+<div id="app" class="hide">
+  <header><h1>Gold<b>Tri</b>Engine <span class="mute">admin</span></h1><span class="sp"></span><span class="mute" id="who"></span><button class="b" id="out">Sign out</button></header>
+  <nav id="tabs"></nav>
+  <main id="view"></main>
+</div>
+<div id="drawer" class="drawer hide"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SB_URL = 'https://ekljeyquxvlfbeadgszx.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrbGpleXF1eHZsZmJlYWRnc3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyOTI5MzYsImV4cCI6MjEwNzg2ODkzNn0.SlM13aMEy-mTO_iuPTvZz5l4BO0xZnvPBJKAVnZKVx8'; // public anon key
+const DEMO = new URLSearchParams(location.search).has('demo');
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = d => d ? new Date(d).toISOString().slice(0, 16).replace('T', ' ') : '-';
+const usd = n => n == null ? '-' : '$' + Number(n).toLocaleString('en-US', {maximumFractionDigits: 2});
+let sb, data = {licenses: [], orders: [], customers: [], config: {}, audit: [], plans: [], videos: []}, tab = 'orders';
+
+// ---------- demo data (?demo=1) so the layout can be reviewed without signing in ----------
+function demoClient() {
+  const now = Date.now(), iso = d => new Date(now + d * 864e5).toISOString();
+  const L = [
+    {id:'1',key:'GTE-7QK2-XM9A-D4PF',plan_id:'tycoon',status:'active',created_at:iso(-40),activated_at:iso(-39),expires_at:iso(326),bound_account:51234567,bound_broker:'IC Markets',bound_is_demo:false,extra_allowance_usd:0,owner_email:'amina@example.com',online:true,last_heartbeat:iso(0),balance:9820.5,equity:9911.2,funded_usd:9500,over_limit:false,engine_state:'IN TRADE',ea_version:'1.08',problems:[]},
+    {id:'2',key:'GTE-LM4R-ZX2B-9QWE',plan_id:'investor',status:'active',created_at:iso(-12),activated_at:iso(-11),expires_at:iso(354),bound_account:70011223,bound_broker:'Fusion Markets',bound_is_demo:false,extra_allowance_usd:0,owner_email:'omar@example.com',online:true,last_heartbeat:iso(0),balance:6100,equity:6040,funded_usd:5900,over_limit:true,engine_state:'PAUSED',ea_version:'1.08',problems:['OVER_LIMIT']},
+    {id:'3',key:'GTE-BB92-KT3C-PL7Y',plan_id:'mogul',status:'active',created_at:iso(-90),activated_at:iso(-88),expires_at:iso(5),bound_account:30998877,bound_broker:'Pepperstone',bound_is_demo:true,extra_allowance_usd:0,owner_email:'lee@example.com',online:false,last_heartbeat:iso(-0.3),balance:15200,equity:15200,funded_usd:15000,over_limit:false,engine_state:'RUNNING',ea_version:'1.08',problems:['HEARTBEAT_MISSING','EXPIRING_SOON']},
+    {id:'4',key:'GTE-HH5N-QW8D-3RTV',plan_id:'billionaire',status:'unused',created_at:iso(-1),owner_email:null,problems:[]}];
+  const O = [
+    {id:'o1',ref:'GTE-A91C4E',kind:'purchase',plan_id:'tycoon',amount_usd:1900,status:'paid_claimed',paid_ref:'Binance tx 88213',email:'new@example.com',created_at:iso(-0.1)},
+    {id:'o2',ref:'GTE-5D20B7',kind:'unbind',plan_id:'investor',amount_usd:100,status:'pending',email:'omar@example.com',created_at:iso(-0.5)},
+    {id:'o3',ref:'GTE-77F0A1',kind:'renewal',plan_id:'mogul',amount_usd:3600,status:'paid',email:'lee@example.com',created_at:iso(-20),license_key:'GTE-BB92-KT3C-PL7Y'}];
+  const P = [{id:'investor',name:'Investor',limit_usd:5000,price_usd:1000,popular:false,active:true,sort:1},{id:'tycoon',name:'Tycoon',limit_usd:10000,price_usd:1900,popular:true,active:true,sort:2},{id:'mogul',name:'Mogul',limit_usd:20000,price_usd:3600,popular:false,active:true,sort:3},{id:'billionaire',name:'Billionaire',limit_usd:null,price_usd:5000,popular:false,active:true,sort:4}];
+  const rpc = async n => ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
+  const q = t => ({select: () => ({order: async () => ({data: t === 'plans' ? P : []})})});
+  return {rpc, from: q, auth: {getSession: async () => ({data: {session: {user: {email: 'demo@admin'}}}}), mfa: {}}};
+}
+
+// ---------- sign-in: email link + authenticator code (required: the database refuses admin calls below aal2) ----------
+async function start() {
+  if (DEMO) { sb = demoClient(); return enter(); }
+  sb = supabase.createClient(SB_URL, SB_KEY, {auth: {detectSessionInUrl: true, persistSession: true}});
+  const {data: {session}} = await sb.auth.getSession();
+  if (!session) { $('#login').classList.remove('hide'); return; }
+  await mfaGate();
+}
+async function mfaGate() {
+  $('#login').classList.remove('hide'); $('#stepEmail').classList.add('hide'); $('#stepMfa').classList.remove('hide'); $('#app').classList.add('hide');
+  const {data: aal} = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal.currentLevel === 'aal2') return enter();
+  const {data: f} = await sb.auth.mfa.listFactors();
+  const verified = (f.totp || []).find(x => x.status === 'verified');
+  if (verified) { window._factor = verified.id; $('#mfaEnroll').classList.add('hide'); return; }
+  for (const x of (f.totp || [])) await sb.auth.mfa.unenroll({factorId: x.id});          // leftover unverified enrolment
+  const {data: e, error} = await sb.auth.mfa.enroll({factorType: 'totp'});
+  if (error) return say('#loginMsg', error.message, true);
+  window._factor = e.id; $('#mfaEnroll').classList.remove('hide');
+  $('#qr').innerHTML = e.totp.qr_code; $('#secret').textContent = e.totp.secret;
+}
+$('#sendLink').onclick = async () => {
+  const email = $('#email').value.trim(); if (!email) return;
+  const {error} = await sb.auth.signInWithOtp({email, options: {emailRedirectTo: location.origin + location.pathname}});
+  say('#loginMsg', error ? error.message : 'Check your email and open the link on this device.', !!error);
+};
+$('#verifyMfa').onclick = async () => {
+  const {data: ch, error: e1} = await sb.auth.mfa.challenge({factorId: window._factor});
+  if (e1) return say('#loginMsg', e1.message, true);
+  const {error} = await sb.auth.mfa.verify({factorId: window._factor, challengeId: ch.id, code: $('#code').value.trim()});
+  if (error) return say('#loginMsg', error.message, true);
+  enter();
+};
+$('#out').onclick = async () => { if (!DEMO) await sb.auth.signOut(); location.href = location.pathname; };
+function say(sel, text, err) { $(sel).innerHTML = '<div class="msg ' + (err ? 'err' : 'okk') + '">' + esc(text) + '</div>'; }
+
+// ---------- data ----------
+async function call(fn, args) {
+  const {data: d, error} = await sb.rpc(fn, args || {});
+  if (error) { toast(error.message, true); throw error; }
+  return d;
+}
+function toast(text, err) { const t = document.createElement('div'); t.className = 'msg ' + (err ? 'err' : 'okk'); t.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:20;min-width:240px'; t.textContent = text; document.body.appendChild(t); setTimeout(() => t.remove(), 3500); }
+async function load() {
+  const [licenses, orders, customers, config, audit] = await Promise.all(['admin_licenses', 'admin_orders', 'admin_customers', 'admin_config', 'admin_audit'].map(f => call(f)));
+  Object.assign(data, {licenses, orders, customers, config, audit});
+  const p = await sb.from('plans').select('*').order('sort'); data.plans = p.data || [];
+  const v = await sb.from('videos').select('*').order('sort'); data.videos = (v && v.data) || [];
+}
+async function enter() {
+  $('#login').classList.add('hide'); $('#app').classList.remove('hide');
+  const {data: {session}} = await sb.auth.getSession(); $('#who').textContent = session?.user?.email || '';
+  try { await load(); } catch (e) { $('#view').innerHTML = '<div class="msg err">Not allowed: this account is not an admin, or the authenticator step is missing. ' + esc(e.message || '') + '</div>'; return; }
+  render();
+}
+
+// ---------- views ----------
+const TABS = [['orders', 'Orders'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['videos', 'Videos'], ['audit', 'Audit log']];
+function render() {
+  const waiting = data.orders.filter(o => o.status === 'paid_claimed' || o.status === 'pending').length;
+  $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
+  $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
+  ({orders: vOrders, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
+}
+const planName = id => (data.plans.find(p => p.id === id) || {}).name || id || '-';
+const stPill = s => `<span class="pill ${ {active:'p-ok',unused:'p-info',expired:'p-warn',disabled:'p-bad',paid:'p-ok',paid_claimed:'p-warn',pending:'p-info',cancelled:'p-mute'}[s] || 'p-mute'}">${esc(s.replace('_', ' '))}</span>`;
+
+function vOrders() {
+  let f = window._of || 'open';
+  const rows = data.orders.filter(o => f === 'all' || (f === 'open' ? (o.status === 'pending' || o.status === 'paid_claimed') : o.status === f));
+  $('#view').innerHTML = `<div class="card"><div class="row"><b>Orders</b><span class="sp" style="flex:1"></span><select id="of">${['open','paid','cancelled','all'].map(x => `<option ${x === f ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+  <div class="tblw"><table class="tbl"><tr><th>Ref</th><th>Customer</th><th>Type</th><th>Plan</th><th>Amount</th><th>Status</th><th>Their reference</th><th>Created</th><th></th></tr>
+  ${rows.map(o => `<tr><td class="mono">${esc(o.ref)}</td><td>${esc(o.email)}</td><td>${esc(o.kind)}</td><td>${esc(planName(o.plan_id))}</td><td><b>${usd(o.amount_usd)}</b></td><td>${stPill(o.status)}</td><td>${esc(o.paid_ref || '')}</td><td class="mute">${fmt(o.created_at)}</td>
+  <td style="white-space:nowrap">${o.status === 'paid' || o.status === 'cancelled' ? (o.license_key ? `<span class="mono mute">${esc(o.license_key)}</span>` : '') : `<button class="b pri" data-c="${o.id}">Payment received</button> <button class="b dng" data-x="${o.id}">Cancel</button>`}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">Nothing here.</td></tr>'}
+  </table></div></div>`;
+  $('#of').onchange = e => { window._of = e.target.value; vOrders(); };
+  $('#view').querySelectorAll('[data-c]').forEach(b => b.onclick = async () => {
+    const o = data.orders.find(x => x.id === b.dataset.c);
+    if (!confirm(`Confirm you RECEIVED ${usd(o.amount_usd)} for order ${o.ref} (${o.kind})? This ${o.kind === 'purchase' ? 'creates the license key' : o.kind === 'unbind' ? 'unbinds the license' : 'applies the change'} now.`)) return;
+    await call('admin_confirm_payment', {p_order: o.id}); toast('Done'); await load(); render();
+  });
+  $('#view').querySelectorAll('[data-x]').forEach(b => b.onclick = async () => { if (!confirm('Cancel this order?')) return; await call('admin_cancel_order', {p_order: b.dataset.x}); await load(); render(); });
+}
+
+function licFilter(l, f) {
+  return f === 'all' || l.status === f || (f === 'over' && l.over_limit) || (f === 'offline' && l.status === 'active' && l.online === false) || (f === 'online' && l.online);
+}
+function vLicenses() {
+  const f = window._lf || 'all', q = (window._lq || '').toLowerCase();
+  const rows = data.licenses.filter(l => licFilter(l, f) && (!q || [l.key, l.owner_email, l.bound_account, l.notes].join(' ').toLowerCase().includes(q)));
+  $('#view').innerHTML = `<div class="card"><div class="row"><input id="lq" placeholder="Search key, email, account" value="${esc(window._lq || '')}" style="flex:1;min-width:200px">
+  <select id="lf">${['all','active','unused','expired','disabled','over','online','offline'].map(x => `<option value="${x}" ${x === f ? 'selected' : ''}>${x === 'over' ? 'over plan limit' : x}</option>`).join('')}</select>
+  <button class="b" id="mk">Create keys</button></div>
+  <div class="tblw"><table class="tbl"><tr><th></th><th>Key</th><th>Plan</th><th>Status</th><th>Customer</th><th>Account</th><th>Funded</th><th>Equity</th><th>Expires</th></tr>
+  ${rows.map(l => `<tr class="click" data-id="${l.id}"><td><span class="dot ${l.online ? 'on' : l.status === 'active' ? 'off' : ''}"></span></td><td class="mono">${esc(l.key)}</td><td>${esc(planName(l.plan_id))}</td><td>${stPill(l.status)}${l.over_limit ? ' <span class="pill p-bad">over limit</span>' : ''}</td><td>${esc(l.owner_email || '-')}</td><td>${l.bound_account ? esc(l.bound_account) + (l.bound_is_demo ? ' <span class="pill p-info">demo</span>' : '') : '-'}</td><td>${usd(l.funded_usd)}</td><td>${usd(l.equity)}</td><td class="mute">${l.expires_at ? fmt(l.expires_at).slice(0, 10) : '-'}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">No licenses match.</td></tr>'}
+  </table></div><div class="mute" style="margin-top:8px">${rows.length} shown of ${data.licenses.length}</div></div>`;
+  $('#lq').oninput = e => { window._lq = e.target.value; clearTimeout(window._t); window._t = setTimeout(vLicenses, 200); $('#lq')?.focus(); };
+  $('#lf').onchange = e => { window._lf = e.target.value; vLicenses(); };
+  $('#mk').onclick = createKeys;
+  $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openLicense(r.dataset.id));
+  const lq = $('#lq'); lq.focus(); lq.setSelectionRange(lq.value.length, lq.value.length);
+}
+function closeDrawer() { $('#drawer').classList.add('hide'); }
+function openLicense(id) {
+  const l = data.licenses.find(x => x.id === id), d = $('#drawer'); d.classList.remove('hide');
+  d.innerHTML = `<div class="row"><h3 class="mono">${esc(l.key)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
+  <div class="mute">${esc(planName(l.plan_id))} · ${stPill(l.status)} · ${esc(l.owner_email || 'no owner')}</div>
+  <div class="grid" style="margin:12px 0"><div class="kpi">Account<b style="font-size:16px">${esc(l.bound_account || '-')}</b><span class="mute">${esc(l.bound_broker || '')}</span></div><div class="kpi">Funded<b style="font-size:16px">${usd(l.funded_usd)}</b><span class="mute">allowance ${usd(l.extra_allowance_usd)}</span></div><div class="kpi">Last heartbeat<b style="font-size:16px">${fmt(l.last_heartbeat)}</b><span class="mute">${esc(l.engine_state || '')} · v${esc(l.ea_version || '-')}</span></div><div class="kpi">Expires<b style="font-size:16px">${l.expires_at ? fmt(l.expires_at).slice(0, 10) : '-'}</b></div></div>
+  ${(l.problems || []).length ? `<div class="msg">Problems: ${l.problems.map(esc).join(', ')}</div>` : ''}
+  <label>Extend (days)</label><div class="row"><input id="ex" type="number" value="30" style="width:100px"><button class="b" data-a="extend" data-v="ex">Extend</button></div>
+  <label>Change plan</label><div class="row"><select id="pl">${data.plans.map(p => `<option value="${p.id}" ${p.id === l.plan_id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select><button class="b" data-a="plan" data-v="pl">Apply</button></div>
+  <label>Extra deposit allowance (USD) + reason</label><div class="row"><input id="al" type="number" value="${l.extra_allowance_usd || 0}" style="width:110px"><input id="ar" placeholder="reason" style="flex:1"><button class="b" data-a="allowance" data-v="al" data-r="ar">Grant</button></div>
+  <label>Telegram chat id (owner's own keys only)</label><div class="row"><input id="tc" placeholder="chat id"><button class="b" data-a="owner_chat" data-v="tc">Set</button></div>
+  <div class="row" style="margin-top:14px">${l.status === 'disabled' ? '<button class="b" data-a="enable">Enable</button>' : '<button class="b dng" data-a="disable">Disable</button>'}
+  ${l.bound_account ? '<button class="b dng" data-a="unbind" data-conf="Unbind this license from its account? Only do this after the 100 USD unbind fee was confirmed.">Unbind</button>' : ''}<button class="b" id="tm">Send test message</button></div>`;
+  $('#dc').onclick = closeDrawer;
+  $('#tm').onclick = async () => { await call('admin_send_test', {p_license: l.id}); toast('Test message queued'); };
+  d.querySelectorAll('[data-a]').forEach(b => b.onclick = async () => {
+    if (b.dataset.conf && !confirm(b.dataset.conf)) return;
+    await call('admin_license_action', {p_license: l.id, p_action: b.dataset.a, p_value: b.dataset.v ? $('#' + b.dataset.v).value : null, p_reason: b.dataset.r ? $('#' + b.dataset.r).value : null});
+    toast('Saved'); await load(); render(); openLicense(l.id);
+  });
+}
+function createKeys() {
+  const d = $('#drawer'); d.classList.remove('hide');
+  d.innerHTML = `<div class="row"><h3>Create keys</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
+  <label>Plan</label><select id="kp" style="width:100%">${data.plans.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
+  <label>How many (1-500)</label><input id="kn" type="number" min="1" max="500" value="1" style="width:100%">
+  <label>Note</label><input id="kt" style="width:100%" placeholder="e.g. giveaway, tester">
+  <div class="row" style="margin-top:12px"><button class="b pri" id="kg">Create</button></div><div id="ko"></div>`;
+  $('#dc').onclick = closeDrawer;
+  $('#kg').onclick = async () => {
+    const keys = await call('admin_create_keys', {p_plan: $('#kp').value, p_count: +$('#kn').value, p_note: $('#kt').value || null});
+    $('#ko').innerHTML = `<textarea readonly class="mono">${esc(keys.join('\n'))}</textarea><button class="b" id="cp">Copy all</button>`;
+    $('#cp').onclick = () => { navigator.clipboard.writeText(keys.join('\n')); toast('Copied'); };
+    await load();
+  };
+}
+
+function vHealth() {
+  const act = data.licenses.filter(l => l.status === 'active');
+  const off = act.filter(l => l.online === false), over = data.licenses.filter(l => l.over_limit), exp = act.filter(l => l.expires_at && (new Date(l.expires_at) - Date.now()) < 7 * 864e5);
+  const box = (t, arr) => `<div class="card"><b>${t} (${arr.length})</b><div class="tblw"><table class="tbl">${arr.map(l => `<tr class="click" data-id="${l.id}"><td class="mono">${esc(l.key)}</td><td>${esc(l.owner_email || '-')}</td><td class="mute">${fmt(l.last_heartbeat)}</td><td>${usd(l.funded_usd)}</td></tr>`).join('') || '<tr><td class="mute">None</td></tr>'}</table></div></div>`;
+  $('#view').innerHTML = `<div class="grid" style="margin-bottom:14px"><div class="kpi">Active licenses<b>${act.length}</b></div><div class="kpi">Online<b style="color:var(--ok)">${act.length - off.length}</b></div><div class="kpi">Offline<b style="color:var(--bad)">${off.length}</b></div><div class="kpi">Over plan limit<b style="color:var(--warn)">${over.length}</b></div></div>` + box('Offline', off) + box('Over plan limit', over) + box('Expiring within 7 days', exp);
+  $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openLicense(r.dataset.id));
+}
+function vCustomers() {
+  $('#view').innerHTML = `<div class="card"><div class="tblw"><table class="tbl"><tr><th>Email</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${data.customers.map(c => `<tr><td>${esc(c.email)}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('')}</table></div></div>`;
+}
+function vSettings() {
+  const c = data.config, fld = (k, label, area) => `<label>${label}</label>${area ? `<textarea id="c_${k}">${esc(c[k] || '')}</textarea>` : `<input id="c_${k}" value="${esc(c[k] || '')}" style="width:100%">`}`;
+  $('#view').innerHTML = `<div class="card"><b>Plans</b><div class="tblw"><table class="tbl"><tr><th>Name</th><th>Covers up to (USD, blank = no limit)</th><th>Price / year (USD)</th><th>Most popular</th><th>Active</th><th></th></tr>
+  ${data.plans.map(p => `<tr data-p="${p.id}"><td><input class="n" value="${esc(p.name)}" style="width:130px"></td><td><input class="l" type="number" value="${p.limit_usd ?? ''}" style="width:120px"></td><td><input class="pr" type="number" value="${p.price_usd}" style="width:110px"></td><td><input class="po" type="checkbox" ${p.popular ? 'checked' : ''}></td><td><input class="ac" type="checkbox" ${p.active ? 'checked' : ''}></td><td><button class="b">Save</button></td></tr>`).join('')}</table></div></div>
+  <div class="card"><b>Payment instructions (shown only to a signed-in customer with an order)</b>${fld('payment_instructions', 'Instructions', true)}${fld('payment_link', 'Binance payment link / QR page URL')}<div class="row" style="margin-top:10px"><button class="b pri" data-k="payment_instructions,payment_link">Save payment details</button></div></div>
+  <div class="card"><b>General</b><label>Sales</label><select id="c_sales_open" style="width:100%"><option value="true" ${c.sales_open !== 'false' ? 'selected' : ''}>Open: customers can buy new licenses</option><option value="false" ${c.sales_open === 'false' ? 'selected' : ''}>Paused: new purchases blocked (renewals, upgrades and unbinds still work)</option></select>${fld('support_url', 'Support link (Telegram)')}${fld('latest_version', 'Latest EA version')}${fld('unbind_fee_usd', 'Unbind fee (USD)')}${fld('limit_tolerance_pct', 'Deposit tolerance over plan size (%)')}${fld('offline_minutes', 'Minutes without heartbeat = offline')}<div class="row" style="margin-top:10px"><button class="b pri" data-k="sales_open,support_url,latest_version,unbind_fee_usd,limit_tolerance_pct,offline_minutes">Save</button></div></div>
+  <div class="card"><b>Backup</b><div class="mute">Downloads licenses, orders, trades and customers as JSON. Do this regularly on the free plan.</div><div class="row" style="margin-top:8px"><button class="b" id="exp">Download export</button></div></div>`;
+  $('#view').querySelectorAll('tr[data-p] button').forEach(b => b.onclick = async () => {
+    const r = b.closest('tr'), lim = r.querySelector('.l').value;
+    await call('admin_update_plan', {p_id: r.dataset.p, p_name: r.querySelector('.n').value, p_limit: lim === '' ? null : +lim, p_price: +r.querySelector('.pr').value, p_popular: r.querySelector('.po').checked, p_active: r.querySelector('.ac').checked});
+    toast('Plan saved'); await load();
+  });
+  $('#view').querySelectorAll('[data-k]').forEach(b => b.onclick = async () => { for (const k of b.dataset.k.split(',')) await call('admin_set_config', {p_key: k, p_value: $('#c_' + k).value}); toast('Saved'); await load(); });
+  $('#exp').onclick = async () => { const j = await call('admin_export'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(j, null, 1)], {type: 'application/json'})); a.download = 'gte-export-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); };
+}
+function vVideos() {
+  $('#view').innerHTML = `<div class="card"><b>Videos</b> <span class="mute">paste YouTube links; nothing is hosted here</span>
+  <div class="row" style="margin-top:10px"><input id="vt" placeholder="Title" style="flex:1;min-width:160px"><input id="vu" placeholder="https://www.youtube.com/watch?v=..." style="flex:2;min-width:200px"><button class="b pri" id="va">Add</button></div>
+  <div class="tblw"><table class="tbl">${data.videos.map(v => `<tr><td>${esc(v.title)}</td><td class="mono mute">${esc(v.url)}</td><td><button class="b dng" data-v="${v.id}">Remove</button></td></tr>`).join('') || '<tr><td class="mute">No videos yet. The website shows a clean placeholder.</td></tr>'}</table></div></div>`;
+  $('#va').onclick = async () => { if (!/^https:\/\/(www\.)?(youtube\.com|youtu\.be)\//.test($('#vu').value)) return toast('Use a YouTube link', true); await call('admin_video', {p_action: 'add', p_title: $('#vt').value, p_url: $('#vu').value}); await load(); vVideos(); };
+  $('#view').querySelectorAll('[data-v]').forEach(b => b.onclick = async () => { await call('admin_video', {p_action: 'delete', p_id: +b.dataset.v}); await load(); vVideos(); });
+}
+function vAudit() {
+  $('#view').innerHTML = `<div class="card"><div class="tblw"><table class="tbl"><tr><th>When (UTC)</th><th>Actor</th><th>Action</th><th>Details</th></tr>${data.audit.map(a => `<tr><td class="mute">${fmt(a.at)}</td><td class="mono mute">${esc(String(a.actor).slice(0, 8))}</td><td>${esc(a.action)}</td><td class="mono mute" style="font-size:12px">${esc(JSON.stringify(a.detail || {}))}</td></tr>`).join('')}</table></div></div>`;
+}
+start();
+</script>
+</body>
+</html>
