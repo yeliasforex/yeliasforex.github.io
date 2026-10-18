@@ -34,7 +34,7 @@
       catalog: [
         {code: 'OVER_LIMIT', severity: 'warning', title: 'Deposits above your plan limit', explanation: 'The money deposited on this account is above your plan size. New trades are paused; open trades are still managed and nothing is closed.', solution: 'Upgrade your plan on your account page, or withdraw the excess. Trading resumes by itself within minutes.'},
         {code: 'TELEGRAM_NOT_CONNECTED', severity: 'info', title: 'Telegram not connected', explanation: 'You will not get notifications on Telegram.', solution: 'Open your account page and tap Connect Telegram.'}],
-      orders: [], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5}};
+      orders: [{id: 'o1', ref: 'GTE-DEMO01', kind: 'upgrade', plan_id: 'mogul', amount_usd: 1700, status: 'pending', created_at: d(0)}], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5}};
   }
 
   function toast(t, err) { const e = document.createElement('div'); e.className = 'msg ' + (err ? 'err' : 'ok'); e.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:99;min-width:260px;max-width:92vw'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 4000); }
@@ -133,14 +133,27 @@
   }
 
   // ---------- actions ----------
+  function addrHtml(d) {
+    if (!d.address) return '';
+    return `<div style="margin:6px 0 14px"><div class="hint">Send to this address (${esc(d.network || '')})</div>
+      <div class="row" style="margin-top:6px"><span class="key" style="font-size:.88rem;word-break:break-all;line-height:1.4">${esc(d.address)}</span><button class="btn sm" data-copy="${esc(d.address)}">Copy address</button></div>
+      <div class="row" style="margin-top:12px;align-items:flex-start"><div id="qr-${esc(d.address.slice(0, 6))}" style="background:#fff;padding:8px;border-radius:10px;width:fit-content" data-qr="${esc(d.address)}"></div>
+      <div class="hint" style="max-width:26rem">Scan with your wallet or exchange app. Check that the network is <b>${esc(d.network || '')}</b>: coins sent on another network can be lost.</div></div></div>`;
+  }
+  async function drawQr(el) {
+    const q = el.querySelector('[data-qr]'); if (!q || q.dataset.done) return;
+    if (!window.QRCode) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); }).catch(() => {});
+    if (window.QRCode) { q.dataset.done = '1'; new QRCode(q, {text: q.dataset.qr, width: 150, height: 150}); }
+    el.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); toast('Copied'); });
+  }
   function wire() {
     A.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard.writeText(b.dataset.copy); toast('Key copied'); });
     A.querySelectorAll('[data-upgrade]').forEach(b => b.onclick = guard(async () => { const o = await rpc('create_order', {p_kind: 'upgrade', p_plan_id: $('#up-' + b.dataset.upgrade).value, p_license_id: b.dataset.upgrade}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-renew]').forEach(b => b.onclick = guard(async () => { const o = await rpc('create_order', {p_kind: 'renewal', p_license_id: b.dataset.renew}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-unbind]').forEach(b => b.onclick = guard(async () => { if (!confirm('Unbinding costs ' + usd(S.settings.unbindFeeUsd ?? 100) + ' and needs support. Start the request?')) return; const o = await rpc('create_order', {p_kind: 'unbind', p_license_id: b.dataset.unbind}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-paid]').forEach(b => b.onclick = guard(async () => { const v = $('#pr-' + b.dataset.paid).value.trim(); if (!v) return toast('Enter your transaction ID or a short note', true); await rpc('claim_payment', {p_order: b.dataset.paid, p_paid_ref: v}); toast('Thank you. We will confirm your payment shortly.'); await refresh(); }));
-    A.querySelectorAll('[id^="pay-"]').forEach(async el => { const id = el.id.slice(4); try { const d = DEMO ? {instructions: 'Payment instructions appear here.', link: ''} : await rpc('get_payment_details', {p_order: id});
-      el.innerHTML = (d.instructions ? '<div style="white-space:pre-wrap">' + esc(d.instructions) + '</div>' : '<span class="hint">Payment details will be shown here. If nothing appears, contact support.</span>') + (d.link ? `<div class="row" style="margin-top:10px"><a class="btn sm mint" href="${esc(d.link)}" rel="noopener" target="_blank">Open payment link</a></div>` : '') + `<p class="hint">Use exactly <b>${usd(S.orders.find(o => o.id === id)?.amount_usd)}</b> and put <b>${esc(S.orders.find(o => o.id === id)?.ref)}</b> in the note if the payment method allows it.</p>`; } catch (e) { el.textContent = 'Could not load payment details.'; } });
+    A.querySelectorAll('[id^="pay-"]').forEach(async el => { const id = el.id.slice(4); try { const d = DEMO ? {instructions: 'Payment instructions appear here.', link: '', network: 'USDT on TRON (TRC20)', address: 'TDemoAddressOnlyForThePreview000000'} : await rpc('get_payment_details', {p_order: id});
+      el.innerHTML = addrHtml(d) + (d.instructions ? '<div style="white-space:pre-wrap">' + esc(d.instructions) + '</div>' : '<span class="hint">Payment details will be shown here. If nothing appears, contact support.</span>') + (d.link ? `<div class="row" style="margin-top:10px"><a class="btn sm mint" href="${esc(d.link)}" rel="noopener" target="_blank">Open payment link</a></div>` : '') + `<p class="hint">Use exactly <b>${usd(S.orders.find(o => o.id === id)?.amount_usd)}</b> and put <b>${esc(S.orders.find(o => o.id === id)?.ref)}</b> in the note if the payment method allows it.</p>`; drawQr(el); } catch (e) { el.textContent = 'Could not load payment details.'; } });
     A.querySelectorAll('[data-pref]').forEach(i => i.onchange = guard(async () => { if (DEMO) return; const prefs = {...(S.profile.notify_prefs || {})}; prefs[i.dataset.pref] = i.checked; const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; S.profile.notify_prefs = prefs; toast('Saved'); }));
     const on = $('#tgOn'); if (on) on.onclick = guard(async () => {
       const bot = S.settings.botUsername || 'GoldTriEngine_Bot'; const tok = DEMO ? 'demo' : await rpc('create_telegram_link');
