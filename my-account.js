@@ -94,7 +94,7 @@
   async function render() {
     const lic = S.licenses.find(l => l.id === cur) || S.licenses[0]; cur = lic ? lic.id : null;
     const parts = [];
-    if (AS) parts.push(`<div class="msg" style="border-color:var(--gold);color:var(--gold);margin-bottom:12px"><b>Admin view.</b> This is ${esc(S.profile.email || 'this customer')}'s account exactly as they see it. Read-only: nothing here can be changed. <a href="admin/" style="color:inherit;text-decoration:underline">Back to admin</a></div>`);
+    if (AS) parts.push(`<div class="msg" style="border-color:var(--gold);color:var(--gold);margin-bottom:12px"><b>Admin view.</b> This is ${esc(S.profile.email || 'this customer')}'s account exactly as they see it. Read-only: nothing here can be changed.${INJ ? '' : ' <a href="admin/" style="color:inherit;text-decoration:underline">Back to admin</a>'}</div>`);
     if (AS && !S.licenses.length) { parts.push('<div class="panel"><h2>Not found</h2><p class="sub">No such license, or this login is not an admin with the authenticator step completed.</p></div>'); A.innerHTML = parts.join(''); return; }
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
     if (!lic) { parts.push(emptyPanel(), claimPanel(), telegramPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
