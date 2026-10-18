@@ -186,3 +186,14 @@ ol.steps li::after{content:"";position:absolute;left:16px;top:34px;bottom:-16px;
 #faq details,.faq details{transition:border-color .25s,background .25s}#faq details:hover{border-color:var(--gold)}
 #faq details[open]{border-color:var(--mint);background:linear-gradient(180deg,rgba(62,224,154,.06),transparent)}
 @media (prefers-reduced-motion:reduce){.fact::before,.bk-mark,.grid3 .card .ico svg,.fz-strip::after,ol.steps li{animation:none}}
+
+/* pricing + download polish */
+.plan{transition:transform .3s,box-shadow .3s,border-color .3s}.plan:hover{transform:translateY(-8px);box-shadow:0 34px 70px -34px rgba(227,185,95,.7);border-color:var(--gold)}
+.plan.pop{position:relative;border-color:var(--gold);box-shadow:0 0 0 1px rgba(227,185,95,.5),0 30px 80px -40px rgba(227,185,95,.8)}
+.plan.pop::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:2px;background:linear-gradient(120deg,var(--gold),var(--mint),var(--gold));background-size:300% 100%;animation:fzFlow 6s linear infinite;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.plan .price{background:linear-gradient(120deg,var(--fg),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.plan .flag{animation:fzPulse 2.6s infinite}
+.pg h1{position:relative}.pg h1::after{content:"";display:block;margin-top:14px;height:3px;width:86px;border-radius:3px;background:linear-gradient(90deg,var(--gold),var(--mint));animation:fzUnder 1.2s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fzUnder{from{width:0}}
+#dl{position:relative;overflow:hidden;animation:fzBreathe 2.8s ease-in-out infinite}#dl::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);transform:translateX(-120%);animation:yrsSheen 3.6s ease-in-out infinite;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.plan.pop::before,.plan .flag,#dl,#dl::after{animation:none}}
