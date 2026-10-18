@@ -54,7 +54,7 @@
   const safe = /^[a-z0-9\-]+\.html(#[\w=-]*)?$/i.test(next) ? next : 'my-account.html';
   const c = await gte.client();
   if (await gte.session()) { location.replace(safe); return; }
-  const GOOGLE_ON = false;   // set to true after Google sign-in is enabled in Supabase
+  const GOOGLE_ON = true;    // Google sign-in is enabled in Supabase
   if (GOOGLE_ON) { document.getElementById('google').classList.remove('hide'); document.getElementById('or').classList.remove('hide'); }
   document.getElementById('google').onclick = () => c.auth.signInWithOAuth({provider: 'google', options: {redirectTo: location.origin + '/' + safe}});
   const out = document.getElementById('out'), say = (t, e) => out.innerHTML = '<div class="msg ' + (e ? 'err' : 'ok') + '">' + gte.esc(t) + '</div>';
