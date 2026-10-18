@@ -20,7 +20,7 @@
 :root[data-theme="light"] .btn.primary:hover{background:#1747C8;color:#fff;border-color:#1747C8}
 :root[data-theme="light"] .btn.mint,:root[data-theme="light"] .nav .pill,:root[data-theme="light"] .nav .pill:hover,:root[data-theme="light"] .skip,:root[data-theme="light"] .pill2.y,:root[data-theme="light"] .side.buy{color:#fff}
 :root[data-theme="light"] .nav .pill:hover{background:#0A7A50}
-:root[data-theme="light"] .eng-track,:root[data-theme="light"] .m{background:rgba(25,40,80,.06)}
+:root[data-theme="light"] .eng-track,:root[data-theme="light"] .m:not(.p):not(.l){background:rgba(25,40,80,.07)}
 :root[data-theme="light"] .eq-tip,:root[data-theme="light"] .ctip,:root[data-theme="light"] .host-bubble{background:rgba(255,255,255,.96);color:var(--fg);border-color:var(--line-2);box-shadow:0 10px 30px -10px rgba(20,30,60,.25)}
 :root[data-theme="light"] .contact-r a{background:rgba(255,255,255,.7)}
 :root[data-theme="light"] .hero::before{background:radial-gradient(60% 55% at 78% 30%,rgba(23,71,200,.14),transparent 70%),radial-gradient(40% 40% at 10% 0%,rgba(11,138,92,.10),transparent 70%)}
@@ -53,10 +53,29 @@ html.theme-anim,html.theme-anim *,html.theme-anim *::before,html.theme-anim *::a
 /* parts that are dark by design (stream window, Telegram phone mock) keep the night palette in day mode */
 :root[data-theme="light"] .console,:root[data-theme="light"] .phone,:root[data-theme="light"] .c-stage{
   --ink:#06080E; --ink-2:#0A0E18; --panel:#0E1322; --panel-2:#121A2D; --line:rgba(170,190,230,.10); --line-2:rgba(170,190,230,.18);
-  --fg:#ECEFF6; --fg-2:#C3CADA; --muted:#8892A8; --faint:#5B6479; --mint:#3EE09A; --gold:#E3B95F; --red:#FF6B78; color-scheme:dark}
+  --fg:#ECEFF6; --fg-2:#C3CADA; --muted:#8892A8; --faint:#5B6479; --mint:#3EE09A; --gold:#E3B95F; --red:#FF6B78; color-scheme:dark; color:#ECEFF6}
 :root[data-theme="light"] .tabsx a.on,:root[data-theme="light"] .subnav a.on{color:var(--fg);background:rgba(25,40,80,.08)}
 :root[data-theme="light"] .tbl2 tr:hover td{background:rgba(25,40,80,.04)}
 :root[data-theme="light"] .dc:hover{background:rgba(25,40,80,.05)}
 :root[data-theme="light"] .meter b{background:var(--fg)}
 :root[data-theme="light"] .cw em{color:var(--muted)}
 :root[data-theme="light"] .endpt{box-shadow:0 0 0 3px rgba(25,40,80,.12)}
+
+/* fixes found in testing */
+:root[data-theme="light"] .btn.mint{background:var(--mint);color:#fff;border-color:var(--mint)}
+:root[data-theme="light"] .btn.mint:hover{background:#0A7A50;border-color:#0A7A50;color:#fff}
+:root[data-theme="light"] .mood[aria-selected="true"]{background:var(--fg);color:#fff;border-color:var(--fg)}
+:root[data-theme="light"] .live-pill{color:var(--red)}
+:root[data-theme="light"] .m.p{background:rgba(11,138,92,.78)}
+:root[data-theme="light"] .m.l{background:rgba(208,54,74,.78)}
+/* the big logo watermark: its white parts would vanish on a light page */
+:root[data-theme="light"] .cta-mark{opacity:.14}
+:root[data-theme="light"] .cta-mark path[fill="#fff"]{fill:#1747C8}
+:root[data-theme="light"] .cta-mark path[fill="#3EE09A"]{fill:#0B8A5C}
+/* chart guide lines were near-white and vanished on a light page (the "0" middle line) */
+:root[data-theme="light"] .chart .zero{stroke:rgba(25,40,80,.5)}
+:root[data-theme="light"] .chart .xh,:root[data-theme="light"] .eq .xh{stroke:rgba(25,40,80,.45)}
+:root[data-theme="light"] .chart circle,:root[data-theme="light"] .eq circle{stroke:#fff}
+:root[data-theme="light"] .host-ring::before{border-color:rgba(25,40,80,.14)}
+:root[data-theme="light"] .host-ring::after{border-color:rgba(25,40,80,.08)}
+:root[data-theme="light"] .acct[data-state="loading"] .kpi b,:root[data-theme="light"] .acct[data-state="loading"] .acct-meta b{background:linear-gradient(90deg,rgba(25,40,80,.05),rgba(25,40,80,.12),rgba(25,40,80,.05));background-size:200% 100%}

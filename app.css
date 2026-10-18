@@ -48,7 +48,7 @@
 .pill{display:inline-flex;align-items:center;gap:7px;padding:4px 11px;border-radius:999px;border:1px solid var(--line-2);font:500 .74rem/1 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--fg-2)}
 .pill.ok{color:var(--mint);border-color:rgba(62,224,154,.45)}.pill.bad{color:var(--red);border-color:rgba(255,107,120,.45)}.pill.warn{color:var(--gold);border-color:rgba(227,185,95,.5)}.pill.info{color:var(--blue-hi);border-color:rgba(91,134,255,.5)}
 .dot2{width:8px;height:8px;border-radius:50%;background:var(--faint);display:inline-block}.dot2.on{background:var(--mint);box-shadow:0 0 0 4px rgba(62,224,154,.15)}.dot2.off{background:var(--red)}
-.key{font:500 1.15rem/1 var(--mono);letter-spacing:.06em;background:var(--ink);border:1px solid var(--line-2);padding:12px 14px;border-radius:12px;display:inline-block}
+.key{overflow-wrap:anywhere;max-width:100%;font:500 1.15rem/1 var(--mono);letter-spacing:.06em;background:var(--ink);border:1px solid var(--line-2);padding:12px 14px;border-radius:12px;display:inline-block}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
 .tile{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
 .tile .l{font:500 .68rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
