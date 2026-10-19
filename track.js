@@ -13,7 +13,7 @@
   if (!src) {
     var q = new URLSearchParams(location.search), ref = '';
     try { if (document.referrer) { var h = new URL(document.referrer).hostname; if (h && h !== location.hostname) ref = h; } } catch (e) {}
-    src = { ref: ref, s: q.get('utm_source') || q.get('src') || '', m: q.get('utm_medium') || '', c: q.get('utm_campaign') || '' };
+    src = { ref: ref, s: q.get('utm_source') || q.get('src') || '', m: q.get('utm_medium') || '', c: q.get('utm_campaign') || '', l: location.pathname.replace(/^\/+/, '') || 'index.html' };
     try { sessionStorage.setItem(SK, JSON.stringify(src)); } catch (e) {}
   }
   var standalone = false; try { standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) {}

@@ -394,6 +394,15 @@
   try { S = await load(); } catch (e) { A.innerHTML = '<div class="msg err">Could not load your account: ' + esc(e.message || e) + '</div>'; return; }
   await render();
   initAvatar();
+  (async () => {                                              // first-visit source from the sign-in link (new accounts only; the database ignores everyone else)
+    if (DEMO || AS) return;
+    try {
+      const u = new URL(location.href), fs = u.searchParams.get('fs'); if (!fs) return;
+      const o = JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(fs)))));
+      await c.rpc('record_first_touch', {p_src: o.s || '', p_medium: o.m || '', p_campaign: o.c || '', p_ref: o.r === undefined ? (o.ref || '') : o.r, p_landing: o.l || ''});
+      u.searchParams.delete('fs'); history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+    } catch (e) {}
+  })();
   if (!DEMO) setInterval(async () => {
     const ae = document.activeElement; if (document.hidden || (ae && /INPUT|SELECT|TEXTAREA/.test(ae.tagName))) return;
     quiet = true;
