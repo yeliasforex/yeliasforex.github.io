@@ -23,7 +23,7 @@
           return;
         }
         if (Notification.permission === 'denied') { ph.textContent = 'Alerts are blocked for this site. Allow notifications in your browser or phone settings, then come back.'; return; }
-        try { await rpc('push_public_key'); } catch (e) { ph.textContent = 'Phone alerts will be available shortly.'; return; }
+        try { if (!(await rpc('push_public_key'))) throw 0; } catch (e) { ph.textContent = 'Phone alerts will be available shortly.'; return; }
         var reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
         pa.disabled = false; pa.checked = !!sub && Notification.permission === 'granted'; pt.hidden = !pa.checked;
         ph.textContent = pa.checked ? 'On. Trades, EA offline, license and update alerts also arrive here.' : 'Get trades, EA offline, license and update alerts here. Follows your Telegram on/off choices above.';
