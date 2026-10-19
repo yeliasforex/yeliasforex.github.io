@@ -102,6 +102,11 @@
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
     if (!lic) { parts.push(emptyPanel(), claimPanel(), alertsPanels(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
+    if (window.gteLive) {
+      const lst = stOf(lic.id), lprobs = problems(lic, lst), td = trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()).reduce((a, x) => a + x.profit, 0);
+      const fs = DEMO ? new URLSearchParams(location.search).get('state') : null;
+      parts.push(gteLive.html({l: lic, st: lst, today: td, err: lprobs.find(p => (p.severity === 'error' || p.severity === 'warning') && p.code !== 'HEARTBEAT_MISSING') || null, force: fs, offMin: Number(S.settings.offlineMinutes) || 15, beatMin: Number(S.settings.heartbeatMinutes) || 5, at: Date.now(), usd, sgn: R.sgn, col: R.col, fill}));
+    }
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · ${esc(l.key)}</option>`).join('')}</select></div>`);
     const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
     if (lv && cv && lic.status === 'active' && vc(lv, cv) > 0) parts.push(`<div class="msg" style="border-color:var(--gold);margin-bottom:12px"><b>A new EA version is available: v${esc(lv)}.</b> Your EA reports v${esc(cv)}. ${S.settings.releaseNotes ? esc(S.settings.releaseNotes) + ' ' : ''}<a href="${esc(S.settings.downloadUrl || 'download.html')}">Download the new file</a>, replace the old one in MetaTrader's MQL5 &rarr; Experts folder, and restart MT5. Open trades are not affected.</div>`);
@@ -109,7 +114,7 @@
     if (nn && tab !== 'inbox') parts.push(`<div class="msg" style="border-color:var(--blue-hi);margin-bottom:12px"><b>You have ${nn} new notification${nn > 1 ? 's' : ''}.</b> ${esc((S.notices.find(x => !x.read_at) || {}).title || '')} <a href="#tab=inbox" data-go="inbox">Open</a></div>`);
     parts.push(hero(lic, trades));
     parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}${k === 'inbox' && unread() ? `<span class="nb">${unread()}</span>` : ''}</a>`).join('')}</div><div id="tabbody"></div>`);
-    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A);
+    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount();
     const sel = $('#licSel'); if (sel) sel.onchange = e => { cur = e.target.value; render(); };
     A.querySelectorAll('#subnav a').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.tab; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x === a)); drawTab(lic, trades); });
     drawTab(lic, trades);

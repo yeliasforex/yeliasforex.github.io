@@ -328,3 +328,57 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 /* inside the installed app */
 .is-app .skip{display:none}
 .is-app body{overscroll-behavior-y:contain}
+
+/* ---- Live status card (My account) ---- */
+#acct .lv{--lv:#3EE09A;position:relative;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr);gap:8px 26px;align-items:center;margin:0 0 16px;padding:22px 26px;border-radius:22px;border:1px solid color-mix(in srgb,var(--lv) 38%,transparent);background:linear-gradient(120deg,color-mix(in srgb,var(--lv) 13%,var(--panel)),var(--panel) 62%);transition:border-color .5s,background .5s}
+#acct .lv::before{content:"";position:absolute;inset:-40% -10% auto auto;width:420px;height:420px;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--lv) 22%,transparent),transparent);opacity:.55;pointer-events:none;animation:lvGlow 7s ease-in-out infinite}
+@keyframes lvGlow{50%{transform:translate(-30px,18px) scale(1.12);opacity:.8}}
+#acct .lv-trade{--lv:#3EE09A}#acct .lv-wait{--lv:#5B86FF}#acct .lv-rest{--lv:#9B8AFB}#acct .lv-off{--lv:#FF6B78}#acct .lv-warn{--lv:#E3B95F}#acct .lv-new{--lv:#E3B95F}#acct .lv-stop{--lv:#FF6B78}
+#acct .lv-orb{position:relative;width:104px;height:104px;display:grid;place-items:center;color:var(--lv)}
+#acct .lv-orb>svg:first-of-type{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+#acct .lv-track{fill:none;stroke:color-mix(in srgb,var(--lv) 18%,transparent);stroke-width:6}
+#acct .lv-arc{fill:none;stroke:var(--lv);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s linear,stroke .5s}
+#acct .lv-ico{width:38px;height:38px;position:relative;z-index:1;transition:transform .4s}
+#acct .lv:hover .lv-ico{transform:scale(1.1) rotate(-4deg)}
+#acct .lv-ripple{position:absolute;inset:14px;border-radius:50%;border:2px solid var(--lv);opacity:0;animation:lvRip 2.8s ease-out infinite}
+#acct .lv-ripple.r2{animation-delay:1.4s}
+@keyframes lvRip{0%{transform:scale(.7);opacity:.55}100%{transform:scale(1.45);opacity:0}}
+#acct .lv-wait .lv-ripple{animation-duration:4.2s}#acct .lv-rest .lv-ripple{animation-duration:6s;opacity:0}
+#acct .lv-off .lv-ripple,#acct .lv-new .lv-ripple,#acct .lv-stop .lv-ripple{animation:none}
+#acct .lv-off .lv-ico{animation:lvShake 3.2s ease-in-out infinite}
+@keyframes lvShake{0%,88%,100%{transform:none}92%{transform:translateX(-3px)}96%{transform:translateX(3px)}}
+#acct .lv-eyebrow{display:flex;align-items:center;gap:8px;font:500 .72rem/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+#acct .lv-live{width:8px;height:8px;border-radius:50%;background:var(--lv);box-shadow:0 0 0 0 var(--lv);animation:lvPing 1.8s infinite}
+#acct .lv-off .lv-live,#acct .lv-new .lv-live,#acct .lv-stop .lv-live{animation:none}
+@keyframes lvPing{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--lv) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+#acct .lv-title{margin:8px 0 4px;font-size:clamp(1.35rem,3.2vw,1.85rem);line-height:1.15;letter-spacing:-.01em;animation:lvIn .5s both}
+@keyframes lvIn{from{opacity:0;transform:translateY(6px)}}
+#acct .lv-sub{margin:0;color:var(--fg-2);font-size:.95rem;line-height:1.45;max-width:46ch}
+#acct .lv-meta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:10px;font:500 .74rem/1.3 var(--mono);color:var(--muted)}
+#acct .lv-late .lv-ago{color:#E3B95F}
+#acct .lv-ecg{display:block;width:min(100%,260px);height:34px;margin-top:10px;overflow:visible}
+#acct .lv-ecg path{fill:none;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+#acct .lv-base{stroke:color-mix(in srgb,var(--lv) 24%,transparent);stroke-width:2}
+#acct .lv-beat{stroke:var(--lv);stroke-width:2.6;stroke-dasharray:.16 .84;stroke-dashoffset:1;animation:lvBeat 2.6s linear infinite;filter:drop-shadow(0 0 4px var(--lv))}
+@keyframes lvBeat{to{stroke-dashoffset:0}}
+#acct .lv-wait .lv-beat{animation-duration:4s}#acct .lv-rest .lv-beat{animation-duration:7s;opacity:.7}
+#acct .lv-flat{display:none;stroke:var(--lv);stroke-width:2;stroke-dasharray:3 6}
+#acct .lv-off .lv-flat,#acct .lv-new .lv-flat,#acct .lv-stop .lv-flat{display:block}
+#acct .lv-off .lv-base,#acct .lv-off .lv-beat,#acct .lv-new .lv-base,#acct .lv-new .lv-beat,#acct .lv-stop .lv-base,#acct .lv-stop .lv-beat{display:none}
+#acct .lv-stats{display:grid;gap:10px}
+#acct .lv-stats>div{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:10px 14px;border-radius:14px;background:color-mix(in srgb,var(--panel-2) 78%,transparent);border:1px solid var(--line);transition:transform .25s,border-color .25s}
+#acct .lv-stats>div:hover{transform:translateX(-4px);border-color:color-mix(in srgb,var(--lv) 45%,transparent)}
+#acct .lv-stats span{font:500 .72rem/1.2 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+#acct .lv-stats b{font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums;text-align:right}
+#acct .lv-foot{grid-column:1/-1;position:relative}
+#acct .lv-foot:empty{display:none}
+#acct .lv-foot{margin-top:6px;padding-top:14px;border-top:1px dashed color-mix(in srgb,var(--lv) 35%,transparent)}
+#acct .lv-steps{font-size:.9rem;color:var(--fg-2);margin-bottom:10px}
+#acct .lv-steps b{display:block;color:var(--fg);margin-bottom:4px}
+#acct .lv-steps ol{margin:0;padding-left:1.2em}#acct .lv-steps p{margin:0}
+@media(max-width:900px){#acct .lv{grid-template-columns:auto minmax(0,1fr);padding:18px}#acct .lv-stats{grid-column:1/-1;grid-template-columns:repeat(3,minmax(0,1fr))}#acct .lv-stats>div{flex-direction:column;align-items:flex-start;gap:4px;padding:10px}#acct .lv-stats b{text-align:left;font-size:1rem}}
+@media(max-width:520px){#acct .lv{gap:6px 14px;padding:16px 14px}#acct .lv-orb{width:76px;height:76px}#acct .lv-ico{width:28px;height:28px}#acct .lv-sub{font-size:.88rem}#acct .lv-ecg{display:none}#acct .lv-stats{gap:6px}#acct .lv-stats>div:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){#acct .lv *,#acct .lv::before{animation:none!important}}
+#acct.still .lv-title{animation:none}
+#acct .lv-stats b{white-space:nowrap}
+@media(max-width:520px){#acct .lv-stats b{font-size:.92rem}#acct .lv-stats span{font-size:.64rem}}
