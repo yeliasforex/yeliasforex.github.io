@@ -478,3 +478,25 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 #pp-rm[hidden],#pa-test[hidden]{display:none!important}
 
 .ma-em{font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ma-em:empty{display:none}
+
+/* ---- name block ---- */
+.ma-tx{gap:3px}
+.ma-nm{display:flex;align-items:center;gap:8px;min-width:0}
+.ma-nm .ma-mail{font-size:1.08rem;font-weight:650;letter-spacing:-.01em;color:var(--fg)}
+.ma-ed{display:inline-flex;align-items:center;gap:6px;flex:none;font:inherit;font-size:.78rem;font-weight:600;color:var(--muted);background:none;border:1px solid transparent;border-radius:999px;padding:4px 6px;cursor:pointer;transition:background .2s,color .2s,border-color .2s,transform .2s}
+.ma-ed svg{width:15px;height:15px}
+.ma-ed:hover,.ma-ed:focus-visible{color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,transparent);border-color:color-mix(in srgb,var(--gold) 35%,transparent);transform:translateY(-1px)}
+.ma-ed.add{color:var(--gold);padding:4px 10px 4px 8px;border-color:color-mix(in srgb,var(--gold) 35%,transparent);background:color-mix(in srgb,var(--gold) 9%,transparent)}
+.ma-ed.add span:empty{display:none}
+.ma-form{display:flex;align-items:center;gap:6px;animation:maFormIn .25s ease both}
+@keyframes maFormIn{from{opacity:0;transform:translateY(-4px)}}
+.ma-form input{min-width:0;width:min(260px,52vw);font:inherit;font-weight:600;font-size:1rem;color:var(--fg);padding:8px 14px;border-radius:999px;border:1.5px solid color-mix(in srgb,var(--gold) 55%,transparent);background:var(--panel);outline:none;transition:box-shadow .2s,border-color .2s}
+.ma-form input:focus{border-color:var(--gold);box-shadow:0 0 0 4px color-mix(in srgb,var(--gold) 20%,transparent)}
+.ma-form button{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:50%;border:0;cursor:pointer;transition:transform .18s,background .2s}
+.ma-form button svg{width:16px;height:16px}
+.ma-form .ok{background:var(--mint);color:#04120B}.ma-form .ok:hover{transform:scale(1.08)}
+.ma-form .no{background:var(--panel-2);color:var(--muted);border:1px solid var(--line-2)}.ma-form .no:hover{color:var(--fg);transform:scale(1.08)}
+.ma-form[hidden],.ma-nm[hidden],.ma-ed[hidden],#hello[hidden],.ma-em[hidden]{display:none!important}
+.ma-em{font-size:.8rem;margin-top:0}
+@media(prefers-reduced-motion:reduce){.ma-form{animation:none}}
+.ma-nm.noname{flex-direction:column;align-items:flex-start;gap:5px}.ma-nm.noname .ma-mail{max-width:100%}

@@ -333,17 +333,37 @@
   async function initAvatar() {
     const av = $('#maav'), btn = $('#maavb'), file = $('#avf'), rm = $('#marm'); if (!av || !btn || !file) return;
     const show = u => { av.classList.toggle('has-img', !!u); av.style.backgroundImage = u ? 'url(' + u + ')' : ''; if (rm) rm.hidden = !u; };
-    let cur = null;
+    let cur = null, nm = '', em = (($('#who') || {}).textContent || '');
+    const paintName = () => {
+      const w = $('#who'), e2 = $('#whoe'), k = $('#hello'), ed = $('#maed'); if (!w) return;
+      w.textContent = nm || em; const nr = $('#manm'); if (nr) nr.classList.toggle('noname', !nm); if (e2) e2.textContent = nm ? em : ''; if (k) k.hidden = !!nm;
+      if (ed) { ed.classList.toggle('add', !nm); ed.querySelector('span').textContent = nm ? '' : 'Add your name'; ed.title = nm ? 'Edit name' : 'Add your name'; ed.hidden = AS; }
+    };
+    const wireName = () => {
+      const ed = $('#maed'), form = $('#maform'), inp = $('#mani'), row = $('#manm'), no = $('#manc'); if (!ed || !form) return;
+      const open = () => { row.hidden = true; form.hidden = false; $('#whoe').hidden = true; inp.value = nm; inp.focus(); inp.select(); };
+      const close = () => { form.hidden = true; row.hidden = false; $('#whoe').hidden = false; };
+      ed.onclick = open; no.onclick = close;
+      inp.onkeydown = e => { if (e.key === 'Escape') close(); };
+      form.onsubmit = guard(async e => {
+        e.preventDefault(); const v = inp.value.replace(/\s+/g, ' ').trim();
+        if (v.length < 2) throw new Error('Enter at least 2 characters.');
+        if (v === nm) return close();
+        if (DEMO) { try { localStorage.setItem('gte_demo_name', v); } catch (x) {} } else await rpc('set_full_name', {p_name: v});
+        nm = v; paintName(); close(); toast('Name saved');
+      });
+    };
     if (DEMO) { try { cur = localStorage.getItem('gte_demo_avatar'); } catch (e) {} }
     else if (!AS) {
       try { await c.rpc('sync_profile_identity'); } catch (e) {}
       try {
         const {data} = await c.from('profiles').select('avatar,full_name,picture_url,email').maybeSingle();
-        cur = data && (data.avatar || data.picture_url) || null;
-        if (data && data.full_name) { const w = $('#who'), e2 = $('#whoe'); if (w) w.textContent = data.full_name; if (e2) e2.textContent = data.email || ''; }
+        cur = data && (data.avatar || data.picture_url) || null; nm = data && data.full_name || ''; em = data && data.email || em;
       } catch (e) {}
     }
-    if (DEMO) { const w = $('#who'), e2 = $('#whoe'); if (w) w.textContent = 'Amina Rahman'; if (e2) e2.textContent = 'amina@example.com'; }
+    if (DEMO) { nm = new URLSearchParams(location.search).has('noname') ? '' : (localStorage.getItem('gte_demo_name') || 'Amina Rahman'); em = 'amina@example.com'; }
+    paintName();
+    if (!AS) wireName();
     show(cur);
     if (AS) { btn.disabled = true; btn.classList.add('ro'); return; }
     btn.onclick = () => file.click();
