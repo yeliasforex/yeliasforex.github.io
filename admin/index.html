@@ -152,7 +152,7 @@ function demoClient() {
     {id:'o2',ref:'GTE-5D20B7',kind:'unbind',plan_id:'investor',amount_usd:100,status:'pending',email:'omar@example.com',created_at:iso(-0.5)},
     {id:'o3',ref:'GTE-77F0A1',kind:'renewal',plan_id:'mogul',amount_usd:3600,status:'paid',email:'lee@example.com',created_at:iso(-20),license_key:'GTE-BB92-KT3C-PL7Y'}];
   const P = [{id:'investor',name:'Investor',limit_usd:5000,price_usd:1000,popular:false,active:true,sort:1},{id:'tycoon',name:'Tycoon',limit_usd:10000,price_usd:1900,popular:true,active:true,sort:2},{id:'mogul',name:'Mogul',limit_usd:20000,price_usd:3600,popular:false,active:true,sort:3},{id:'billionaire',name:'Billionaire',limit_usd:null,price_usd:5000,popular:false,active:true,sort:4}];
-  const rpc = async n => n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
+  const rpc = async n => n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
   const q = t => ({select: () => ({order: async () => ({data: t === 'plans' ? P : []})})});
   return {rpc, from: q, auth: {getSession: async () => ({data: {session: {user: {email: 'demo@admin'}}}}), mfa: {}}};
 }
@@ -499,7 +499,7 @@ function crmDraw() {
   const buyers = n(st.license_holders), pct = n(st.signups) ? Math.round(buyers / n(st.signups) * 100) : 0;
   const count = f => L.filter(f).length;
   const chips = [['todo', 'To follow up', count(due)], ['all', 'All sign-ups', L.length], ...Object.entries(GRP).map(([k, v]) => [k, v[0], count(l => l.grp === k)]), ['optout', 'Unsubscribed', count(l => l.optout)]];
-  const rows = L.filter(l => (crm.view === 'todo' ? due(l) : crm.view === 'all' ? true : crm.view === 'optout' ? l.optout : l.grp === crm.view) && (!q || String(l.email).toLowerCase().includes(q) || String(l.note).toLowerCase().includes(q)));
+  const rows = L.filter(l => (crm.view === 'todo' ? due(l) : crm.view === 'all' ? true : crm.view === 'optout' ? l.optout : l.grp === crm.view) && (!q || (String(l.email) + ' ' + String(l.full_name || '')).toLowerCase().includes(q) || String(l.note).toLowerCase().includes(q)));
   const since = st.first_download ? fmt(st.first_download).slice(0, 10) : null;
   const GC = {new: '#4f8ff7', downloaded: '#e0a03a', order_waiting: '#f0c35a', cold: '#8b95a3', key_unused: '#7aa7ff', customer: '#3fb27f', expiring: '#e0a03a', expired: '#e5534b'};
   const dl = L.filter(l => l.last_download).length, od = L.filter(l => l.open_order || l.licenses > 0).length, tot = Math.max(L.length, 1);
@@ -525,7 +525,7 @@ function crmDraw() {
       <button class="b pri" id="bs">Email selected (<span id="bn">${crm.sel.size}</span>)</button><button class="b" id="tp">Edit email templates</button></div>
     <div class="mute" style="margin:2px 0 8px">Downloads are counted from ${since || 'now on'} (earlier ones were not tracked). Promotional emails skip people who unsubscribed or are marked "Do not contact". Gmail allows about 500 emails a day: send in small batches.</div>
     <div class="tblw"><table class="tbl"><tr><th></th><th>Email</th><th>Signed up</th><th>Group</th><th>Status</th><th>Next follow-up</th><th>Last email</th><th></th></tr>
-    ${rows.map(l => `<tr data-u="${esc(l.user_id)}"><td><input type="checkbox" data-s="${esc(l.user_id)}" ${crm.sel.has(l.user_id) ? 'checked' : ''}></td><td class="click"><span class="av" style="--c:${GC[l.grp]}">${init(l.email)}</span>${esc(l.email)}${l.optout ? ' <span class="pill p-mute">unsubscribed</span>' : ''}${l.note ? ' <span class="mute" title="' + esc(l.note) + '">&#9998;</span>' : ''}</td><td class="mute">${fmt(l.created_at).slice(0, 10)}</td>
+    ${rows.map(l => `<tr data-u="${esc(l.user_id)}"><td><input type="checkbox" data-s="${esc(l.user_id)}" ${crm.sel.has(l.user_id) ? 'checked' : ''}></td><td class="click"><span class="av" style="--c:${GC[l.grp]}">${init(l.full_name || l.email)}</span>${l.full_name ? '<b>' + esc(l.full_name) + '</b> <span class="mute">' + esc(l.email) + '</span>' : esc(l.email)}${l.optout ? ' <span class="pill p-mute">unsubscribed</span>' : ''}${l.note ? ' <span class="mute" title="' + esc(l.note) + '">&#9998;</span>' : ''}</td><td class="mute">${fmt(l.created_at).slice(0, 10)}</td>
       <td><span class="pill ${GRP[l.grp][1]}">${GRP[l.grp][0]}</span></td>
       <td><select data-st="${esc(l.user_id)}">${STATUS.map(([k, v]) => `<option value="${k}" ${k === l.status ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
       <td><input type="date" data-nx="${esc(l.user_id)}" value="${esc(l.next_followup || '')}" style="width:140px"></td>
@@ -565,7 +565,7 @@ async function bulkSend() {
 async function openLead(uid) {
   const l = crm.leads.find(x => x.user_id === uid), d = $('#drawer'); d.classList.remove('hide');
   const hist = await call('admin_lead_history', {p_user: uid}).catch(() => []);
-  d.innerHTML = `<div class="row"><h3>${esc(l.email)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
+  d.innerHTML = `<div class="row"><h3>${l.full_name ? esc(l.full_name) + ' <small class="mute">' + esc(l.email) + '</small>' : esc(l.email)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
   <div class="mute">Signed up ${fmt(l.created_at).slice(0, 10)} · <span class="pill ${GRP[l.grp][1]}">${GRP[l.grp][0]}</span>${l.optout ? ' · <span class="pill p-mute">unsubscribed</span>' : ''}</div>
   <div class="grid" style="margin:12px 0"><div class="kpi">Downloaded the EA<b style="font-size:15px">${l.last_download ? fmt(l.last_download).slice(0, 10) : 'not seen'}</b></div><div class="kpi">Licenses<b style="font-size:15px">${Number(l.licenses)}</b><span class="mute">${Number(l.active_keys)} active</span></div><div class="kpi">Order<b style="font-size:15px">${l.open_order ? 'waiting for payment' : '-'}</b></div></div>
   <label>Status</label><select id="ls" style="width:100%">${STATUS.map(([k, v]) => `<option value="${k}" ${k === l.status ? 'selected' : ''}>${v}</option>`).join('')}</select>
@@ -610,10 +610,10 @@ function vHealth() {
   $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openLicense(r.dataset.id));
 }
 function vCustomers() {
-  const q = (window._cq || '').toLowerCase(), rows = data.customers.filter(c => !q || String(c.email).toLowerCase().includes(q));
+  const q = (window._cq || '').toLowerCase(), rows = data.customers.filter(c => !q || (String(c.email) + ' ' + String(c.full_name || '')).toLowerCase().includes(q));
   const tg = data.customers.filter(c => c.telegram).length, wl = data.customers.filter(c => c.licenses > 0).length;
   const head = `<div class="grid" style="margin-bottom:14px">${kx('People', data.customers.length)}${kx('With a license', wl, Math.round(wl / Math.max(1, data.customers.length) * 100) + '%', 'var(--ok)')}${kx('Telegram connected', tg, Math.round(tg / Math.max(1, data.customers.length) * 100) + '%', 'var(--info)')}</div>`;
-  $('#view').innerHTML = head + `<div class="card"><div class="row"><input id="cq" placeholder="Search email" value="${esc(window._cq || '')}" style="flex:1;min-width:200px"><span class="mute">Click a customer to see everything about them</span></div><div class="tblw"><table class="tbl"><tr><th>Email</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${rows.map(c => `<tr class="click" data-u="${esc(c.user_id)}"><td><span class="av" style="--c:${hue(c.email)}">${initial(c.email)}</span>${esc(c.email)}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('') || '<tr><td colspan="4" class="mute">No customers match.</td></tr>'}</table></div></div>`;
+  $('#view').innerHTML = head + `<div class="card"><div class="row"><input id="cq" placeholder="Search name or email" value="${esc(window._cq || '')}" style="flex:1;min-width:200px"><span class="mute">Click a customer to see everything about them</span></div><div class="tblw"><table class="tbl"><tr><th>Email</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${rows.map(c => `<tr class="click" data-u="${esc(c.user_id)}"><td><span class="av" style="--c:${hue(c.email)}">${initial(c.full_name || c.email)}</span>${c.full_name ? '<b>' + esc(c.full_name) + '</b> <span class="mute">' + esc(c.email) + '</span>' : esc(c.email)}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('') || '<tr><td colspan="4" class="mute">No customers match.</td></tr>'}</table></div></div>`;
   $('#cq').oninput = e => { window._cq = e.target.value; clearTimeout(window._t); window._t = setTimeout(vCustomers, 200); };
   const cq = $('#cq'); cq.focus(); cq.setSelectionRange(cq.value.length, cq.value.length);
   $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openCustomer(r.dataset.u));
@@ -621,7 +621,7 @@ function vCustomers() {
 function openCustomer(uid) {
   const c = data.customers.find(x => x.user_id === uid), d = $('#drawer'); d.classList.remove('hide');
   const lics = data.licenses.filter(l => l.owner_email === c.email), ords = data.orders.filter(o => o.email === c.email);
-  d.innerHTML = `<div class="row"><h3>${esc(c.email)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
+  d.innerHTML = `<div class="row"><h3>${c.full_name ? esc(c.full_name) + ' <small class="mute">' + esc(c.email) + '</small>' : esc(c.email)}</h3><span style="flex:1"></span><button class="b" id="dc">Close</button></div>
   <div class="mute">Joined ${fmt(c.created_at)} · Telegram ${c.telegram ? 'connected' : 'not connected'}</div>
   <label style="margin-top:14px">Licenses (${lics.length})</label>
   ${lics.map(l => `<div class="card" style="margin:6px 0"><div class="row" style="margin:0"><b class="mono">${esc(l.key)}</b>${stPill(l.status)}${l.over_limit ? '<span class="pill p-bad">over limit</span>' : ''}</div>

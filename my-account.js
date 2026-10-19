@@ -335,7 +335,15 @@
     const show = u => { av.classList.toggle('has-img', !!u); av.style.backgroundImage = u ? 'url(' + u + ')' : ''; if (rm) rm.hidden = !u; };
     let cur = null;
     if (DEMO) { try { cur = localStorage.getItem('gte_demo_avatar'); } catch (e) {} }
-    else if (!AS) { try { const {data} = await c.from('profiles').select('avatar').maybeSingle(); cur = data && data.avatar || null; } catch (e) {} }
+    else if (!AS) {
+      try { await c.rpc('sync_profile_identity'); } catch (e) {}
+      try {
+        const {data} = await c.from('profiles').select('avatar,full_name,picture_url,email').maybeSingle();
+        cur = data && (data.avatar || data.picture_url) || null;
+        if (data && data.full_name) { const w = $('#who'), e2 = $('#whoe'); if (w) w.textContent = data.full_name; if (e2) e2.textContent = data.email || ''; }
+      } catch (e) {}
+    }
+    if (DEMO) { const w = $('#who'), e2 = $('#whoe'); if (w) w.textContent = 'Amina Rahman'; if (e2) e2.textContent = 'amina@example.com'; }
     show(cur);
     if (AS) { btn.disabled = true; btn.classList.add('ro'); return; }
     btn.onclick = () => file.click();
