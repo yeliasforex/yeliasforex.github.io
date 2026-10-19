@@ -327,7 +327,6 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 @media(prefers-reduced-motion:reduce){.ap-hero::after,.ap-ico{animation:none}}
 /* inside the installed app */
 .is-app .skip{display:none}
-.is-app body{overscroll-behavior-y:contain}
 
 /* ---- Live status card (My account) ---- */
 #acct .lv{--lv:#3EE09A;position:relative;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr);gap:8px 26px;align-items:center;margin:0 0 16px;padding:22px 26px;border-radius:22px;border:1px solid color-mix(in srgb,var(--lv) 38%,transparent);background:linear-gradient(120deg,color-mix(in srgb,var(--lv) 13%,var(--panel)),var(--panel) 62%);transition:border-color .5s,background .5s}
