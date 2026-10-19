@@ -18,7 +18,16 @@
     document.querySelectorAll('[data-installed]').forEach(function (b) { b.hidden = !standalone; });
     document.querySelectorAll('[data-noprompt]').forEach(function (b) { b.hidden = ok || standalone; });
   }
-  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.gteApp.prompt = e; sync(); });
+  function chip() {
+    if (standalone || /apps\.html/.test(location.pathname) || document.querySelector('.app-chip')) return;
+    try { var x = +localStorage.getItem('gte_chip_x'); if (x && Date.now() - x < 7 * 864e5) return; } catch (e) {}
+    var c = document.createElement('div'); c.className = 'app-chip'; c.setAttribute('role', 'region'); c.setAttribute('aria-label', 'Install the app');
+    c.innerHTML = '<img src="icon-192.png" alt="" width="36" height="36"><span><b>Get the app</b><small>Alerts and your account, one tap away</small></span><button type="button" class="go">Install</button><button type="button" class="x" aria-label="Not now">&times;</button>';
+    c.querySelector('.go').onclick = function () { c.remove(); window.gteApp.install(); };
+    c.querySelector('.x').onclick = function () { c.remove(); try { localStorage.setItem('gte_chip_x', String(Date.now())); } catch (e) {} };
+    document.body.appendChild(c);
+  }
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); window.gteApp.prompt = e; sync(); setTimeout(chip, 6000); });
   window.addEventListener('appinstalled', function () { window.gteApp.prompt = null; standalone = true; sync(); });
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-install]'); if (b) { e.preventDefault(); window.gteApp.install(); }

@@ -398,3 +398,15 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 #acct .lv-tt{font:500 .8rem/1 var(--mono);color:var(--muted)}
 #acct .lv-sd{color:var(--fg-2)}
 #acct .lv-none{margin:6px 0 4px;color:var(--fg-2);font-size:.9rem}
+
+/* ---- Install chip ---- */
+.app-chip{position:fixed;left:14px;bottom:14px;z-index:60;display:flex;align-items:center;gap:11px;max-width:min(360px,calc(100vw - 100px));padding:10px 10px 10px 12px;border-radius:16px;background:var(--panel,#fff);border:1px solid var(--line-2,rgba(0,0,0,.12));box-shadow:0 10px 30px rgba(10,20,50,.18);animation:acIn .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes acIn{from{opacity:0;transform:translateY(14px)}}
+.app-chip img{border-radius:9px;flex:none}
+.app-chip span{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.app-chip b{font-size:.9rem}
+.app-chip small{color:var(--muted);font-size:.76rem}
+.app-chip .go{margin-left:auto;font:inherit;font-weight:600;font-size:.84rem;border:0;border-radius:10px;padding:9px 14px;background:var(--mint,#3EE09A);color:#04120B;cursor:pointer}
+.app-chip .x{font:inherit;font-size:1.2rem;line-height:1;border:0;background:none;color:var(--muted);cursor:pointer;padding:4px 6px}
+@media(max-width:520px){.app-chip small{display:none}}
+@media(prefers-reduced-motion:reduce){.app-chip{animation:none}}
