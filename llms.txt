@@ -18,6 +18,12 @@ Key facts:
 
 ## Main pages
 - [Home](https://yeliasforex.github.io/): what GoldTriEngine is, how the stream works, backtest summary, license plans, brokers
+- [Gold EA for MT5 (product page)](https://yeliasforex.github.io/gold-ea-mt5.html): what GoldTriEngine is, how it trades, risk controls, requirements and how to check it before paying
+- [Best gold EA for MT5? Ten checks](https://yeliasforex.github.io/best-gold-ea-mt5.html): a checklist for judging any gold EA, with GoldTriEngine's own answers including its weak spots
+- [GoldTriEngine review: is it legit?](https://yeliasforex.github.io/goldtriengine-review.html): who makes it, what can be verified, what it does not do, its limits
+- [Gold EA for Fusion Markets and IC Markets Raw accounts](https://yeliasforex.github.io/fusion-markets-ic-markets-gold-ea.html): why a Raw account is required, costs, setup, affiliate disclosure
+- [Free backtest EA](https://yeliasforex.github.io/free-backtest.html): download the EA and test it yourself in the MT5 Strategy Tester, no key and no payment
+- [Pricing](https://yeliasforex.github.io/pricing.html): four yearly plans by account size
 - [How to judge a gold EA](https://yeliasforex.github.io/guide.html): eight checks for any XAUUSD Expert Advisor (verified live record, stop losses, profit factor and drawdown, how the backtest was made, broker conditions, seller transparency, risk), with GoldTriEngine's own honest scorecard
 - [FAQ](https://yeliasforex.github.io/faq.html): answers about the EA, backtest, brokers, risk, licenses and the live stream
 
