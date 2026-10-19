@@ -55,28 +55,42 @@
     if (s === 'stop') return '<div class="row">' + (d.l.status === 'expired' ? '<a class="btn sm mint" href="#tab=billing" data-go="billing">Renew</a>' : '') + sup + '</div>';
     return '';
   }
+  function detail(d) {
+    var R_ = d.R, tr = (d.todayTrades || []).slice().sort(function (a, b) { return new Date(a.closed_at) - new Date(b.closed_at); });
+    var wins = tr.filter(function (x) { return x.profit > 0; }).length, run = 0, cum = tr.map(function (x) { run += x.profit; return run; });
+    var rows = tr.slice().reverse().slice(0, 6).map(function (x) {
+      return '<div class="lv-tr"><span class="lv-tt">' + new Date(x.closed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + '</span>'
+        + '<span class="chip" style="--c:' + (R_.ECL[x.engine] || '#888') + '">' + esc(R_.ENG[x.engine] || '') + '</span>'
+        + '<span class="lv-sd">' + (x.dir > 0 ? 'Buy' : 'Sell') + '</span><b style="color:' + d.col(x.profit) + '">' + d.sgn(x.profit) + '</b></div>';
+    }).join('');
+    return '<button class="lv-more" type="button" aria-expanded="false" aria-controls="lv-d"><span>Today in detail</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>'
+      + '<div class="lv-detail" id="lv-d"><div class="lv-di"><div class="lv-dh"><b>Closed trades today</b><span>' + (tr.length ? tr.length + ' trade' + (tr.length === 1 ? '' : 's') + ', ' + wins + ' won' : 'none yet') + '</span></div>'
+      + (tr.length ? '<div class="lv-sp">' + R_.spark(cum.length > 1 ? cum : [0].concat(cum), cum.length && cum[cum.length - 1] < 0 ? '#FF6B78' : '#3EE09A', 44) + '</div>' + rows : '<p class="lv-none">No trade has closed today. The EA only trades when its rules give a signal.</p>')
+      + '</div></div>';
+  }
   function html(d) {
     D = d; var now = Date.now(), m = model(d, now), st = d.st || {}, l = d.l;
     var online = m.s === 'trade' || m.s === 'wait' || m.s === 'rest' || m.s === 'warn';
     var fl = (st.equity != null && st.balance != null) ? st.equity - st.balance : null;
     var openTxt = online ? ((st.open_positions || 0) + (fl != null && (st.open_positions || 0) > 0 ? ' · ' + d.sgn(fl) : '')) : (st.open_positions == null ? '-' : st.open_positions + ' (last known)');
-    return '<section class="lv lv-' + m.s + '" id="lv" aria-live="polite">'
+    return '<section class="lv lv-' + m.s + '" id="lv">'
       + '<div class="lv-orb"><i class="lv-ripple"></i><i class="lv-ripple r2"></i><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="lv-track" cx="50" cy="50" r="' + R + '"/><circle class="lv-arc" cx="50" cy="50" r="' + R + '" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + (C * (1 - m.fresh)).toFixed(1) + '"/></svg>'
       + '<svg class="lv-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[m.s] + '</svg></div>'
       + '<div class="lv-main"><div class="lv-eyebrow"><span class="lv-live"></span>Live status</div>'
-      + '<h2 class="lv-title">' + esc(m.title) + '</h2><p class="lv-sub">' + esc(m.sub) + '</p>'
+      + '<h2 class="lv-title" role="status">' + esc(m.title) + '</h2><p class="lv-sub">' + esc(m.sub) + '</p>'
       + '<div class="lv-meta"><span class="lv-ago">' + (m.ago ? 'Last report ' + esc(m.ago) : 'No report yet') + '</span>' + (st.ea_version ? '<span>EA v' + esc(st.ea_version) + '</span>' : '') + '<span class="lv-chk">Checked just now</span></div>'
       + '<svg class="lv-ecg" viewBox="0 0 240 36" preserveAspectRatio="none" aria-hidden="true"><path class="lv-flat" d="M0 18H240"/><path class="lv-base" pathLength="1" d="M0 18H40L48 18L54 6L62 30L68 12L74 18H120L128 18L134 6L142 30L148 12L154 18H200L208 18L214 6L222 30L228 12L234 18H240"/><path class="lv-beat" pathLength="1" d="M0 18H40L48 18L54 6L62 30L68 12L74 18H120L128 18L134 6L142 30L148 12L154 18H200L208 18L214 6L222 30L228 12L234 18H240"/></svg></div>'
       + '<div class="lv-stats"><div><span>Today, closed</span><b style="color:' + d.col(d.today) + '" data-cu="' + d.today + '" data-f="sgn">' + d.sgn(d.today) + '</b></div>'
       + '<div><span>Open trades</span><b class="lv-open">' + esc(openTxt) + '</b></div>'
       + '<div><span>Equity</span><b' + (st.equity != null ? ' data-cu="' + st.equity + '" data-f="usd"' : '') + '>' + (st.equity != null ? d.usd(st.equity) : '-') + '</b></div></div>'
+      + detail(d)
       + '<div class="lv-foot">' + foot(m.s, d) + '</div></section>';
   }
   function paint() {
     var el = document.getElementById('lv'); if (!el || !D) return;
     var now = Date.now(), m = model(D, now);
     if (m.s !== shown) {
-      shown = m.s; el.className = 'lv lv-' + m.s;
+      shown = m.s; el.className = 'lv lv-' + m.s + (el.classList.contains('lv-open') ? ' lv-open' : '') + (el.classList.contains('lv-late') ? ' lv-late' : '');
       el.querySelector('.lv-title').textContent = m.title; el.querySelector('.lv-sub').textContent = m.sub;
       el.querySelector('.lv-foot').innerHTML = foot(m.s, D);
       el.querySelector('.lv-ico').innerHTML = ICON[m.s];
@@ -92,6 +106,9 @@
     var el = document.getElementById('lv'); if (!el) return;
     shown = (el.className.match(/lv-(\w+)/) || [])[1];
     el.querySelectorAll('.lv-foot [data-go]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var t = document.querySelector('#subnav a[data-tab="' + a.dataset.go + '"]'); if (t) t.click(); }; });
+    var mb = el.querySelector('.lv-more'), dt = el.querySelector('.lv-detail');
+    if (mb) mb.onclick = function () { var o = !el.classList.contains('lv-open'); el.classList.toggle('lv-open', o); mb.setAttribute('aria-expanded', o); try { sessionStorage.setItem('gte_lv_open', o ? '1' : ''); } catch (e) {} };
+    try { if (sessionStorage.getItem('gte_lv_open') === '1') { el.classList.add('lv-open'); if (mb) mb.setAttribute('aria-expanded', 'true'); } } catch (e) {}
     timer = setInterval(function () { if (!document.hidden) paint(); }, 1000);
     paint();
   }
