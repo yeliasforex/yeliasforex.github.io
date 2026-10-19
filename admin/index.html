@@ -69,6 +69,33 @@ button.dng{border-color:var(--bad);color:var(--bad)}
 .hide{display:none!important}
 label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
 @media (max-width:640px){main{padding:10px}.tbl td,.tbl th{padding:7px 5px}}
+
+.vz-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.vz-top .on{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+.vz-dot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 var(--ok);animation:vzp 1.8s infinite}
+@keyframes vzp{0%{box-shadow:0 0 0 0 rgba(63,178,127,.6)}70%{box-shadow:0 0 0 8px rgba(63,178,127,0)}100%{box-shadow:0 0 0 0 rgba(63,178,127,0)}}
+.vz-seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}.vz-seg button{background:none;border:0;color:var(--mute);padding:6px 12px;cursor:pointer;font:inherit}.vz-seg button.on{background:var(--panel2);color:var(--text);font-weight:600}
+.vz-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.vz-cols>.card{margin:0}
+.vz-hb{display:grid;gap:7px;margin-top:8px}
+.vz-hb>div{display:grid;grid-template-columns:minmax(90px,150px) 1fr auto;gap:10px;align-items:center;font-size:13px}
+.vz-hb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vz-hb u{display:block;height:9px;border-radius:5px;background:var(--panel2);overflow:hidden}.vz-hb u i{display:block;height:100%;width:0;border-radius:5px;background:var(--c,var(--gold));animation:vzw 1s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes vzw{to{width:var(--w)}}
+.vz-hb b{font-variant-numeric:tabular-nums;min-width:34px;text-align:right}.vz-hb em{font-style:normal;color:var(--mute);font-size:11px;margin-left:5px}
+.vz-chart{width:100%;height:190px;display:block}
+.vz-tip{position:absolute;pointer-events:none;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:12px;opacity:0;transition:opacity .15s;white-space:nowrap;z-index:3}
+.vz-hrs{display:grid;grid-template-columns:repeat(24,1fr);gap:3px;align-items:end;height:90px;margin-top:8px}
+.vz-hrs div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:3px}.vz-hrs i{display:block;width:100%;border-radius:3px 3px 0 0;background:var(--gold);min-height:3px;height:0;animation:vzh .9s cubic-bezier(.2,.8,.2,1) forwards}.vz-hrs small{font-size:9px;color:var(--mute)}
+@keyframes vzh{to{height:var(--h)}}
+.vz-fn{display:grid;gap:8px;margin-top:8px}.vz-fn>div{display:grid;grid-template-columns:150px 1fr 120px;gap:10px;align-items:center;font-size:13px}
+.vz-fn u{display:block;height:22px;border-radius:7px;background:var(--panel2);overflow:hidden}.vz-fn u i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--info),var(--ok));animation:vzw 1s cubic-bezier(.2,.8,.2,1) forwards}
+.vz-fn b{text-align:right}.vz-fn em{font-style:normal;color:var(--mute);font-size:11px}
+@media(max-width:560px){.vz-fn>div{grid-template-columns:100px 1fr 90px}.vz-hb>div{grid-template-columns:90px 1fr auto}}
+.vz-ins{display:grid;gap:8px;margin:6px 0 0;padding:0;list-style:none}.vz-ins li{padding:9px 12px;border-radius:9px;background:var(--panel2);border-left:3px solid var(--gold);font-size:13px;line-height:1.5}
+.vz-utm{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}.vz-utm input,.vz-utm select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px;font:inherit}
+.vz-link{margin-top:8px;word-break:break-all;background:var(--panel2);border:1px dashed var(--line);border-radius:8px;padding:9px 11px;font-family:ui-monospace,monospace;font-size:12px}
+.vz-cc{display:inline-block;min-width:26px;padding:1px 5px;margin-right:6px;border-radius:5px;background:var(--panel2);border:1px solid var(--line);font:600 10px/1.5 ui-monospace,monospace;text-align:center;color:var(--mute)}
 </style>
 </head>
 <body>
@@ -125,12 +152,13 @@ function demoClient() {
     {id:'o2',ref:'GTE-5D20B7',kind:'unbind',plan_id:'investor',amount_usd:100,status:'pending',email:'omar@example.com',created_at:iso(-0.5)},
     {id:'o3',ref:'GTE-77F0A1',kind:'renewal',plan_id:'mogul',amount_usd:3600,status:'paid',email:'lee@example.com',created_at:iso(-20),license_key:'GTE-BB92-KT3C-PL7Y'}];
   const P = [{id:'investor',name:'Investor',limit_usd:5000,price_usd:1000,popular:false,active:true,sort:1},{id:'tycoon',name:'Tycoon',limit_usd:10000,price_usd:1900,popular:true,active:true,sort:2},{id:'mogul',name:'Mogul',limit_usd:20000,price_usd:3600,popular:false,active:true,sort:3},{id:'billionaire',name:'Billionaire',limit_usd:null,price_usd:5000,popular:false,active:true,sort:4}];
-  const rpc = async n => ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
+  const rpc = async n => n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
   const q = t => ({select: () => ({order: async () => ({data: t === 'plans' ? P : []})})});
   return {rpc, from: q, auth: {getSession: async () => ({data: {session: {user: {email: 'demo@admin'}}}}), mfa: {}}};
 }
 
 // ---------- sign-in: email link or Google, then a 6-digit code sent to the owner Telegram (the database refuses admin calls until this login session is verified) ----------
+try { if (localStorage.getItem('gte_notrack') === null) localStorage.setItem('gte_notrack', '1'); } catch (e) {}
 async function start() {
   if (DEMO) { sb = demoClient(); return enter(); }
   sb = supabase.createClient(SB_URL, SB_KEY, {auth: {detectSessionInUrl: true, persistSession: true}});
@@ -215,12 +243,12 @@ async function accountView(id) {
 $('#acvx').onclick = () => { $('#acv').classList.add('hide'); $('#acvf').src = 'about:blank'; };
 
 // ---------- views ----------
-const TABS = [['orders', 'Orders'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['videos', 'Videos'], ['audit', 'Audit log']];
+const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['videos', 'Videos'], ['audit', 'Audit log']];
 function render() {
   const waiting = data.orders.filter(o => o.status === 'paid_claimed' || o.status === 'pending').length;
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
-  ({orders: vOrders, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
+  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
   const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw);
 }
 const kx = (label, val, sub, color, hot, pre) => `<div class="kpi kx ${hot ? 'hot' : ''}">${label}<b ${color ? `style="color:${color}"` : ''} ${pre ? `data-pre="${pre}"` : ''} data-n="${val}">${val}</b>${sub ? `<span class="mute">${sub}</span>` : ''}</div>`;
@@ -230,6 +258,108 @@ const initial = e => esc(String(e || '?').trim().charAt(0).toUpperCase());
 const hue = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 360; return `hsl(${h} 60% 62%)`; };
 const planName = id => (data.plans.find(p => p.id === id) || {}).name || id || '-';
 const stPill = s => `<span class="pill ${ {active:'p-ok',unused:'p-info',expired:'p-warn',disabled:'p-bad',paid:'p-ok',paid_claimed:'p-warn',pending:'p-info',cancelled:'p-mute'}[s] || 'p-mute'}">${esc(s.replace('_', ' '))}</span>`;
+
+// ---------- Visitors ----------
+const vz = {days: 30, d: null};
+const ccName = c => { if (!c || c === '??') return 'Unknown'; try { return new Intl.DisplayNames(['en'], {type: 'region'}).of(c) || c; } catch (e) { return c; } };
+const ccFlag = c => `<span class="vz-cc">${(!c || c === '??') ? '?' : esc(c)}</span>`;
+const vzBars = (rows, label, colors) => { const tot = rows.reduce((s, r) => s + r.visitors, 0) || 1, mx = Math.max(1, ...rows.map(r => r.visitors)); return `<div class="vz-hb">${rows.map((r, i) => `<div><span>${label(r)}</span><u><i style="--w:${r.visitors / mx * 100}%;${colors ? '--c:' + colors[i % colors.length] : ''};animation-delay:${i * 50}ms"></i></u><b>${r.visitors}<em>${Math.round(r.visitors / tot * 100)}%</em></b></div>`).join('') || '<div class="mute">No data yet</div>'}</div>`; };
+function vzChart(daily) {
+  const W = 700, H = 190, pl = 30, pr = 8, pt = 10, pb = 22, n = daily.length, mx = Math.max(4, ...daily.map(x => Math.max(x.visitors, x.views)));
+  const X = i => pl + (n < 2 ? 0 : i * (W - pl - pr) / (n - 1)), Y = v => H - pb - v / mx * (H - pb - pt);
+  const line = k => daily.map((x, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(x[k]).toFixed(1)).join('');
+  const ticks = [0, .5, 1].map(f => Math.round(mx * f));
+  const lab = daily.map((x, i) => (i % Math.ceil(n / 7) === 0 || i === n - 1) ? `<text x="${X(i)}" y="${H - 6}" text-anchor="${i === n - 1 ? 'end' : i === 0 ? 'start' : 'middle'}" font-size="10" fill="var(--mute)">${x.day.slice(5)}</text>` : '').join('');
+  return `<div style="position:relative"><svg class="vz-chart" id="vzc" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <defs><linearGradient id="vzg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e0b24a" stop-opacity=".35"/><stop offset="1" stop-color="#e0b24a" stop-opacity="0"/></linearGradient></defs>
+    ${ticks.map(v => `<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${pl - 5}" y="${Y(v) + 3}" text-anchor="end" font-size="10" fill="var(--mute)">${v}</text>`).join('')}
+    <path d="${line('views')}" fill="none" stroke="var(--info)" stroke-width="2" opacity=".55" vector-effect="non-scaling-stroke"/>
+    <path d="${line('visitors')} L${X(n - 1)} ${H - pb} L${X(0)} ${H - pb}Z" fill="url(#vzg)"/>
+    <path d="${line('visitors')}" fill="none" stroke="var(--gold)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    ${lab}<g id="vzh" style="display:none"><line id="vzl" y1="${pt}" y2="${H - pb}" stroke="var(--mute)" stroke-dasharray="3 3"/></g></svg><div class="vz-tip" id="vzt"></div></div>
+    <div class="mute" style="margin-top:4px"><span style="color:var(--gold)">&#9632;</span> Visitors per day &nbsp; <span style="color:var(--info)">&#9632;</span> Page views</div>`;
+}
+function vzInsights(d) {
+  const out = [], tot = d.visitors || 0; if (tot < 20) return ['Not enough visits yet to draw conclusions (fewer than 20 so far). Come back after a few days of traffic.'];
+  const pct = n => Math.round(n / tot * 100), top = d.countries[0], mob = (d.devices.find(x => x.name === 'mobile') || {visitors: 0}).visitors;
+  if (top) out.push(`<b>${ccFlag(top.country)} ${esc(ccName(top.country))}</b> is your biggest audience (${pct(top.visitors)}% of visitors).` + (d.countries[1] ? ` Next: ${esc(ccName(d.countries[1].country))}, ${esc(ccName((d.countries[2] || {}).country || ''))}.` : '') + ' Consider posting at their local evening hours and adding that language to the stream chat and Telegram welcome.');
+  out.push(`<b>${pct(mob)}%</b> of visitors use a phone. ${pct(mob) > 60 ? 'Check every new page on a phone first: that is where most buyers see it.' : 'Desktop is strong, so the long guide and backtest pages are being read.'}`);
+  const s = d.sources[0]; if (s) out.push(`Top source: <b>${esc(s.name)}</b> (${pct(s.visitors)}%). ${s.name === 'direct' ? 'Direct means people typed the address or came from apps that hide the source. Use tagged links (below) in YouTube, TikTok and Telegram posts to see which one really brings visitors.' : 'Keep feeding it, and tag every post link so you can compare channels.'}`);
+  const f = d.funnel; if (f.visitors) out.push(`Of ${f.visitors} visitors, <b>${f.pricing}</b> (${Math.round(f.pricing / f.visitors * 100)}%) looked at pricing and <b>${f.signups}</b> signed up (${(f.signups / f.visitors * 100).toFixed(1)}%). ${f.pricing && f.signups / f.pricing < .1 ? 'Many look at pricing but do not sign up: add proof (live record, free backtest) near the plans.' : ''}`);
+  const off = new Date().getTimezoneOffset(), best = d.hours.slice().sort((a, b) => b.visitors - a.visitors)[0]; if (best) { const h = ((best.hr - off / 60) % 24 + 24) % 24; out.push(`Busiest hour: <b>${String(h).padStart(2, '0')}:00</b> your time. Go live or post just before it.`); }
+  if (d.bounce_pct != null && d.bounce_pct > 65) out.push(`${d.bounce_pct}% of visitors leave after one page. A short video or the free backtest button higher on the home page can help.`);
+  return out;
+}
+async function vVisitors() {
+  $('#view').innerHTML = '<div class="card mute">Loading...</div>';
+  let d; try { d = await call('admin_visitors', {p_days: vz.days}); } catch (e) { return; }
+  vz.d = d;
+  let noTrack = true; try { noTrack = !!localStorage.getItem('gte_notrack'); } catch (e) {}
+  const t = d.today || {visitors: 0, views: 0}, y = d.yesterday || {visitors: 0, views: 0};
+  const delta = t.visitors - y.visitors, dtxt = y.visitors || t.visitors ? (delta >= 0 ? '+' : '') + delta + ' vs yesterday' : 'no visits yet';
+  const off = new Date().getTimezoneOffset() / 60, hrs = Array.from({length: 24}, (_, i) => ({hr: i, visitors: 0})); d.hours.forEach(h => hrs[h.hr].visitors = h.visitors);
+  const hm = Math.max(1, ...hrs.map(h => h.visitors));
+  const f = d.funnel, steps = [['Visitors', f.visitors], ['Looked at pricing', f.pricing], ['Opened sign-in', f.signin], ['Signed up', f.signups], ['Downloaded the EA', f.downloads], ['Started an order', f.orders], ['Paid', f.paid]];
+  const colr = ['#e0b24a', '#4f8ff7', '#3fb27f', '#b07cff', '#e5534b', '#4fc3d9', '#e0a03a'];
+  const devs = d.devices.map(x => [x.name, x.visitors, x.name === 'mobile' ? '#4f8ff7' : x.name === 'desktop' ? '#e0b24a' : '#3fb27f']);
+  $('#view').innerHTML = `
+  <div class="vz-top"><span class="on"><i class="vz-dot"></i>${d.online_now} online now</span><span class="mute">last 5 minutes</span><span style="flex:1"></span>
+    <div class="vz-seg" id="vzd">${[7, 30, 90].map(n => `<button data-d="${n}" class="${vz.days === n ? 'on' : ''}">${n} days</button>`).join('')}</div></div>
+  <div class="grid" style="margin-bottom:14px">${kx('Visitors today', t.visitors, dtxt, 'var(--gold)', false)}${kx('Visitors, ' + d.days + ' days', d.visitors, d.views + ' page views')}${kx('Avg time on a page', d.avg_secs || 0, d.avg_secs ? 'seconds' : 'measured after a few visits')}${kx('Left after one page', d.bounce_pct == null ? 0 : d.bounce_pct, 'percent of visitors', d.bounce_pct > 70 ? 'var(--warn)' : '')}${kx('Opened in the app', d.app_views, 'page views from the installed app')}</div>
+  <div class="card"><b>Visitors per day</b>${vzChart(d.daily)}</div>
+  <div class="card"><b>What this means for sales</b><ul class="vz-ins">${vzInsights(d).map(x => `<li>${x}</li>`).join('')}</ul></div>
+  <div class="vz-cols" style="margin-bottom:14px">
+    <div class="card"><b>Where they are from</b>${vzBars(d.countries, r => ccFlag(r.country) + ' ' + esc(ccName(r.country)), colr)}<div class="mute" style="margin-top:8px">Country comes from the connection. Only the country is kept, never the address.</div></div>
+    <div class="card"><b>Regions (their clock)</b>${vzBars(d.regions.map(r => ({...r, tz: r.tz})), r => esc(String(r.tz).replace(/_/g, ' ')), ['#4f8ff7'])}<div class="mute" style="margin-top:8px">Time zone is the closest we get to city level.</div></div>
+  </div>
+  <div class="vz-cols" style="margin-bottom:14px">
+    <div class="card"><b>Devices</b>${seg(devs, d.devices.reduce((s, x) => s + x.visitors, 0))}<div class="mute" style="margin-top:12px">System</div>${vzBars(d.os, r => esc(r.name), ['#3fb27f'])}<div class="mute" style="margin-top:12px">Browser</div>${vzBars(d.browsers, r => esc(r.name), ['#b07cff'])}</div>
+    <div class="card"><b>How they found you</b>${vzBars(d.sources, r => esc(r.name), colr)}${d.campaigns.length ? `<div class="mute" style="margin-top:12px">Tagged campaigns</div>${vzBars(d.campaigns, r => esc(r.name) + (r.source ? ' <small class="mute">(' + esc(r.source) + ')</small>' : ''), ['#e0b24a'])}` : ''}<div class="mute" style="margin-top:12px">Language</div>${vzBars(d.langs, r => esc(r.name), ['#4fc3d9'])}</div>
+  </div>
+  <div class="card"><b>From visit to sale</b><div class="vz-fn">${steps.map(([n, v], i) => `<div><span>${n}</span><u><i style="--w:${f.visitors ? Math.max(2, Math.min(100, v / f.visitors * 100)) : 0}%;animation-delay:${i * 70}ms"></i></u><b>${v}${i ? `<em> ${steps[i - 1][1] ? Math.round(v / steps[i - 1][1] * 100) + '% of previous' : ''}</em>` : ''}</b></div>`).join('')}</div>
+    <div class="mute" style="margin-top:8px">Visitors are counted once per day. Sign-ups, downloads and orders are real records from your database for the same period.</div></div>
+  <div class="vz-cols" style="margin-bottom:14px">
+    <div class="card"><b>Busiest hours</b> <span class="mute">(your local time)</span><div class="vz-hrs">${Array.from({length: 24}, (_, i) => { const u = ((i + Math.round(off)) % 24 + 24) % 24; const v = hrs[u].visitors; return `<div title="${String(i).padStart(2, '0')}:00 - ${v} visitors"><i style="--h:${Math.max(3, v / hm * 100)}%;animation-delay:${i * 20}ms"></i><small>${i % 3 === 0 ? i : ''}</small></div>`; }).join('')}</div></div>
+    <div class="card"><b>Most viewed pages</b><div class="tblw"><table class="tbl"><tr><th>Page</th><th>Views</th><th>Visitors</th><th>Avg time</th></tr>${d.pages.map(p => `<tr><td class="mono">${esc(p.path)}</td><td>${p.views}</td><td>${p.visitors}</td><td class="mute">${p.avg_secs ? p.avg_secs + ' s' : '-'}</td></tr>`).join('') || '<tr><td colspan="4" class="mute">No visits yet</td></tr>'}</table></div></div>
+  </div>
+  <div class="card"><b>Tagged link builder</b><div class="mute">Add this to every link you post, then the Visitors tab shows exactly which video, post or channel brought people.</div>
+    <div class="vz-utm"><select id="ub_p"><option value="index.html">Home</option><option value="free-backtest.html">Free backtest</option><option value="pricing.html">Pricing</option><option value="apps.html">Get the app</option><option value="guide.html">Guide</option></select>
+    <input id="ub_s" placeholder="Where (youtube, tiktok, telegram)" value="youtube"><input id="ub_m" placeholder="Type (video, post, bio)" value="video"><input id="ub_c" placeholder="Name (oct-gold-live)" value=""></div>
+    <div class="vz-link" id="ub_o"></div><div class="row" style="margin-top:8px"><button class="b pri" id="ub_cp">Copy link</button></div></div>
+  <div class="card"><b>Recent visits</b><div class="tblw"><table class="tbl"><tr><th>When</th><th>Country</th><th>Page</th><th>From</th><th>Device</th><th>Time</th></tr>${d.recent.map(r => `<tr><td class="mute">${new Date(r.at).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}</td><td>${ccFlag(r.country)} ${esc(ccName(r.country))}</td><td class="mono">${esc(r.path)}</td><td>${esc(r.src || '')}</td><td>${esc(r.device)} &middot; ${esc(r.os)} &middot; ${esc(r.browser)}</td><td class="mute">${r.secs ? r.secs + ' s' : '-'}</td></tr>`).join('') || '<tr><td colspan="6" class="mute">No visits yet</td></tr>'}</table></div></div>
+  <div class="card"><b>Age and gender</b><div class="mute" style="margin-top:6px">A website cannot see how old someone is or their gender, and guessing it would be unreliable and intrusive, so it is not collected. For that, use YouTube Studio and TikTok analytics (they show age, gender and country of your audience), and let customers add details themselves later if you want. What this page does give you: country, time zone, device, language, source, behaviour and the real path from visit to sale.</div></div>
+  <div class="card"><b>Privacy</b><div class="mute" style="margin-top:6px">No cookies, no IP address and no device id are stored. A visitor is counted once per day through a one-way hash that changes daily and cannot be reversed. People who send "Do Not Track" are not counted. Details are on the privacy page.</div>
+    <div class="row" style="margin-top:8px"><span class="mute">${noTrack ? 'Your own visits from this browser are not counted.' : 'Your own visits from this browser are counted.'}</span><button class="b" id="vz_nt">${noTrack ? 'Count my visits' : 'Do not count my visits'}</button></div></div>`;
+  $('#vzd').querySelectorAll('button').forEach(b => b.onclick = () => { vz.days = +b.dataset.d; vVisitors(); });
+  $('#vz_nt').onclick = () => { try { noTrack ? localStorage.removeItem('gte_notrack') : localStorage.setItem('gte_notrack', '1'); } catch (e) {} vVisitors(); };
+  const ub = () => { const q = new URLSearchParams(); const s = $('#ub_s').value.trim(), m = $('#ub_m').value.trim(), c = $('#ub_c').value.trim(); if (s) q.set('utm_source', s); if (m) q.set('utm_medium', m); if (c) q.set('utm_campaign', c); const u = 'https://yeliasforex.github.io/' + ($('#ub_p').value === 'index.html' ? '' : $('#ub_p').value) + (q.toString() ? '?' + q.toString() : ''); $('#ub_o').textContent = u; return u; };
+  ['ub_p', 'ub_s', 'ub_m', 'ub_c'].forEach(id => $('#' + id).oninput = ub); ub();
+  $('#ub_cp').onclick = async () => { try { await navigator.clipboard.writeText(ub()); toast('Link copied'); } catch (e) { toast('Select and copy the link', true); } };
+  const svg = $('#vzc'), tip = $('#vzt'); if (svg) {
+    const W = 700, pl = 30, pr = 8, n = d.daily.length;
+    svg.onmousemove = e => { const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, i = Math.max(0, Math.min(n - 1, Math.round((x - pl) / ((W - pl - pr) / Math.max(1, n - 1))))), p = d.daily[i];
+      $('#vzh').style.display = ''; const lx = pl + i * (W - pl - pr) / Math.max(1, n - 1); $('#vzl').setAttribute('x1', lx); $('#vzl').setAttribute('x2', lx);
+      tip.style.opacity = 1; tip.style.left = Math.min(r.width - 140, Math.max(0, lx / W * r.width + 8)) + 'px'; tip.style.top = '6px'; tip.innerHTML = `<b>${p.day}</b><br>${p.visitors} visitors<br>${p.views} views`; };
+    svg.onmouseleave = () => { tip.style.opacity = 0; $('#vzh').style.display = 'none'; };
+  }
+}
+function demoVisitors() {
+  const days = 30, daily = Array.from({length: days}, (_, i) => { const d = new Date(Date.now() - (days - 1 - i) * 864e5), v = Math.round(40 + i * 3.2 + Math.sin(i / 2) * 14 + (i % 7 === 5 ? -12 : 0)); return {day: d.toISOString().slice(0, 10), visitors: v, views: Math.round(v * 2.4)}; });
+  const sum = daily.reduce((s, x) => s + x.visitors, 0);
+  return {days, daily, today: {visitors: daily[days - 1].visitors, views: daily[days - 1].views}, yesterday: {visitors: daily[days - 2].visitors, views: 0}, visitors: sum, views: Math.round(sum * 2.4), online_now: 7, avg_secs: 74, bounce_pct: 52, app_views: 38,
+    countries: [['BD', 31], ['IN', 22], ['AE', 11], ['GB', 8], ['US', 7], ['PK', 6], ['SA', 5], ['??', 4]].map(([country, p]) => ({country, visitors: Math.round(sum * p / 100)})),
+    regions: [['Asia/Dhaka', 30], ['Asia/Kolkata', 21], ['Asia/Dubai', 11], ['Europe/London', 8], ['America/New_York', 6], ['Asia/Karachi', 6]].map(([tz, p]) => ({tz, visitors: Math.round(sum * p / 100)})),
+    devices: [{name: 'mobile', visitors: Math.round(sum * .68)}, {name: 'desktop', visitors: Math.round(sum * .29)}, {name: 'tablet', visitors: Math.round(sum * .03)}],
+    os: [['Android', 52], ['Windows', 24], ['iOS', 15], ['macOS', 6], ['Linux', 3]].map(([name, p]) => ({name, visitors: Math.round(sum * p / 100)})),
+    browsers: [['Chrome', 66], ['Safari', 17], ['Samsung Internet', 8], ['Edge', 5], ['Firefox', 3]].map(([name, p]) => ({name, visitors: Math.round(sum * p / 100)})),
+    langs: [['en', 70], ['bn', 12], ['hi', 8], ['ar', 6]].map(([name, p]) => ({name, visitors: Math.round(sum * p / 100)})),
+    sources: [['youtube', 38], ['direct', 27], ['telegram', 14], ['tiktok', 9], ['google', 8], ['myfxbook', 4]].map(([name, p]) => ({name, visitors: Math.round(sum * p / 100)})),
+    campaigns: [{name: 'oct-gold-live', source: 'youtube', visitors: Math.round(sum * .21)}, {name: 'channel-bio', source: 'telegram', visitors: Math.round(sum * .08)}],
+    pages: [['index.html', 1], ['pricing.html', .31], ['free-backtest.html', .27], ['signin.html', .12], ['guide.html', .1], ['faq.html', .08], ['apps.html', .05]].map(([path, f]) => ({path, views: Math.round(sum * 1.6 * f), visitors: Math.round(sum * .9 * f), avg_secs: Math.round(30 + f * 60)})),
+    hours: Array.from({length: 24}, (_, hr) => ({hr, visitors: Math.round(sum / 24 * (1 + .8 * Math.sin((hr - 9) / 24 * 6.28)))})),
+    funnel: {visitors: sum, pricing: Math.round(sum * .31), free: Math.round(sum * .27), signin: Math.round(sum * .12), signups: Math.round(sum * .045), downloads: Math.round(sum * .03), orders: Math.round(sum * .006), paid: Math.round(sum * .004)},
+    recent: [['BD', 'pricing.html', 'youtube', 'mobile', 'Android', 'Chrome', 48], ['IN', 'index.html', 'direct', 'mobile', 'iOS', 'Safari', 21], ['AE', 'free-backtest.html', 'telegram', 'desktop', 'Windows', 'Edge', 93], ['GB', 'guide.html', 'google', 'desktop', 'macOS', 'Chrome', null]].map(([country, path, src, device, os, browser, secs], i) => ({at: new Date(Date.now() - i * 420000).toISOString(), country, path, src, device, os, browser, secs}))};
+}
 
 function vOrders() {
   let f = window._of || 'open';
