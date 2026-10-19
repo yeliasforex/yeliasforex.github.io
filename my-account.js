@@ -5,7 +5,7 @@
   let c, S = {}, cur = null, range = 'all';
   const tflt = {eng: 'all', res: 'all', page: 1};
   let tab = (location.hash.match(/tab=(\w+)/) || [])[1] || 'overview';
-  const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['inbox', 'Notifications'], ['alerts', 'Telegram'], ['billing', 'Orders & keys']];
+  const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['inbox', 'Notifications'], ['alerts', 'Alerts'], ['billing', 'Orders & keys']];
   const NOTIFY = [['ea_started', 'EA started / stopped'], ['trade_open', 'Trade opened'], ['trade_close', 'Trade closed with result'], ['addon', 'Add-on filled / closed'], ['daily_report', 'Daily report'], ['offline', 'EA offline / back online']];
   const SEV = {error: 0, warning: 1, info: 2}, tradeCache = {};
   const QS = new URLSearchParams(location.search), INJ = QS.has('inject');
@@ -100,7 +100,7 @@
     if (AS) parts.push(`<div class="msg" style="border-color:var(--gold);color:var(--gold);margin-bottom:12px"><b>Admin view.</b> This is ${esc(S.profile.email || 'this customer')}'s account exactly as they see it. Read-only: nothing here can be changed.${INJ ? '' : ' <a href="admin/" style="color:inherit;text-decoration:underline">Back to admin</a>'}</div>`);
     if (AS && !S.licenses.length) { parts.push('<div class="panel"><h2>Not found</h2><p class="sub">No such license, or this login is not a verified admin.</p></div>'); A.innerHTML = parts.join(''); return; }
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
-    if (!lic) { parts.push(emptyPanel(), claimPanel(), telegramPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
+    if (!lic) { parts.push(emptyPanel(), claimPanel(), alertsPanels(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · ${esc(l.key)}</option>`).join('')}</select></div>`);
     const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
@@ -145,7 +145,7 @@
   function drawTab(lic, trades) {
     const body = $('#tabbody'); if (!body) return;
     A.classList.toggle('still', quiet);
-    body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, inbox: tInbox, alerts: () => telegramPanel(), billing: tBilling}[tab] || tOverview)(lic, trades);
+    body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, inbox: tInbox, alerts: () => alertsPanels(), billing: tBilling}[tab] || tOverview)(lic, trades);
     wire(); afterDraw(lic, trades); countUp(body);
     if (tab === 'inbox' && unread() && !DEMO && !AS) markRead();
   }
@@ -265,6 +265,7 @@
       : `<div class="f" style="margin-top:14px"><label for="pr-${o.id}">After paying, enter your transaction ID or a note</label><input id="pr-${o.id}" placeholder="Transaction ID / reference"><div class="row"><button class="btn mint" data-paid="${o.id}">I have paid</button></div></div>`}
       ${o.kind === 'unbind' ? '<p class="fine"><b>Next:</b> after paying, contact support on Telegram so we can unbind the key.</p>' : ''}</div>`;
   }
+  function alertsPanels() { return telegramPanel() + (!AS && window.gteDevice ? gteDevice.html() : ''); }
   function telegramPanel() {
     const on = !!S.profile.telegram_chat_id, prefs = S.profile.notify_prefs || {};
     return `<div class="panel"><div class="row sp"><div><h2>Telegram notifications</h2><p class="sub" style="margin:0">Trades, daily report, offline alerts and license warnings on your phone.</p></div><span class="pill ${on ? 'ok' : 'warn'}">${on ? 'Connected' : 'Not connected'}</span></div>
@@ -314,6 +315,7 @@
       for (let i = 0; i < 40 && !DEMO; i++) { await new Promise(r => setTimeout(r, 3000)); const {data} = await c.from('profiles').select('telegram_chat_id').maybeSingle(); if (data && data.telegram_chat_id) { await refresh(); toast('Telegram connected'); return; } }
     });
     const off = $('#tgOff'); if (off) off.onclick = guard(async () => { await rpc('disconnect_telegram'); await refresh(); });
+    if (!AS && window.gteDevice) gteDevice.wire(rpc, toast, guard);
     const go = $('#ckGo'); if (go) go.onclick = guard(async () => { const k = $('#ck').value.trim(); if (!k) return; await rpc('claim_license', {p_key: k}); toast('Key added'); await refresh(); });
   }
   async function refresh(hash) { S = await load(); Object.keys(tradeCache).forEach(k => delete tradeCache[k]); if (hash) history.replaceState(null, '', hash); await render(); }
