@@ -323,6 +323,32 @@
     if (!AS && window.gteDevice) gteDevice.wire(rpc, toast, guard);
     const go = $('#ckGo'); if (go) go.onclick = guard(async () => { const k = $('#ck').value.trim(); if (!k) return; await rpc('claim_license', {p_key: k}); toast('Key added'); await refresh(); });
   }
+  function resizeSquare(f, s) {
+    return new Promise((res, rej) => {
+      const img = new Image(), u = URL.createObjectURL(f);
+      img.onload = () => { const m = Math.min(img.width, img.height), cv = document.createElement('canvas'); cv.width = cv.height = s; cv.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s); URL.revokeObjectURL(u); res(cv.toDataURL('image/jpeg', .85)); };
+      img.onerror = () => rej(new Error('Could not read that image.')); img.src = u;
+    });
+  }
+  async function initAvatar() {
+    const av = $('#maav'), btn = $('#maavb'), file = $('#avf'), rm = $('#marm'); if (!av || !btn || !file) return;
+    const show = u => { av.classList.toggle('has-img', !!u); av.style.backgroundImage = u ? 'url(' + u + ')' : ''; if (rm) rm.hidden = !u; };
+    let cur = null;
+    if (DEMO) { try { cur = localStorage.getItem('gte_demo_avatar'); } catch (e) {} }
+    else if (!AS) { try { const {data} = await c.from('profiles').select('avatar').maybeSingle(); cur = data && data.avatar || null; } catch (e) {} }
+    show(cur);
+    if (AS) { btn.disabled = true; btn.classList.add('ro'); return; }
+    btn.onclick = () => file.click();
+    window.gteAvatarApi = {pick: () => file.click(), remove: () => rm && rm.onclick && rm.onclick(), has: () => av.classList.contains('has-img')};
+    file.onchange = guard(async () => {
+      const f = file.files[0]; file.value = ''; if (!f) return;
+      if (!/^image\//.test(f.type)) throw new Error('Choose an image file.');
+      const url = await resizeSquare(f, 192);
+      if (DEMO) { try { localStorage.setItem('gte_demo_avatar', url); } catch (e) {} } else await rpc('set_avatar', {p_data: url});
+      show(url); toast('Photo updated');
+    });
+    if (rm) rm.onclick = guard(async () => { if (DEMO) { try { localStorage.removeItem('gte_demo_avatar'); } catch (e) {} } else await rpc('set_avatar', {p_data: null}); show(null); toast('Photo removed'); });
+  }
   async function refresh(hash) { S = await load(); Object.keys(tradeCache).forEach(k => delete tradeCache[k]); if (hash) history.replaceState(null, '', hash); await render(); }
 
   // ---------- start ----------
@@ -339,6 +365,7 @@
   $('#out').onclick = async () => { if (!DEMO) await c.auth.signOut(); location.href = 'index.html'; };
   try { S = await load(); } catch (e) { A.innerHTML = '<div class="msg err">Could not load your account: ' + esc(e.message || e) + '</div>'; return; }
   await render();
+  initAvatar();
   if (!DEMO) setInterval(async () => {
     const ae = document.activeElement; if (document.hidden || (ae && /INPUT|SELECT|TEXTAREA/.test(ae.tagName))) return;
     quiet = true;

@@ -8,6 +8,7 @@
   window.gteDevice = {
     html: function () {
       return '<div class="panel" id="dv"><div class="row sp"><div><h2>This device</h2><p class="sub" style="margin:0">Alerts on your phone and a quick lock for this app. Both are per device.</p></div></div>'
+        + '<div class="tog"><span><b>Profile photo</b><br><span class="hint">Shown in the circle at the top of My account.</span></span><span class="row"><button class="btn sm" id="pp-up" type="button">Upload</button><button class="btn sm" id="pp-rm" type="button" hidden>Remove</button></span></div>'
         + '<div class="tog"><span><b>Phone alerts</b><br><span class="hint" id="pa-h">Checking...</span></span><label class="sw"><input type="checkbox" id="pa" disabled><span></span></label></div>'
         + '<div class="row" style="margin:2px 0 8px"><button class="btn sm" id="pa-test" type="button" hidden>Send a test alert</button></div>'
         + '<div class="tog"><span><b>Quick unlock</b><br><span class="hint" id="ql-h">Checking...</span></span><label class="sw"><input type="checkbox" id="ql" disabled><span></span></label></div></div>';
@@ -16,6 +17,12 @@
       var pa = document.getElementById('pa'), ph = document.getElementById('pa-h'), pt = document.getElementById('pa-test');
       var ql = document.getElementById('ql'), qh = document.getElementById('ql-h');
       if (!pa || !ql) return;
+      var pu = document.getElementById('pp-up'), pr = document.getElementById('pp-rm'), mav = document.getElementById('maav');
+      function ppState() { var h = window.gteAvatarApi && gteAvatarApi.has(); if (pu) pu.textContent = h ? 'Change' : 'Upload'; if (pr) pr.hidden = !h; }
+      if (pu) pu.onclick = function () { if (window.gteAvatarApi) gteAvatarApi.pick(); };
+      if (pr) pr.onclick = function () { if (window.gteAvatarApi) gteAvatarApi.remove(); };
+      if (mav) new MutationObserver(ppState).observe(mav, { attributes: true, attributeFilter: ['class'] });
+      ppState();
       /* ---- phone alerts ---- */
       async function pushState() {
         if (!PUSH_OK) {

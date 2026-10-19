@@ -9,19 +9,19 @@
 <meta name="theme-color" content="#F4F6FB">
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
-<link rel="stylesheet" href="style.css?v=20261019app15">
-<link rel="stylesheet" href="app.css?v=20261019app15">
-<link rel="stylesheet" href="wow.css?v=20261019app15">
-<link rel="stylesheet" href="theme.css?v=20261019app15">
-<script src="theme.js?v=20261019app15"></script>
+<link rel="stylesheet" href="style.css?v=20261019app21">
+<link rel="stylesheet" href="app.css?v=20261019app21">
+<link rel="stylesheet" href="wow.css?v=20261019app21">
+<link rel="stylesheet" href="theme.css?v=20261019app21">
+<script src="theme.js?v=20261019app21"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="GoldTriEngine">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script src="pwa.js?v=20261019app15" defer></script>
-<script src="lock.js?v=20261019app15"></script>
+<script src="pwa.js?v=20261019app21" defer></script>
+<script src="lock.js?v=20261019app21"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -29,9 +29,17 @@
 <main id="main">
 
 <section class="pg"><div class="wrap">
-  <div class="ma-hero"><span class="fz-orb o1"></span><span class="fz-orb o2"></span>
-    <div class="ma-id"><span class="ma-av" id="maav">&middot;</span><div><span class="kicker" id="hello">My account</span><h1 style="font-size:clamp(1.8rem,4vw,2.8rem)">Your account</h1><span class="hint" id="who"></span></div></div>
-    <div class="ma-quick"><a href="download.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg>Download EA</a><a href="apps.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>Get the app</a><a href="free-backtest.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 8-9"/></svg>Free backtest</a><a href="pricing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg>Plans</a><a href="https://t.me/GoldTriEngine_Support" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4 3 11l5 2 2 6 3-4 5 4z"/></svg>Support</a><button class="btn sm" id="out">Sign out</button></div></div>
+  <header class="ma-bar">
+    <div class="ma-id"><button class="ma-avb" id="maavb" type="button" aria-label="Change profile photo" title="Change photo"><span class="ma-av" id="maav">&middot;</span><i class="ma-cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></i></button><input type="file" id="avf" accept="image/*" hidden><div class="ma-tx"><span class="kicker" id="hello">My account</span><span class="ma-mail" id="who"></span><button class="ma-rm" id="marm" type="button" hidden>Remove photo</button></div><h1 class="sr-only">Your account</h1></div>
+    <button class="ma-out" id="out" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Sign out</span></button>
+    <nav class="ma-quick" aria-label="Shortcuts">
+      <a href="download.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 5 5-5M5 21h14"/></svg><span class="lg">Download EA</span><span class="sh">EA file</span></a>
+      <a href="apps.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg><span class="lg">Get the app</span><span class="sh">App</span></a>
+      <a href="free-backtest.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 8-9"/></svg><span class="lg">Free backtest</span><span class="sh">Backtest</span></a>
+      <a href="pricing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg><span>Plans</span></a>
+      <a href="https://t.me/GoldTriEngine_Support" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4 3 11l5 2 2 6 3-4 5 4z"/></svg><span>Support</span></a>
+    </nav>
+  </header>
   <script>(function(){var w=document.getElementById('who'),a=document.getElementById('maav');if(!w||!a)return;function f(){var t=(w.textContent||'').trim();if(t)a.textContent=t.charAt(0).toUpperCase()}f();new MutationObserver(f).observe(w,{childList:true,characterData:true,subtree:true})})();</script>
   <div id="gate" class="hide"><p class="lead">Sign in to see your licenses.</p><a class="btn primary" href="signin.html?next=my-account.html">Sign in</a></div>
   <div class="acct" id="acct"></div>
@@ -52,10 +60,10 @@
     Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
   </div>
 </footer>
-<script src="site.js?v=20261019app15" defer></script>
-<script src="app.js?v=20261019app15"></script>
-<script src="results.js?v=20261019app15"></script><script src="device.js?v=20261019app15"></script><script src="live.js?v=20261019app15"></script><script src="my-account.js?v=20261019app15"></script>
-<script src="wow.js?v=20261019app15" defer></script>
-<script src="chat.js?v=20261019app15" defer></script>
+<script src="site.js?v=20261019app21" defer></script>
+<script src="app.js?v=20261019app21"></script>
+<script src="results.js?v=20261019app21"></script><script src="device.js?v=20261019app21"></script><script src="live.js?v=20261019app21"></script><script src="my-account.js?v=20261019app21"></script>
+<script src="wow.js?v=20261019app21" defer></script>
+<script src="chat.js?v=20261019app21" defer></script>
 </body>
 </html>

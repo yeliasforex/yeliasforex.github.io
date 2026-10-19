@@ -432,3 +432,47 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
   .ma-quick a svg{width:20px;height:20px}
   .ma-quick .btn.sm{margin:0;width:100%}
 }
+
+/* ---- My account header v2: slim bar ---- */
+.ma-bar{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;margin:0 0 18px;padding:12px 16px;border-radius:18px;border:1px solid var(--line-2);background:linear-gradient(100deg,color-mix(in srgb,var(--gold) 11%,var(--panel)),var(--panel) 58%)}
+.ma-bar .ma-id{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 220px}
+.ma-bar .ma-av{width:42px;height:42px;font:700 1.05rem var(--sans);animation:none;box-shadow:none}
+.ma-tx{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ma-tx .kicker{font-size:.68rem;letter-spacing:.14em;margin:0}
+.ma-mail{font-weight:600;font-size:.98rem;color:var(--fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.ma-bar .ma-quick{display:flex;flex-wrap:nowrap;gap:4px;order:2}
+.ma-bar .ma-quick a{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:12px;border:1px solid transparent;background:transparent;font-size:.86rem;color:var(--fg-2);white-space:nowrap;transition:background .2s,border-color .2s,color .2s}
+.ma-bar .ma-quick a:hover{background:var(--panel-2);border-color:var(--line-2);color:var(--fg);transform:none}
+.ma-bar .ma-quick svg{width:17px;height:17px;color:var(--gold)}
+.ma-out{order:3;display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:.86rem;font-weight:600;padding:8px 13px;border-radius:12px;border:1px solid var(--line-2);background:transparent;color:var(--fg);cursor:pointer;transition:background .2s}
+.ma-out:hover{background:var(--panel-2)}
+.ma-out svg{width:16px;height:16px}
+@media(max-width:860px){
+  .ma-bar{padding:12px}
+  .ma-bar .ma-id{order:1}.ma-out{order:2}
+  .ma-bar .ma-quick{order:3;flex:1 1 100%;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+  .ma-bar .ma-quick a{flex-direction:column;justify-content:center;gap:4px;padding:9px 2px;min-height:56px;font-size:.7rem;line-height:1.1;text-align:center;white-space:normal;border-color:var(--line);background:color-mix(in srgb,var(--panel-2) 70%,transparent)}
+  .ma-bar .ma-quick svg{width:20px;height:20px}
+  .ma-out span{display:none}.ma-out{padding:9px}
+}
+@media(min-width:861px) and (max-width:1179px){
+  .ma-bar .ma-id{order:1;flex:1 1 200px}.ma-out{order:2}
+  .ma-bar .ma-quick{order:3;flex:1 1 100%;justify-content:space-between;padding-top:8px;border-top:1px dashed var(--line-2)}
+}
+.ma-quick .sh{display:none}
+@media(max-width:860px){.ma-quick .lg{display:none}.ma-quick .sh{display:inline}.ma-bar .ma-quick a{min-height:52px;font-size:.72rem}}
+
+/* ---- profile photo ---- */
+.ma-avb{position:relative;flex:none;border:0;background:none;padding:0;cursor:pointer;border-radius:50%;line-height:0}
+.ma-avb.ro{cursor:default}.ma-avb.ro .ma-cam{display:none}
+.ma-av.has-img{color:transparent!important;background-size:cover!important;background-position:center!important}
+.ma-cam{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--fg);color:var(--panel);border:2px solid var(--panel);opacity:0;transform:scale(.6);transition:transform .2s,opacity .2s}
+.ma-cam svg{width:11px;height:11px}
+.ma-avb:hover .ma-cam,.ma-avb:focus-visible .ma-cam{opacity:1;transform:scale(1)}
+.ma-rm{font:inherit;font-size:.72rem;color:var(--muted);background:none;border:0;padding:0;text-align:left;cursor:pointer;text-decoration:underline;width:max-content}
+.ma-rm:hover{color:var(--fg)}
+@media(max-width:860px){.ma-bar .ma-quick a{border-color:transparent!important;background:transparent!important}}
+
+.ma-rm{display:none!important}
+#pp-rm[hidden],#pa-test[hidden]{display:none!important}
