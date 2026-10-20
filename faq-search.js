@@ -11,6 +11,7 @@
     var q = input.value.trim().toLowerCase(), shown = 0;
     items.forEach(function (d) { var ok = !q || d.textContent.toLowerCase().indexOf(q) > -1; d.hidden = !ok; if (ok) shown++; if (q && ok && shown === 1) d.open = true; else if (q) d.open = false; });
     none.hidden = shown > 0; count.textContent = q ? shown + ' of ' + items.length : items.length + ' questions';
+    clearTimeout(window.__fqT); if (q.length >= 3) window.__fqT = setTimeout(function () { try { gteEvent(shown > 0 ? 'faq_search' : 'faq_nohit', q.slice(0, 60)); } catch (e) {} }, 1500);
   }
   input.addEventListener('input', run); run();
 })();

@@ -47,10 +47,12 @@
             var j = sub.toJSON();
             await rpc('push_subscribe', { p_endpoint: sub.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_ua: navigator.userAgent });
             await rpc('push_test');
+            try { gteEvent('push_on'); } catch (x) {}
             toast('Phone alerts are on');
           } else {
             var s = await reg.pushManager.getSubscription();
             if (s) { var ep = s.endpoint; await s.unsubscribe(); await rpc('push_unsubscribe', { p_endpoint: ep }); }
+            try { gteEvent('push_off'); } catch (x) {}
             toast('Phone alerts are off');
           }
         } finally { await pushState(); }
@@ -74,7 +76,7 @@
               user: { id: crypto.getRandomValues(new Uint8Array(16)), name: 'GoldTriEngine app', displayName: 'GoldTriEngine app' },
               pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
               authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'discouraged' }, timeout: 60000 } });
-            localStorage.setItem('gte_lock', b64u(cred.rawId)); gteLock.stamp(); toast('Quick unlock is on');
+            localStorage.setItem('gte_lock', b64u(cred.rawId)); gteLock.stamp(); try { gteEvent('lock_on'); } catch (x) {} toast('Quick unlock is on');
           } else { localStorage.removeItem('gte_lock'); toast('Quick unlock is off'); }
         } catch (e) { ql.checked = !want; throw new Error(want ? 'Quick unlock was not set up.' : 'Quick unlock could not be turned off.'); }
         finally { await lockState(); }

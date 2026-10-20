@@ -73,6 +73,7 @@
     text = text.trim(); if (!text) return;
     const sg = M.querySelector('.gc-s'); if (sg) sg.remove();
     add('u', esc(text)); hist.push({role: 'user', text}); save(); I.value = ''; B.disabled = true;
+    try { gteEvent('assistant_q', text.slice(0, 140)); } catch (e) {}
     const typing = add('a', '<span class="gc-d"><i></i><i></i><i></i></span>');
     try {
       const t = await token(), headers = {'Content-Type': 'application/json'}; if (t) headers.Authorization = 'Bearer ' + t;
@@ -80,7 +81,7 @@
       const j = await r.json().catch(() => ({}));
       typing.remove();
       if (!r.ok) { add('a e', fmt(j.error || 'Something went wrong. Please contact support: ' + SUPPORT)); hist.pop(); save(); }
-      else { add('a', fmt(j.reply)); hist.push({role: 'model', text: j.reply}); save(); }
+      else { add('a', fmt(j.reply)); hist.push({role: 'model', text: j.reply}); save(); try { if (/not sure|not certain|can.t confirm|ask support|contact support|support on telegram/i.test(j.reply || '')) gteEvent('assistant_unsure', text.slice(0, 140)); } catch (e) {} }
     } catch (e) { typing.remove(); add('a e', 'Could not reach the assistant. Please try again or contact support: ' + SUPPORT); hist.pop(); save(); }
     B.disabled = false; I.focus();
   }

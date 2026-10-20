@@ -152,7 +152,7 @@ function demoClient() {
     {id:'o2',ref:'GTE-5D20B7',kind:'unbind',plan_id:'investor',amount_usd:100,status:'pending',email:'omar@example.com',created_at:iso(-0.5)},
     {id:'o3',ref:'GTE-77F0A1',kind:'renewal',plan_id:'mogul',amount_usd:3600,status:'paid',email:'lee@example.com',created_at:iso(-20),license_key:'GTE-BB92-KT3C-PL7Y'}];
   const P = [{id:'investor',name:'Investor',limit_usd:5000,price_usd:1000,popular:false,active:true,sort:1},{id:'tycoon',name:'Tycoon',limit_usd:10000,price_usd:1900,popular:true,active:true,sort:2},{id:'mogul',name:'Mogul',limit_usd:20000,price_usd:3600,popular:false,active:true,sort:3},{id:'billionaire',name:'Billionaire',limit_usd:null,price_usd:5000,popular:false,active:true,sort:4}];
-  const rpc = async n => n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
+  const rpc = async n => n === 'admin_events' ? ({data: demoEvents()}) : n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
   const q = t => ({select: () => ({order: async () => ({data: t === 'plans' ? P : []})})});
   return {rpc, from: q, auth: {getSession: async () => ({data: {session: {user: {email: 'demo@admin'}}}}), mfa: {}}};
 }
@@ -292,10 +292,55 @@ function vzInsights(d) {
   if (d.bounce_pct != null && d.bounce_pct > 65) out.push(`${d.bounce_pct}% of visitors leave after one page. A short video or the free backtest button higher on the home page can help.`);
   return out;
 }
+function vzEvents(e) {
+  if (!e) return '<div class="card"><b>Actions and speed</b><div class="mute" style="margin-top:6px">Not available yet.</div></div>';
+  const LBL = {'out:youtube': 'YouTube', 'out:telegram': 'Telegram', 'out:myfxbook': 'Myfxbook', 'out:tiktok': 'TikTok', 'out:broker': 'Broker link', 'out:other': 'Other site', 'out:ea_file': 'EA file',
+    apk_download: 'Android app downloaded', app_installed: 'App installed', push_on: 'Phone alerts switched on', push_off: 'Phone alerts switched off', lock_on: 'Quick unlock switched on',
+    signin_google: 'Sign-in: Google pressed', signin_link: 'Sign-in: email link requested', signin_error: 'Sign-in: error', plan_click: 'Plan clicked', assistant_q: 'Assistant question', assistant_unsure: 'Assistant unsure',
+    faq_search: 'FAQ search', faq_nohit: 'FAQ search, nothing found', js_error: 'Page error', not_found: 'Page not found'};
+  const nm = n => LBL[n] || n, num = x => Number(x) || 0;
+  const list = (rows, empty) => rows && rows.length ? `<table class="tbl">${rows.map(r => `<tr><td>${esc(r.detail)}</td><td style="width:50px;text-align:right"><b>${r.n}</b></td></tr>`).join('')}</table>` : `<div class="mute" style="margin-top:6px">${empty}</div>`;
+  const out = (e.outbound || []).map(r => ({name: nm(r.name) + (r.detail ? ' (' + r.detail + ')' : ''), visitors: num(r.n)}));
+  const pl = (e.plans || []).map(r => ({name: r.detail, visitors: num(r.n)}));
+  const s = e.signin || {}, ins = e.installs || {};
+  const sstep = [['Opened the sign-in page', s.page], ['Pressed Google', s.google], ['Asked for an email link', s.link], ['Errors', s.error], ['Accounts created', s.signups]];
+  const TH = {lcp: [2500, 4000, 'Main content shown (ms)'], load: [3000, 6000, 'Page fully loaded (ms)'], inp: [200, 500, 'Reaction to taps (ms)'], cls: [100, 250, 'Layout jumps (x1000)']};
+  const vit = (e.vitals || []).map(v => { const th = TH[v.name] || [1e9, 1e9, v.name], c = num(v.p75) <= th[0] ? 'var(--ok)' : num(v.p75) <= th[1] ? 'var(--warn)' : 'var(--bad)'; return `<tr><td>${esc(th[2])}</td><td>${v.app ? 'Installed app' : 'Browser'}</td><td><b>${num(v.p50)}</b></td><td><b style="color:${c}">${num(v.p75)}</b></td><td class="mute">${v.n}</td></tr>`; }).join('');
+  return `
+  <div class="vz-cols" style="margin-bottom:14px">
+    <div class="card"><b>Clicks to other channels</b>${vzBars(out, r => esc(r.name), ['#4f8ff7'])}<div class="mute" style="margin-top:8px">Counted when someone presses a link to YouTube, Telegram, Myfxbook, TikTok or a broker.</div></div>
+    <div class="card"><b>Plan interest</b>${vzBars(pl, r => esc(r.name), ['#e0b24a'])}<div class="mute" style="margin-top:8px">Which plan card people press on the pricing page.</div></div>
+  </div>
+  <div class="vz-cols" style="margin-bottom:14px">
+    <div class="card"><b>Sign-in steps</b><table class="tbl">${sstep.map(([n, v]) => `<tr><td>${n}</td><td style="width:60px;text-align:right"><b>${num(v)}</b></td></tr>`).join('')}</table><div class="mute" style="margin-top:8px">If many open the page but few ask for a link, the page needs to be clearer.</div></div>
+    <div class="card"><b>App and alerts</b><table class="tbl">${[['App installed from the browser', ins.app_installed], ['Android app downloaded', ins.apk_download], ['Phone alerts switched on', ins.push_on], ['Phone alerts switched off', ins.push_off], ['Devices that get alerts now', ins.devices_with_alerts], ['Quick unlock switched on', ins.lock_on]].map(([n, v]) => `<tr><td>${n}</td><td style="width:60px;text-align:right"><b>${num(v)}</b></td></tr>`).join('')}</table></div>
+  </div>
+  <div class="vz-cols" style="margin-bottom:14px">
+    <div class="card"><b>What visitors ask the assistant</b>${list(e.questions, 'No questions yet.')}<div class="mute" style="margin-top:10px"><b>It was not sure about</b> (add these to the FAQ)</div>${list(e.unsure, 'Nothing yet.')}</div>
+    <div class="card"><b>What visitors search in the FAQ</b>${list(e.faq, 'No searches yet.')}<div class="mute" style="margin-top:10px"><b>Searched but found nothing</b> (write these answers)</div>${list(e.faq_miss, 'Nothing yet.')}</div>
+  </div>
+  <div class="card"><b>Speed on real devices</b><div class="tblw"><table class="tbl"><tr><th>Measure</th><th>Where</th><th>Typical</th><th>Slowest quarter</th><th>Samples</th></tr>${vit || '<tr><td colspan="5" class="mute">Measured on the first page of each visit; results appear after a few visits.</td></tr>'}</table></div>
+    <div class="mute" style="margin-top:8px">Green is good, amber needs work, red is slow. Compare "Installed app" with "Browser" to see if the app lags.</div></div>
+  <div class="vz-cols" style="margin-bottom:14px">
+    <div class="card"><b>Page errors</b>${list(e.errors, 'No errors recorded.')}</div>
+    <div class="card"><b>Addresses that were not found</b>${list(e.not_found, 'None.')}</div>
+  </div>`;
+}
+function demoEvents() {
+  return {outbound: [{name: 'out:youtube', detail: 'live', n: 182}, {name: 'out:telegram', detail: 'channel', n: 96}, {name: 'out:broker', detail: 'fusion', n: 41}, {name: 'out:broker', detail: 'ic', n: 29}, {name: 'out:myfxbook', detail: 'profile', n: 24}],
+    plans: [{detail: 'tycoon', n: 38}, {detail: 'investor', n: 31}, {detail: 'mogul', n: 12}, {detail: 'billionaire', n: 4}],
+    signin: {page: 310, google: 120, link: 85, error: 6, signups: 116}, installs: {app_installed: 22, apk_download: 47, push_on: 18, push_off: 2, lock_on: 9, devices_with_alerts: 16},
+    questions: [{detail: 'is it safe for a small account?', n: 7}, {detail: 'which broker do I need', n: 6}, {detail: 'does it work on mt4', n: 5}], unsure: [{detail: 'can I use it on a prop firm', n: 4}],
+    faq: [{detail: 'refund', n: 12}, {detail: 'vps', n: 9}], faq_miss: [{detail: 'prop firm', n: 6}, {detail: 'bitcoin', n: 3}],
+    vitals: [{name: 'lcp', app: false, n: 180, p50: 1900, p75: 2800}, {name: 'lcp', app: true, n: 60, p50: 1400, p75: 2100}, {name: 'inp', app: false, n: 150, p50: 90, p75: 180}, {name: 'inp', app: true, n: 48, p50: 160, p75: 420}, {name: 'cls', app: false, n: 180, p50: 10, p75: 60}],
+    errors: [{detail: 'Script error. @chat.js:0', n: 3}], not_found: [{detail: '/pricing.htm', n: 5}]};
+}
+
 async function vVisitors() {
   $('#view').innerHTML = '<div class="card mute">Loading...</div>';
   let d; try { d = await call('admin_visitors', {p_days: vz.days}); } catch (e) { return; }
   vz.d = d;
+  let evd = null; try { const r = await sb.rpc('admin_events', {p_days: vz.days}); evd = r.error ? null : r.data; } catch (e) {}
   let noTrack = true; try { noTrack = !!localStorage.getItem('gte_notrack'); } catch (e) {}
   const t = d.today || {visitors: 0, views: 0}, y = d.yesterday || {visitors: 0, views: 0};
   const delta = t.visitors - y.visitors, dtxt = y.visitors || t.visitors ? (delta >= 0 ? '+' : '') + delta + ' vs yesterday' : 'no visits yet';
@@ -332,6 +377,7 @@ async function vVisitors() {
     <input id="ub_s" placeholder="Where (youtube, tiktok, telegram)" value="youtube"><input id="ub_m" placeholder="Type (video, post, bio)" value="video"><input id="ub_c" placeholder="Name (oct-gold-live)" value=""></div>
     <div class="vz-link" id="ub_o"></div><div class="row" style="margin-top:8px"><button class="b pri" id="ub_cp">Copy link</button></div></div>
   <div class="card"><b>Recent visits</b><div class="tblw"><table class="tbl"><tr><th>When</th><th>Country</th><th>Page</th><th>From</th><th>Device</th><th>Time</th></tr>${d.recent.map(r => `<tr><td class="mute">${new Date(r.at).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}</td><td>${ccFlag(r.country)} ${esc(ccName(r.country))}</td><td class="mono">${esc(r.path)}</td><td>${esc(r.src || '')}</td><td>${esc(r.device)} &middot; ${esc(r.os)} &middot; ${esc(r.browser)}</td><td class="mute">${r.secs ? r.secs + ' s' : '-'}</td></tr>`).join('') || '<tr><td colspan="6" class="mute">No visits yet</td></tr>'}</table></div></div>
+  ${vzEvents(evd)}
   <div class="card"><b>Age and gender</b><div class="mute" style="margin-top:6px">A website cannot see how old someone is or their gender, and guessing it would be unreliable and intrusive, so it is not collected. For that, use YouTube Studio and TikTok analytics (they show age, gender and country of your audience), and let customers add details themselves later if you want. What this page does give you: country, time zone, device, language, source, behaviour and the real path from visit to sale.</div></div>
   <div class="card"><b>Privacy</b><div class="mute" style="margin-top:6px">No cookies, no IP address and no device id are stored. A visitor is counted once per day through a one-way hash that changes daily and cannot be reversed. People who send "Do Not Track" are not counted. Details are on the privacy page.</div>
     <div class="row" style="margin-top:8px"><span class="mute">${noTrack ? 'Your own visits from this browser are not counted.' : 'Your own visits from this browser are counted.'}</span><button class="b" id="vz_nt">${noTrack ? 'Count my visits' : 'Do not count my visits'}</button></div></div>`;
