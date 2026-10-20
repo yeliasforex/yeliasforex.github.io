@@ -639,3 +639,15 @@ html.st-lock{overflow:hidden}
 .st-av-b:hover .st-av{filter:brightness(.95)}
 .st-rm{font:inherit;font-size:.8rem;color:var(--muted);background:none;border:0;padding:6px 0 0;cursor:pointer;text-decoration:underline}.st-rm:hover{color:var(--fg)}
 .st-ph{margin-top:2px}
+
+/* ---- backtest months: amounts ---- */
+.mgrid .m[data-v]{cursor:pointer;position:relative;display:grid;place-items:center;transition:transform .15s,box-shadow .15s,filter .15s}
+.mgrid .m[data-v]::after{content:attr(data-s);font:600 .62rem/1 var(--mono);color:rgba(255,255,255,.95);text-shadow:0 1px 1px rgba(0,0,0,.25);pointer-events:none}
+.mgrid .m[data-v]:hover,.mgrid .m[data-v]:focus-visible{transform:translateY(-2px) scale(1.06);filter:brightness(1.08);outline:none;z-index:2}
+.mgrid .m.sel{box-shadow:0 0 0 2px var(--fg),0 4px 14px rgba(10,20,50,.25);z-index:3}
+.mread{margin:14px 0 0;padding:11px 14px;border-radius:12px;background:color-mix(in srgb,var(--panel-2) 70%,transparent);border:1px dashed var(--line-2);font-size:.92rem;min-height:2.6em;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.mread .up{color:var(--mint,#3EE09A)}.mread .dn{color:var(--red,#FF6B78)}.mread b{font-variant-numeric:tabular-nums}
+.mread small{color:var(--muted)}
+.mtip{position:absolute;z-index:6;pointer-events:none;padding:6px 10px;border-radius:9px;background:var(--fg);color:var(--panel);font:600 .78rem/1.2 var(--mono);white-space:nowrap;opacity:0;transform:translate(-50%,-6px);transition:opacity .12s}
+.mtip.on{opacity:1}
+@media(max-width:700px){.mgrid .m[data-v]::after{display:none}.mread{font-size:.88rem}}

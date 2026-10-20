@@ -237,3 +237,29 @@
   function tick(){f.classList.toggle('show',scrollY>500&&!inC);}
   addEventListener('scroll',tick,{passive:true}); tick();
 })();
+
+/* backtest months: hover, focus or tap shows what the month won or lost */
+(function () {
+  var g = document.querySelector('.mgrid'); if (!g) return;
+  var out = document.getElementById('mread'), cells = g.querySelectorAll('.m[data-v]'), host = g.parentElement, tip = document.createElement('div');
+  tip.className = 'mtip'; if (getComputedStyle(host).position === 'static') host.style.position = 'relative'; host.appendChild(tip);
+  function money(v) { return '$' + Math.abs(v).toLocaleString('en-US'); }
+  function txt(c) { var v = +c.dataset.v, p = +c.dataset.p, s = v >= 0 ? '+' : '-'; return { v: v, s: s, p: p, a: s + money(v), pc: s + Math.abs(p).toFixed(1) + '%' }; }
+  function show(c, pin) {
+    var d = txt(c);
+    if (pin) { cells.forEach(function (x) { x.classList.remove('sel'); }); c.classList.add('sel'); }
+    if (out) out.innerHTML = '<b>' + c.dataset.m + '</b> ' + (d.v >= 0 ? 'won' : 'lost') + ' <b class="' + (d.v >= 0 ? 'up' : 'dn') + '">' + d.a + '</b> <small>(' + d.pc + ' of the balance at the start of that month' + (c.dataset.part ? ', partial month' : '') + ')</small>';
+    if (!matchMedia('(hover:hover)').matches) return;               // phones: the line under the grid is enough
+    var r = c.getBoundingClientRect(), h = host.getBoundingClientRect();
+    tip.textContent = c.dataset.m.slice(0, 3) + ' ' + c.dataset.m.slice(-4) + '  ' + d.a + '  ' + d.pc;
+    tip.style.left = (r.left - h.left + r.width / 2) + 'px'; tip.style.top = (r.top - h.top - 30) + 'px'; tip.classList.add('on');
+  }
+  cells.forEach(function (c) {
+    c.addEventListener('mouseenter', function () { if (matchMedia('(hover:hover)').matches) show(c, false); });
+    c.addEventListener('mouseleave', function () { tip.classList.remove('on'); });
+    c.addEventListener('focus', function () { show(c, true); });
+    c.addEventListener('click', function () { show(c, true); });
+    c.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(c, true); } });
+  });
+  document.addEventListener('click', function (e) { if (!g.contains(e.target)) tip.classList.remove('on'); });
+})();
