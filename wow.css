@@ -633,3 +633,7 @@ html.st-lock{overflow:hidden}
   @keyframes stUp{from{transform:translateY(40px);opacity:0}}
 }
 @media(prefers-reduced-motion:reduce){.st,.st-bk{animation:none}}
+.st-av-b{position:relative;flex:none;border:0;background:none;padding:0;border-radius:50%;cursor:pointer;line-height:0}
+.st-av-b .ma-cam{opacity:1;transform:none;right:-2px;bottom:-2px;width:24px;height:24px}
+.st-av-b .ma-cam svg{width:13px;height:13px}
+.st-av-b:hover .st-av{filter:brightness(.95)}

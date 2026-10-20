@@ -245,7 +245,7 @@ $('#acvx').onclick = () => { $('#acv').classList.add('hide'); $('#acvf').src = '
 // ---------- views ----------
 const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['videos', 'Videos'], ['audit', 'Audit log']];
 function render() {
-  const waiting = data.orders.filter(o => o.status === 'paid_claimed' || o.status === 'pending').length;
+  const waiting = data.orders.filter(o => o.status === 'paid_claimed').length;
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
   ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
@@ -417,20 +417,21 @@ function demoVisitors() {
 }
 
 function vOrders() {
-  let f = window._of || 'open';
-  const rows = data.orders.filter(o => f === 'all' || (f === 'open' ? (o.status === 'pending' || o.status === 'paid_claimed') : o.status === f));
+  const FL = {check: 'To check (customer says paid)', notpaid: 'Started, not paid', paid: 'Paid', cancelled: 'Cancelled', all: 'All'};
+  let f = window._of2 || 'check';
+  const rows = data.orders.filter(o => f === 'all' || (f === 'check' ? o.status === 'paid_claimed' : f === 'notpaid' ? o.status === 'pending' : o.status === f));
   const paidO = data.orders.filter(o => o.status === 'paid'), usdSum = a => a.reduce((s, o) => s + Number(o.amount_usd || 0), 0);
   const mo = {}; paidO.forEach(o => { const k = String(o.created_at).slice(0, 7); mo[k] = (mo[k] || 0) + Number(o.amount_usd || 0); });
   const mk = Object.keys(mo).sort().slice(-8), mm = Math.max(1, ...mk.map(k => mo[k]));
-  const opn = data.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed');
-  const head = `<div class="grid" style="margin-bottom:14px">${kx('Waiting for you', opn.length, opn.length ? 'check the money, then press Payment received' : 'all caught up', 'var(--warn)', opn.length > 0)}${kx('Money received', Math.round(usdSum(paidO)), paidO.length + ' paid orders', 'var(--ok)', false, '$')}${kx('Orders in total', data.orders.length, data.orders.filter(o => o.status === 'cancelled').length + ' cancelled')}</div>
+  const opn = data.orders.filter(o => o.status === 'paid_claimed'), np = data.orders.filter(o => o.status === 'pending');
+  const head = `<div class="grid" style="margin-bottom:14px">${kx('To check', opn.length, opn.length ? 'the customer pressed I have paid: check the money, then press Payment received' : 'nothing to check, all caught up', 'var(--warn)', opn.length > 0)}${kx('Started, not paid', np.length, np.length ? 'the customer has not said they paid yet, no action needed' : 'none', np.length ? 'var(--info)' : '')}${kx('Money received', Math.round(usdSum(paidO)), paidO.length + ' paid orders', 'var(--ok)', false, '$')}${kx('Orders in total', data.orders.length, data.orders.filter(o => o.status === 'cancelled').length + ' cancelled')}</div>
   ${mk.length ? `<div class="card"><div class="mute" style="font-weight:600;margin-bottom:8px">Money received per month (USD)</div><div class="mb">${mk.map((k, i) => `<div><i style="--h:${Math.max(6, mo[k] / mm * 100)}%;animation-delay:${i * 70}ms"></i><b>$${Math.round(mo[k]).toLocaleString('en-US')}</b><small>${k.slice(2)}</small></div>`).join('')}</div></div>` : ''}`;
-  $('#view').innerHTML = head + `<div class="card"><div class="row"><b>Orders</b><span class="sp" style="flex:1"></span><select id="of">${['open','paid','cancelled','all'].map(x => `<option ${x === f ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
+  $('#view').innerHTML = head + `<div class="card"><div class="row"><b>Orders</b><span class="sp" style="flex:1"></span><select id="of">${Object.keys(FL).map(x => `<option value="${x}" ${x === f ? 'selected' : ''}>${FL[x]}</option>`).join('')}</select></div>
   <div class="tblw"><table class="tbl"><tr><th>Ref</th><th>Customer</th><th>Type</th><th>Plan</th><th>Amount</th><th>Status</th><th>Their reference</th><th>Created</th><th></th></tr>
   ${rows.map(o => `<tr><td class="mono">${esc(o.ref)}</td><td>${esc(o.email)}</td><td>${esc(o.kind)}</td><td>${esc(planName(o.plan_id))}</td><td><b>${usd(o.amount_usd)}</b></td><td>${stPill(o.status)}</td><td>${esc(o.paid_ref || '')}</td><td class="mute">${fmt(o.created_at)}</td>
-  <td style="white-space:nowrap">${o.status === 'paid' || o.status === 'cancelled' ? (o.license_key ? `<span class="mono mute">${esc(o.license_key)}</span>` : '') : `<button class="b pri" data-c="${o.id}">Payment received</button> <button class="b dng" data-x="${o.id}">Cancel</button>`}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">Nothing here.</td></tr>'}
+  <td style="white-space:nowrap">${o.status === 'paid' || o.status === 'cancelled' ? (o.license_key ? `<span class="mono mute">${esc(o.license_key)}</span>` : '') : (o.status === 'paid_claimed' ? `<button class="b pri" data-c="${o.id}">Payment received</button> <button class="b dng" data-x="${o.id}">Cancel</button>` : `<span class="mute" style="margin-right:8px">not paid yet</span><button class="b" data-c="${o.id}" title="Only if the money arrived without the customer pressing I have paid">Mark paid</button> <button class="b dng" data-x="${o.id}">Cancel</button>`)}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">Nothing here.</td></tr>'}
   </table></div></div>`;
-  $('#of').onchange = e => { window._of = e.target.value; vOrders(); };
+  $('#of').onchange = e => { window._of2 = e.target.value; vOrders(); };
   $('#view').querySelectorAll('[data-c]').forEach(b => b.onclick = async () => {
     const o = data.orders.find(x => x.id === b.dataset.c);
     if (!confirm(`Confirm you RECEIVED ${usd(o.amount_usd)} for order ${o.ref} (${o.kind})? This ${o.kind === 'purchase' ? 'creates the license key' : o.kind === 'unbind' ? 'unbinds the license' : 'applies the change'} now.`)) return;

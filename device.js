@@ -27,7 +27,7 @@
       var ql = document.getElementById('ql'), qh = document.getElementById('ql-h');
       if (!pa || !ql) return;
       var pu = document.getElementById('pp-up'), pr = document.getElementById('pp-rm'), mav = document.getElementById('maav');
-      function ppState() { var h = window.gteAvatarApi && gteAvatarApi.has(); if (pu) pu.textContent = h ? 'Change' : 'Upload'; if (pr) pr.hidden = !h; }
+      function ppState() { var h = window.gteAvatarApi && gteAvatarApi.has(); if (pu) pu.textContent = h ? 'Change photo' : 'Add photo'; if (pr) pr.hidden = !h; }
       if (pu) pu.onclick = function () { if (window.gteAvatarApi) gteAvatarApi.pick(); };
       if (pr) pr.onclick = function () { if (window.gteAvatarApi) gteAvatarApi.remove(); };
       if (mav) new MutationObserver(ppState).observe(mav, { attributes: true, attributeFilter: ['class'] });

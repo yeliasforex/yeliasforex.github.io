@@ -326,7 +326,7 @@
       <div class="amt" style="margin:10px 0">${usd(o.amount_usd)} <span class="hint">USD</span></div>
       <div id="pay-${o.id}"><span class="hint">Loading payment details...</span></div>
       ${claimed ? '<p class="hint">Thanks. We are confirming your payment. Your key appears here and on Telegram once it is confirmed.</p>'
-      : `<div class="f" style="margin-top:14px"><label for="pr-${o.id}">After paying, enter your transaction ID or a note</label><input id="pr-${o.id}" placeholder="Transaction ID / reference"><div class="row"><button class="btn mint" data-paid="${o.id}">I have paid</button></div></div>`}
+      : `<div class="f" style="margin-top:14px"><label for="pr-${o.id}">After paying, enter your transaction ID or a note</label><input id="pr-${o.id}" placeholder="Transaction ID / reference"><div class="row"><button class="btn mint" data-paid="${o.id}">I have paid</button><button class="btn" data-cancel="${o.id}" type="button">Cancel this order</button></div></div>`}
       ${o.kind === 'unbind' ? '<p class="fine"><b>Next:</b> after paying, contact support on Telegram so we can unbind the key.</p>' : ''}</div>`;
   }
   function claimPanel() { return `<div class="panel"><h2>Add a license key</h2><p class="sub">If we gave you a key (a gift or a manual sale), add it to your account here.</p><div class="f"><input id="ck" placeholder="GTE-XXXX-XXXX-XXXX" autocapitalize="characters"><button class="btn" id="ckGo">Add key</button></div></div>`; }
@@ -355,6 +355,7 @@
     A.querySelectorAll('[data-upgrade]').forEach(b => b.onclick = guard(async () => { const o = await rpc('create_order', {p_kind: 'upgrade', p_plan_id: $('#up-' + b.dataset.upgrade).value, p_license_id: b.dataset.upgrade}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-renew]').forEach(b => b.onclick = guard(async () => { const o = await rpc('create_order', {p_kind: 'renewal', p_license_id: b.dataset.renew}); await refresh('#order=' + o.id); }));
     A.querySelectorAll('[data-unbind]').forEach(b => b.onclick = guard(async () => { if (!confirm('Unbinding costs ' + usd(S.settings.unbindFeeUsd ?? 100) + ' and needs support. Start the request?')) return; const o = await rpc('create_order', {p_kind: 'unbind', p_license_id: b.dataset.unbind}); await refresh('#order=' + o.id); }));
+    A.querySelectorAll('[data-cancel]').forEach(b => b.onclick = guard(async () => { if (!confirm('Cancel this order? Nothing has been paid, so nothing is lost. You can start a new order any time.')) return; await rpc('cancel_my_order', {p_order: b.dataset.cancel}); toast('Order cancelled'); await refresh(); }));
     A.querySelectorAll('[data-paid]').forEach(b => b.onclick = guard(async () => { const v = $('#pr-' + b.dataset.paid).value.trim(); if (!v) return toast('Enter your transaction ID or a short note', true); await rpc('claim_payment', {p_order: b.dataset.paid, p_paid_ref: v}); toast('Thank you. We will confirm your payment shortly.'); await refresh(); }));
     A.querySelectorAll('[id^="pay-"]').forEach(async el => {
       if (el.dataset.done) return; el.dataset.done = '1'; const id = el.id.slice(4);
@@ -410,8 +411,9 @@
     window.gteName = {get: () => nm, set: async v => { if (DEMO) { try { localStorage.setItem('gte_demo_name', v); } catch (x) {} } else await rpc('set_full_name', {p_name: v}); nm = v; paintName(); }};
     show(cur);
     if (AS) { btn.disabled = true; btn.classList.add('ro'); return; }
-    btn.onclick = () => { if (window.gteOpenSettings) gteOpenSettings(); else file.click(); };
-    window.gteAvatarApi = {pick: () => file.click(), remove: () => rm && rm.onclick && rm.onclick(), has: () => av.classList.contains('has-img')};
+    btn.onclick = () => file.click();                       // tap the photo: choose a new one (name and the rest are under the gear)
+    const doRemove = guard(async () => { if (DEMO) { try { localStorage.removeItem('gte_demo_avatar'); } catch (e) {} } else await rpc('set_avatar', {p_data: null}); show(null); toast('Photo removed'); if (!DEMO) { try { await c.rpc('sync_profile_identity'); const {data} = await c.from('profiles').select('picture_url').maybeSingle(); if (data && data.picture_url) show(data.picture_url); } catch (e) {} } });
+    window.gteAvatarApi = {pick: () => file.click(), remove: doRemove, has: () => av.classList.contains('has-img')};
     file.onchange = guard(async () => {
       const f = file.files[0]; file.value = ''; if (!f) return;
       if (f.type && !/^image\//.test(f.type)) throw new Error('Choose a picture (JPG or PNG).');
@@ -435,7 +437,7 @@
     return `<header class="st-h"><b>Settings</b><button class="st-x" type="button" aria-label="Close settings">${sic('x')}</button></header>
     <div class="st-body">
       <section class="st-s"><h3>${sic('user')}Profile</h3>
-        <div class="st-prof"><span class="st-av" id="stav"></span>
+        <div class="st-prof"><button class="st-av-b" id="stavb" type="button" aria-label="Change photo"><span class="st-av" id="stav"></span><i class="ma-cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></i></button>
           <div class="st-pf"><label for="stname">Your name</label>
             <div class="st-nm"><input id="stname" type="text" maxlength="60" minlength="2" autocomplete="name" placeholder="Your name" value="${esc(name)}"><button class="btn sm mint" id="stsave" type="button">Save</button></div>
             <div class="st-ph"><button class="btn sm" id="pp-up" type="button">Upload photo</button><button class="btn sm" id="pp-rm" type="button" hidden>Remove</button></div></div></div>
@@ -461,6 +463,7 @@
       const v = inp.value.replace(/\s+/g, ' ').trim(); if (v.length < 2) throw new Error('Enter at least 2 characters.');
       if (window.gteName) { if (v === gteName.get()) return toast('Name is up to date'); await gteName.set(v); toast('Name saved'); }
     });
+    const sab = $('#stavb'); if (sab) sab.onclick = () => { if (window.gteAvatarApi) gteAvatarApi.pick(); };
     $('#stsave').onclick = save; inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } };
     if (window.gteDevice) gteDevice.wire(rpc, toast, guard);
     st.querySelectorAll('[data-pref]').forEach(i => i.onchange = guard(async () => { if (AS) { i.checked = !i.checked; throw new Error('Read-only admin view.'); } if (DEMO) { toast('Saved'); return; } const prefs = {...(S.profile.notify_prefs || {})}; prefs[i.dataset.pref] = i.checked; const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; S.profile.notify_prefs = prefs; toast('Saved'); }));
