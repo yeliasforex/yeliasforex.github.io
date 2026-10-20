@@ -47,17 +47,29 @@
     if (DEMO) { toast('Demo mode: ' + fn); return {id: 'demo', ref: 'GTE-DEMO01', amountUsd: 1700}; }
     const {data, error} = await c.rpc(fn, args || {}); if (error) throw error; return data;
   }
+  const TCOLS = 'engine,dir,is_add,opened_at,closed_at,open_price,close_price,lots,result_r,profit';
+  const tnorm = rows => { rows.forEach(t => { t.profit = Number(t.profit); t.result_r = Number(t.result_r); t.lots = Number(t.lots); }); return rows; };
   async function tradesFor(id) {
-    const hit = tradeCache[id]; if (hit && Date.now() - hit.at < 120000) return hit.rows;
+    const hit = tradeCache[id]; if (hit && Date.now() - hit.at < 55000) return hit.rows;
+    if (hit && hit.rows.length && !INJ && !DEMO) {                      // background refresh: fetch only the trades closed since the last one we have
+      try {
+        const last = hit.rows[hit.rows.length - 1].closed_at;
+        const {data, error} = await c.from('trades').select(TCOLS).eq('license_id', id).gte('closed_at', last).order('closed_at').limit(1000);
+        if (!error && data) {
+          const key = x => x.opened_at + '|' + x.closed_at + '|' + x.lots + '|' + x.profit, have = new Set(hit.rows.map(key));
+          hit.rows = hit.rows.concat(tnorm(data).filter(x => !have.has(key(x)))); hit.at = Date.now(); return hit.rows;
+        }
+      } catch (e) {}
+    }
     let rows = [];
     if (INJ) rows = window.__inj.trades.map(t => ({...t}));
     else
     if (DEMO) rows = R.demo();
     else for (let from = 0; from < 20000; from += 1000) {
-      const {data, error} = await c.from('trades').select('engine,dir,is_add,opened_at,closed_at,open_price,close_price,lots,result_r,profit').eq('license_id', id).order('closed_at').range(from, from + 999);
+      const {data, error} = await c.from('trades').select(TCOLS).eq('license_id', id).order('closed_at').range(from, from + 999);
       if (error) throw error; rows = rows.concat(data); if (data.length < 1000) break;
     }
-    rows.forEach(t => { t.profit = Number(t.profit); t.result_r = Number(t.result_r); t.lots = Number(t.lots); });
+    tnorm(rows);
     tradeCache[id] = {at: Date.now(), rows}; return rows;
   }
   function demoData() {
@@ -403,9 +415,15 @@
       u.searchParams.delete('fs'); history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
     } catch (e) {}
   })();
+  const sigNow = () => JSON.stringify([S.licenses, (S.statuses || []).map(s => { const {last_heartbeat, ...r} = s; return r; }), S.notices, S.orders, S.profile, S.settings]);
   if (!DEMO) setInterval(async () => {
     const ae = document.activeElement; if (document.hidden || (ae && /INPUT|SELECT|TEXTAREA/.test(ae.tagName))) return;
     quiet = true;
-    try { S = await load(); await render(); } catch (e) {} finally { quiet = false; }
+    try {
+      const before = sigNow(), n0 = (tradeCache[cur] || {rows: []}).rows.length;
+      S = await load(); const n1 = cur ? (await tradesFor(cur)).length : 0;
+      if (sigNow() === before && n1 === n0) { if (window.gteLive) gteLive.refresh(stOf(cur)); }       // nothing changed: only the live card moves, no rebuild, no lag
+      else await render();
+    } catch (e) {} finally { quiet = false; }
   }, 60000);
 })();

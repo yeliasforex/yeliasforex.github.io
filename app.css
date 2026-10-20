@@ -220,7 +220,7 @@
   .winbox{grid-template-columns:1fr;justify-items:center}.winbox .wfacts{width:100%}
   .hrs{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
-#acct.still *,#acct.still *::after{animation:none!important}
+#acct.still > :not(.lv),#acct.still > :not(.lv) *,#acct.still > :not(.lv)::after,#acct.still > :not(.lv) *::after{animation:none!important}
 @media (prefers-reduced-motion:reduce){#acct *,#acct *::after{animation:none!important;transition:none!important}.dot2.on{animation:none}}
 
 /* admin panel embeds this page to show a customer's account exactly as they see it (page header, menu and footer hidden) */

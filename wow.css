@@ -500,3 +500,11 @@ html{overflow-x:hidden;overflow-x:clip;max-width:100%}
 .ma-em{font-size:.8rem;margin-top:0}
 @media(prefers-reduced-motion:reduce){.ma-form{animation:none}}
 .ma-nm.noname{flex-direction:column;align-items:flex-start;gap:5px}.ma-nm.noname .ma-mail{max-width:100%}
+
+/* ---- smoother on phones and when off screen ---- */
+#acct .lv-paused *,#acct .lv-paused::before{animation-play-state:paused!important}
+@media (hover:none),(max-width:900px){
+  #acct .lv-beat{filter:none}
+  .top.scrolled{-webkit-backdrop-filter:none;backdrop-filter:none;background:rgba(6,8,14,.96)}
+  html[data-theme="light"] .top.scrolled{background:rgba(244,246,251,.96)}
+}

@@ -90,7 +90,7 @@
     var el = document.getElementById('lv'); if (!el || !D) return;
     var now = Date.now(), m = model(D, now);
     if (m.s !== shown) {
-      shown = m.s; el.className = 'lv lv-' + m.s + (el.classList.contains('lv-open') ? ' lv-open' : '') + (el.classList.contains('lv-late') ? ' lv-late' : '');
+      shown = m.s; el.className = 'lv lv-' + m.s + (el.classList.contains('lv-open') ? ' lv-open' : '') + (el.classList.contains('lv-late') ? ' lv-late' : '') + (el.classList.contains('lv-paused') ? ' lv-paused' : '');
       el.querySelector('.lv-title').textContent = m.title; el.querySelector('.lv-sub').textContent = m.sub;
       el.querySelector('.lv-foot').innerHTML = foot(m.s, D);
       el.querySelector('.lv-ico').innerHTML = ICON[m.s];
@@ -109,8 +109,10 @@
     var mb = el.querySelector('.lv-more'), dt = el.querySelector('.lv-detail');
     if (mb) mb.onclick = function () { var o = !el.classList.contains('lv-open'); el.classList.toggle('lv-open', o); mb.setAttribute('aria-expanded', o); try { sessionStorage.setItem('gte_lv_open', o ? '1' : ''); } catch (e) {} };
     try { if (sessionStorage.getItem('gte_lv_open') === '1') { el.classList.add('lv-open'); if (mb) mb.setAttribute('aria-expanded', 'true'); } } catch (e) {}
+    try { if (window.IntersectionObserver) { if (window.__lvIO) window.__lvIO.disconnect(); window.__lvIO = new IntersectionObserver(function (es) { el.classList.toggle('lv-paused', !es[0].isIntersecting); }); window.__lvIO.observe(el); } } catch (e) {}
     timer = setInterval(function () { if (!document.hidden) paint(); }, 1000);
     paint();
   }
-  window.gteLive = { html: html, mount: mount };
+  function refresh(st) { if (!D || !st) return; D.st = st; D.at = Date.now(); paint(); }
+  window.gteLive = { html: html, mount: mount, refresh: refresh };
 })();
