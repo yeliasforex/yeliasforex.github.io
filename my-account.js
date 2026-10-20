@@ -414,9 +414,9 @@
     window.gteAvatarApi = {pick: () => file.click(), remove: () => rm && rm.onclick && rm.onclick(), has: () => av.classList.contains('has-img')};
     file.onchange = guard(async () => {
       const f = file.files[0]; file.value = ''; if (!f) return;
-      if (!/^image\//.test(f.type)) throw new Error('Choose an image file.');
-      const url = await resizeSquare(f, 192);
-      if (DEMO) { try { localStorage.setItem('gte_demo_avatar', url); } catch (e) {} } else await rpc('set_avatar', {p_data: url});
+      if (f.type && !/^image\//.test(f.type)) throw new Error('Choose a picture (JPG or PNG).');
+      let url; try { url = await resizeSquare(f, 192); } catch (e) { try { gteEvent('js_error', 'avatar decode: ' + (f.type || 'no type') + ' ' + Math.round(f.size / 1024) + 'kb'); } catch (x) {} throw new Error('This picture format is not supported. Choose a JPG or PNG.'); }
+      if (DEMO) { try { localStorage.setItem('gte_demo_avatar', url); } catch (e) {} } else { try { await rpc('set_avatar', {p_data: url}); } catch (e) { try { gteEvent('js_error', 'avatar save: ' + String(e.message || e).slice(0, 90)); } catch (x) {} throw e; } }
       show(url); toast('Photo updated');
     });
     if (rm) rm.onclick = guard(async () => { if (DEMO) { try { localStorage.removeItem('gte_demo_avatar'); } catch (e) {} } else await rpc('set_avatar', {p_data: null}); show(null); toast('Photo removed'); });
