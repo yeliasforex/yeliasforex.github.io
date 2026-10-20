@@ -51,7 +51,7 @@
     var sup = '<a class="btn sm" href="https://t.me/GoldTriEngine_Support" rel="noopener">Ask support</a>';
     if (s === 'off') return '<div class="lv-steps"><b>What to do</b><ol><li>MT5 is open and connected (green bars bottom right).</li><li>Algo Trading is ON and the EA shows a smiling face on the chart.</li><li>Your PC or VPS and its internet are running.</li></ol></div><div class="row"><a class="btn sm" href="faq.html">Fix guide</a>' + sup + '</div>';
     if (s === 'warn') return '<div class="lv-steps"><b>What to do</b><p>' + esc(d.fill(d.err.solution)) + '</p></div>';
-    if (s === 'new') return '<div class="row"><a class="btn sm mint" href="download.html">Download EA</a><a class="btn sm" href="download.html">Setup in 6 steps</a></div>';
+    if (s === 'new') return '<div class="row"><a class="btn sm mint" href="download.html">Set up in 6 steps</a></div>';
     if (s === 'stop') return '<div class="row">' + (d.l.status === 'expired' ? '<a class="btn sm mint" href="#tab=billing" data-go="billing">Renew</a>' : '') + sup + '</div>';
     return '';
   }

@@ -6,6 +6,14 @@
   var isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   window.gteDevice = {
+    rowsPhone: function () {
+      return '<div class="st-r"><div class="st-t"><b>Phone alerts</b><span class="hint" id="pa-h">Checking...</span></div><label class="sw"><input type="checkbox" id="pa" disabled><span></span></label></div>'
+        + '<div class="st-sub"><button class="btn sm" id="pa-test" type="button" hidden>Send a test alert</button></div>';
+    },
+    rowsDevice: function () {
+      return '<div class="st-r"><div class="st-t"><b>Quick unlock</b><span class="hint" id="ql-h">Checking...</span></div><label class="sw"><input type="checkbox" id="ql" disabled><span></span></label></div>'
+        + '<div class="st-r"><div class="st-t"><b>Animations</b><span class="hint" id="mo-h">Auto follows your phone. If they look switched off, choose On.</span></div><span class="seg3" id="mo"><button type="button" data-m="auto">Auto</button><button type="button" data-m="on">On</button><button type="button" data-m="off">Off</button></span></div>';
+    },
     html: function () {
       return '<div class="panel" id="dv"><div class="row sp"><div><h2>This device</h2><p class="sub" style="margin:0">Alerts on your phone and a quick lock for this app. Both are per device.</p></div></div>'
         + '<div class="tog"><span><b>Profile photo</b><br><span class="hint">Shown in the circle at the top of My account.</span></span><span class="row"><button class="btn sm" id="pp-up" type="button">Upload</button><button class="btn sm" id="pp-rm" type="button" hidden>Remove</button></span></div>'

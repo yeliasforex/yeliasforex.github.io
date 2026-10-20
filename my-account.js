@@ -4,8 +4,8 @@
   const usd = (n, d) => d !== undefined ? R.usd(n, d) : (Number.isInteger(+n) ? R.usd(n, 0) : R.usd(n, 2));   // always two decimals unless a whole amount
   let c, S = {}, cur = null, range = 'all';
   const tflt = {eng: 'all', res: 'all', page: 1};
-  let tab = (location.hash.match(/tab=(\w+)/) || [])[1] || 'overview';
-  const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['inbox', 'Notifications'], ['alerts', 'Alerts'], ['billing', 'Orders & keys']];
+  let tab = (location.hash.match(/tab=(\w+)/) || [])[1] || 'overview'; if (tab === 'alerts' || tab === 'inbox') tab = 'overview';
+  const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['billing', 'Keys & orders']];
   const NOTIFY = [['ea_started', 'EA started / stopped'], ['trade_open', 'Trade opened'], ['trade_close', 'Trade closed with result'], ['addon', 'Add-on filled / closed'], ['daily_report', 'Daily report'], ['offline', 'EA offline / back online']];
   const SEV = {error: 0, warning: 1, info: 2}, tradeCache = {};
   const QS = new URLSearchParams(location.search), INJ = QS.has('inject');
@@ -107,7 +107,7 @@
     if (!list.length) return `<div class="np-empty">${svgI('ok')}<b>You are all caught up</b><span>Important messages appear here.</span></div>`;
     return list.map(n => {
       const k = KI[n.kind] ? n.kind : 'info';
-      const act = n.link ? `<a class="btn sm ${n.kind === 'update' ? 'mint' : ''}" href="${esc(n.link)}">${n.kind === 'update' ? 'Download' : 'Open'}</a>`
+      const act = n.link ? `<a class="btn sm ${n.kind === 'update' ? 'mint' : ''}" href="${esc(n.link)}">${n.kind === 'update' ? 'Update now' : 'Open'}</a>`
         : /^A license key was added/.test(n.title) ? '<a class="btn sm mint" href="#tab=billing" data-go="billing">See your keys</a>' : '';
       return `<div class="ni ${n.read_at ? '' : 'new'}"><button class="ni-h" type="button" aria-expanded="false"><i class="ni-ic k-${k}">${svgI(k)}</i><span class="ni-t">${esc(n.title)}</span><time>${sago(n.created_at)}</time><u class="ni-dot"></u></button>${n.body || act ? `<div class="ni-b">${n.body ? `<p>${esc(n.body).replace(/\n/g, '<br>')}</p>` : ''}${act}</div>` : ''}</div>`;
     }).join('');
@@ -117,19 +117,20 @@
     if (AS || INJ) { bell.hidden = true; return; }
     const n = unread(), was = bdg.textContent; bdg.hidden = !n; bdg.textContent = n > 9 ? '9+' : String(n); bell.classList.toggle('has', !!n);
     if (n && was !== bdg.textContent) { bdg.classList.remove('pop'); void bdg.offsetWidth; bdg.classList.add('pop'); }
-    const np = $('#np'); if (np && !np.hidden) { const l = np.querySelector('.np-list'); if (l) l.innerHTML = notifRows((S.notices || []).slice(0, 8)); }
+    const np = $('#np'); if (np && !np.hidden) { const l = np.querySelector('.np-list'); if (l) l.innerHTML = notifRows((S.notices || []).slice(0, 30)); }
   }
   function initBell() {
     const bell = $('#mabell'), np = $('#np'), bk = $('#npbk'); if (!bell || !np) return;
     const close = () => { np.hidden = true; bk.hidden = true; bell.setAttribute('aria-expanded', 'false'); };
     const open = () => {
-      np.innerHTML = '<div class="np-h"><b>Notifications</b><button class="np-mk" type="button">Mark all read</button></div><div class="np-list"></div><a class="np-f" href="#tab=inbox" data-go="inbox">See all</a>';
-      np.querySelector('.np-list').innerHTML = notifRows((S.notices || []).slice(0, 8));
+      np.innerHTML = '<div class="np-h"><b>Notifications</b><button class="np-mk" type="button">Mark all read</button></div><div class="np-list"></div>';
+      np.querySelector('.np-list').innerHTML = notifRows((S.notices || []).slice(0, 30));
       np.hidden = false; bk.hidden = false; bell.setAttribute('aria-expanded', 'true');
       np.querySelector('.np-mk').onclick = guard(async () => { await markRead(true); });
       if (unread() && !DEMO) setTimeout(() => { if (!np.hidden) markRead(); }, 1500);
     };
     bell.onclick = e => { e.stopPropagation(); np.hidden ? open() : close(); };
+    if ((location.hash.match(/tab=(\w+)/) || [])[1] === 'inbox') setTimeout(() => { if (np.hidden) open(); }, 700);
     bk.onclick = close;
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !np.hidden) close(); });
     document.addEventListener('click', e => {
@@ -164,19 +165,19 @@
     if (AS) parts.push(`<div class="msg" style="border-color:var(--gold);color:var(--gold);margin-bottom:12px"><b>Admin view.</b> This is ${esc(S.profile.email || 'this customer')}'s account exactly as they see it. Read-only: nothing here can be changed.${INJ ? '' : ' <a href="admin/" style="color:inherit;text-decoration:underline">Back to admin</a>'}</div>`);
     if (AS && !S.licenses.length) { parts.push('<div class="panel"><h2>Not found</h2><p class="sub">No such license, or this login is not a verified admin.</p></div>'); A.innerHTML = parts.join(''); return; }
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
-    if (!lic) { parts.push(emptyPanel(), claimPanel(), alertsPanels(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
+    if (!lic) { parts.push(emptyPanel(), claimPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
     if (window.gteLive) {
       const lst = stOf(lic.id), lprobs = problems(lic, lst), td = trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()).reduce((a, x) => a + x.profit, 0);
       const fs = DEMO ? new URLSearchParams(location.search).get('state') : null;
       parts.push(gteLive.html({upd: (S.settings.latestVersion && stOf(lic.id).ea_version && lic.status === 'active' && (x => { const p = String(S.settings.latestVersion).split('.').map(Number), q = String(stOf(lic.id).ea_version).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d > 0; } return false; })() ) ? S.settings.latestVersion : null, l: lic, st: lst, today: td, err: lprobs.find(p => (p.severity === 'error' || p.severity === 'warning') && p.code !== 'HEARTBEAT_MISSING') || null, update: null, force: fs, offMin: Number(S.settings.offlineMinutes) || 15, beatMin: Number(S.settings.heartbeatMinutes) || 5, at: Date.now(), R, todayTrades: trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()), usd, sgn: R.sgn, col: R.col, fill}));
     }
-    if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · ${esc(l.key)}</option>`).join('')}</select></div>`);
+    if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · …${esc(String(l.key).slice(-4))}</option>`).join('')}</select></div>`);
     const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
     const updAvail = !!(lv && cv && lic.status === 'active' && vc(lv, cv) > 0);
     parts.push(hero(lic, trades));
     parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}${k === 'inbox' && unread() ? `<span class="nb">${unread()}</span>` : ''}</a>`).join('')}</div><div id="tabbody"></div>`);
-    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount(); paintBell();
+    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount(); paintBell(); if (stOpen && !quiet) renderSettings();
     const sel = $('#licSel'); if (sel) sel.onchange = e => { cur = e.target.value; render(); };
     A.querySelectorAll('#subnav a').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.tab; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x === a)); drawTab(lic, trades); });
     drawTab(lic, trades);
@@ -205,16 +206,15 @@
         <div class="tile"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2)}</div></div>
       </div>
       <div class="hero-f">
-        <div class="row"><span class="key" id="k-${l.id}">${esc(l.key)}</span><button class="btn sm" data-copy="${esc(l.key)}">Copy</button><a class="btn sm" href="download.html">Download EA</a></div>
+        <div class="row"><button class="btn sm" data-copy="${esc(l.key)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:15px;height:15px;margin-right:6px;vertical-align:-2px"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>Copy license key</button><a class="hint" href="#tab=billing" data-go="billing">See all keys</a></div>
         <div class="yr"><div class="row sp"><span class="hint">${days != null ? (days >= 0 ? 'License valid until <b>' + date(l.expires_at) + '</b>' : 'Expired on ' + date(l.expires_at)) : 'The year starts when you first attach the key'}</span><span class="hint">${days != null && days >= 0 ? days + ' days left' : ''}</span></div><div class="meter ${days != null && days <= 30 ? 'warn' : ''}"><i style="width:${pct}%"></i></div></div>
       </div></div>`;
   }
   function drawTab(lic, trades) {
     const body = $('#tabbody'); if (!body) return;
     A.classList.toggle('still', quiet);
-    body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, inbox: tInbox, alerts: () => alertsPanels(), billing: tBilling}[tab] || tOverview)(lic, trades);
+    body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, billing: tBilling}[tab] || tOverview)(lic, trades);
     wire(); afterDraw(lic, trades); countUp(body);
-    if (tab === 'inbox' && unread() && !DEMO && !AS) markRead();
   }
   function keysPanel(cur) {
     if (!S.licenses.length) return '';
@@ -227,7 +227,7 @@
     const tol = S.settings.toleranceActive ?? 5, lim = pl.limit_usd, allowed = lim == null ? null : lim * (1 + tol / 100) + Number(l.extra_allowance_usd || 0);
     const funded = Number(st.funded_usd || 0), pct = allowed ? Math.min(100, funded / allowed * 100) : 0, mark = allowed ? Math.min(100, lim / allowed * 100) : 0, over = st.over_limit, near = allowed && funded > lim * 0.9;
     const recent = trades.slice().sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at)).slice(0, 6);
-    return `${S.licenses.length > 1 ? keysPanel(l.id) : ''}<div class="grid2">
+    return `<div class="grid2">
       <div class="panel"><h2>Status</h2><p class="sub">What the EA reports for this license.</p>
         ${probs.length ? '<div class="prob">' + probs.map(p => `<div class="it ${p.severity}"><div class="t">${esc(p.title)}</div><div class="e">${esc(fill(p.explanation))}</div><div class="s">What to do: ${esc(fill(p.solution))}</div></div>`).join('') + '</div>' : '<div class="allgood">&#10003; Everything looks good. No problems reported.</div>'}</div>
       <div class="panel"><h2>Account &amp; limit</h2><p class="sub">The account this key is bound to.</p>
@@ -266,9 +266,6 @@
       <div class="panel"><h3 class="rh" style="margin-top:0">Daily result <span class="hint">last 30 days, amounts in USD</span></h3>${R.bars(R.dayItems(all, 30), 210)}</div>
       <div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">closing day</span></h3>${R.weekdayBars(t)}</div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 230, {full: true})}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
-  }
-  function tInbox() {
-    return `<div class="panel"><div class="row sp"><div><h2>Notifications</h2><p class="sub" style="margin:0">Messages about your license, deposits, orders and updates. Trade alerts go to Telegram.</p></div></div><div class="np-list full">${notifRows(S.notices || [])}</div></div>`;
   }
   function tTrades(l, all) {
     if (!all.length) return `<div class="panel"><h2>Trades</h2><div class="empty">No closed trades yet.</div></div>`;
@@ -332,14 +329,6 @@
       : `<div class="f" style="margin-top:14px"><label for="pr-${o.id}">After paying, enter your transaction ID or a note</label><input id="pr-${o.id}" placeholder="Transaction ID / reference"><div class="row"><button class="btn mint" data-paid="${o.id}">I have paid</button></div></div>`}
       ${o.kind === 'unbind' ? '<p class="fine"><b>Next:</b> after paying, contact support on Telegram so we can unbind the key.</p>' : ''}</div>`;
   }
-  function alertsPanels() { return telegramPanel() + (!AS && window.gteDevice ? gteDevice.html() : ''); }
-  function telegramPanel() {
-    const on = !!S.profile.telegram_chat_id, prefs = S.profile.notify_prefs || {};
-    return `<div class="panel"><div class="row sp"><div><h2>Telegram notifications</h2><p class="sub" style="margin:0">Trades, daily report, offline alerts and license warnings on your phone.</p></div><span class="pill ${on ? 'ok' : 'warn'}">${on ? 'Connected' : 'Not connected'}</span></div>
-      ${on ? `<div style="margin-top:12px">${NOTIFY.map(([k, label]) => `<div class="tog"><span>${label}</span><label class="sw"><input type="checkbox" data-pref="${k}" ${prefs[k] === false || prefs[k] === 'false' ? '' : 'checked'}><span></span></label></div>`).join('')}
-        <p class="hint" style="margin-top:10px">License and deposit-limit warnings are always sent.</p><button class="btn sm danger" id="tgOff" style="margin-top:8px">Disconnect Telegram</button></div>`
-      : '<div class="row" style="margin-top:14px"><button class="btn mint" id="tgOn">Connect Telegram</button><span class="hint" id="tgHint">Opens Telegram. Tap Start in the bot.</span></div>'}</div>`;
-  }
   function claimPanel() { return `<div class="panel"><h2>Add a license key</h2><p class="sub">If we gave you a key (a gift or a manual sale), add it to your account here.</p><div class="f"><input id="ck" placeholder="GTE-XXXX-XXXX-XXXX" autocapitalize="characters"><button class="btn" id="ckGo">Add key</button></div></div>`; }
   function ordersPanel() {
     if (!S.orders.length) return '';
@@ -375,14 +364,6 @@
         drawQr(el);
       } catch (e) { el.textContent = 'Could not load payment details.'; }
     });
-    A.querySelectorAll('[data-pref]').forEach(i => i.onchange = guard(async () => { if (AS) { i.checked = !i.checked; throw new Error('Read-only admin view.'); } if (DEMO) return; const prefs = {...(S.profile.notify_prefs || {})}; prefs[i.dataset.pref] = i.checked; const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; S.profile.notify_prefs = prefs; toast('Saved'); }));
-    const on = $('#tgOn'); if (on) on.onclick = guard(async () => {
-      const bot = S.settings.botUsername || 'GoldTriEngine_Bot'; const tok = DEMO ? 'demo' : await rpc('create_telegram_link');
-      window.open('https://t.me/' + bot + '?start=' + tok, '_blank', 'noopener'); $('#tgHint').textContent = 'Waiting for you to tap Start in Telegram...';
-      for (let i = 0; i < 40 && !DEMO; i++) { await new Promise(r => setTimeout(r, 3000)); const {data} = await c.from('profiles').select('telegram_chat_id').maybeSingle(); if (data && data.telegram_chat_id) { await refresh(); toast('Telegram connected'); return; } }
-    });
-    const off = $('#tgOff'); if (off) off.onclick = guard(async () => { await rpc('disconnect_telegram'); await refresh(); });
-    if (!AS && window.gteDevice) gteDevice.wire(rpc, toast, guard);
     const go = $('#ckGo'); if (go) go.onclick = guard(async () => { const k = $('#ck').value.trim(); if (!k) return; await rpc('claim_license', {p_key: k}); toast('Key added'); await refresh(); });
   }
   function resizeSquare(f, s) {
@@ -426,9 +407,10 @@
     if (DEMO) { nm = new URLSearchParams(location.search).has('noname') ? '' : (localStorage.getItem('gte_demo_name') || 'Amina Rahman'); em = 'amina@example.com'; }
     paintName();
     if (!AS) wireName();
+    window.gteName = {get: () => nm, set: async v => { if (DEMO) { try { localStorage.setItem('gte_demo_name', v); } catch (x) {} } else await rpc('set_full_name', {p_name: v}); nm = v; paintName(); }};
     show(cur);
     if (AS) { btn.disabled = true; btn.classList.add('ro'); return; }
-    btn.onclick = () => file.click();
+    btn.onclick = () => { if (window.gteOpenSettings) gteOpenSettings(); else file.click(); };
     window.gteAvatarApi = {pick: () => file.click(), remove: () => rm && rm.onclick && rm.onclick(), has: () => av.classList.contains('has-img')};
     file.onchange = guard(async () => {
       const f = file.files[0]; file.value = ''; if (!f) return;
@@ -438,6 +420,84 @@
       show(url); toast('Photo updated');
     });
     if (rm) rm.onclick = guard(async () => { if (DEMO) { try { localStorage.removeItem('gte_demo_avatar'); } catch (e) {} } else await rpc('set_avatar', {p_data: null}); show(null); toast('Photo removed'); });
+  }
+  // ---------- settings sheet (gear icon): everything the customer can change, in one place ----------
+  let stOpen = false;
+  const SI = {
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    bell: '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>',
+    device: '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>'};
+  const sic = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${SI[k]}</svg>`;
+  function settingsHtml() {
+    const prof = S.profile || {}, email = prof.email || '', on = !!prof.telegram_chat_id, prefs = prof.notify_prefs || {}, name = (window.gteName && gteName.get()) || '';
+    return `<header class="st-h"><b>Settings</b><button class="st-x" type="button" aria-label="Close settings">${sic('x')}</button></header>
+    <div class="st-body">
+      <section class="st-s"><h3>${sic('user')}Profile</h3>
+        <div class="st-prof"><span class="st-av" id="stav"></span>
+          <div class="st-pf"><label for="stname">Your name</label>
+            <div class="st-nm"><input id="stname" type="text" maxlength="60" minlength="2" autocomplete="name" placeholder="Your name" value="${esc(name)}"><button class="btn sm mint" id="stsave" type="button">Save</button></div>
+            <div class="st-ph"><button class="btn sm" id="pp-up" type="button">Upload photo</button><button class="btn sm" id="pp-rm" type="button" hidden>Remove</button></div></div></div>
+      </section>
+      <section class="st-s"><h3>${sic('bell')}Alerts</h3>
+        ${window.gteDevice ? gteDevice.rowsPhone() : ''}
+        <div class="st-r"><div class="st-t"><b>Telegram</b><span class="hint" id="tgHint">${on ? 'Connected' : 'Trade alerts, daily report and warnings.'}</span></div>${on ? '<button class="btn sm" id="tgOff" type="button">Disconnect</button>' : '<button class="btn sm mint" id="tgOn" type="button">Connect</button>'}</div>
+        <details class="st-d"${S.__stDet ? ' open' : ''}><summary>Choose what I get</summary>
+          ${NOTIFY.map(([k, label]) => `<div class="st-r"><div class="st-t"><b>${label}</b></div><label class="sw"><input type="checkbox" data-pref="${k}" ${prefs[k] === false || prefs[k] === 'false' ? '' : 'checked'}><span></span></label></div>`).join('')}
+          <p class="hint">Applies to Telegram and phone alerts. License and deposit-limit warnings are always sent.</p></details>
+      </section>
+      <section class="st-s"><h3>${sic('device')}This device</h3>${window.gteDevice ? gteDevice.rowsDevice() : ''}</section>
+      <section class="st-s"><h3>${sic('lock')}Account</h3>
+        <div class="st-r"><div class="st-t"><b>${esc(email || 'Your account')}</b><span class="hint">Signed in with this email</span></div><button class="btn sm" id="stout" type="button">Sign out</button></div>
+      </section>
+    </div>`;
+  }
+  function wireSettings() {
+    const st = $('#st'), mav = $('#maav'), sav = $('#stav');
+    if (sav && mav) { const sync = () => { sav.className = mav.className + ' st-av'; sav.style.backgroundImage = mav.style.backgroundImage; sav.textContent = mav.textContent; }; sync(); if (!st.__mo) { st.__mo = new MutationObserver(sync); st.__mo.observe(mav, {attributes: true, attributeFilter: ['class', 'style']}); } }
+    st.querySelector('.st-x').onclick = closeSettings;
+    const inp = $('#stname'), save = guard(async () => {
+      const v = inp.value.replace(/\s+/g, ' ').trim(); if (v.length < 2) throw new Error('Enter at least 2 characters.');
+      if (window.gteName) { if (v === gteName.get()) return toast('Name is up to date'); await gteName.set(v); toast('Name saved'); }
+    });
+    $('#stsave').onclick = save; inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } };
+    if (window.gteDevice) gteDevice.wire(rpc, toast, guard);
+    st.querySelectorAll('[data-pref]').forEach(i => i.onchange = guard(async () => { if (AS) { i.checked = !i.checked; throw new Error('Read-only admin view.'); } if (DEMO) { toast('Saved'); return; } const prefs = {...(S.profile.notify_prefs || {})}; prefs[i.dataset.pref] = i.checked; const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; S.profile.notify_prefs = prefs; toast('Saved'); }));
+    const tgOn = $('#tgOn'); if (tgOn) tgOn.onclick = guard(async () => {
+      const bot = S.settings.botUsername || 'GoldTriEngine_Bot'; const tok = DEMO ? 'demo' : await rpc('create_telegram_link');
+      window.open('https://t.me/' + bot + '?start=' + tok, '_blank', 'noopener'); $('#tgHint').textContent = 'Waiting for you to tap Start in Telegram...';
+      for (let i = 0; i < 40 && !DEMO; i++) { await new Promise(r => setTimeout(r, 3000)); const {data} = await c.from('profiles').select('telegram_chat_id').maybeSingle(); if (data && data.telegram_chat_id) { await refresh(); toast('Telegram connected'); return; } }
+    });
+    const tgOff = $('#tgOff'); if (tgOff) tgOff.onclick = guard(async () => { await rpc('disconnect_telegram'); await refresh(); });
+    $('#stout').onclick = signOut;
+    const det = st.querySelector('.st-d'); if (det) det.ontoggle = () => { S.__stDet = det.open; };
+  }
+  function renderSettings() {
+    const st = $('#st'); if (!st) return; const top = (st.querySelector('.st-body') || {}).scrollTop || 0;
+    st.innerHTML = settingsHtml(); wireSettings(); const b = st.querySelector('.st-body'); if (b) b.scrollTop = top;
+  }
+  function openSettings() {
+    const st = $('#st'), bk = $('#stbk'); if (!st || AS || INJ) return;
+    const np = $('#np'); if (np && !np.hidden) { np.hidden = true; $('#npbk').hidden = true; }
+    stOpen = true; renderSettings(); st.hidden = false; bk.hidden = false; document.documentElement.classList.add('st-lock');
+    const g = $('#mager'); if (g) g.setAttribute('aria-expanded', 'true');
+    if (location.hash !== '#settings') history.replaceState(null, '', location.pathname + location.search + '#settings');
+  }
+  function closeSettings() {
+    const st = $('#st'), bk = $('#stbk'); if (!st) return; stOpen = false; st.hidden = true; bk.hidden = true; document.documentElement.classList.remove('st-lock');
+    const g = $('#mager'); if (g) g.setAttribute('aria-expanded', 'false');
+    if (location.hash === '#settings') history.replaceState(null, '', location.pathname + location.search + '#tab=' + tab);
+  }
+  window.gteOpenSettings = openSettings;
+  function initSettings() {
+    const g = $('#mager'); if (!g) return;
+    if (AS || INJ) { g.hidden = true; return; }
+    g.onclick = () => stOpen ? closeSettings() : openSettings();
+    $('#stbk').onclick = closeSettings;
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && stOpen) closeSettings(); });
+    addEventListener('hashchange', () => { if (location.hash === '#settings' && !stOpen) openSettings(); else if (location.hash !== '#settings' && stOpen) closeSettings(); });
+    if (location.hash === '#settings' || (location.hash.match(/tab=(\w+)/) || [])[1] === 'alerts') { if (tab === 'alerts') tab = 'overview'; openSettings(); }
   }
   async function refresh(hash) { S = await load(); Object.keys(tradeCache).forEach(k => delete tradeCache[k]); if (hash) history.replaceState(null, '', hash); await render(); }
 
@@ -452,10 +512,10 @@
   const sess = DEMO ? {user: {email: 'amina@example.com'}} : await gte.session();
   if (!sess) { $('#gate').classList.remove('hide'); return; }
   $('#who').textContent = sess.user.email || '';
-  $('#out').onclick = async () => { if (!DEMO) await c.auth.signOut(); location.href = 'index.html'; };
+  const signOut = async () => { if (!DEMO) await c.auth.signOut(); location.href = 'index.html'; };
   try { S = await load(); } catch (e) { A.innerHTML = '<div class="msg err">Could not load your account: ' + esc(e.message || e) + '</div>'; return; }
   await render();
-  initAvatar(); initBell(); paintBell();
+  initAvatar(); initBell(); paintBell(); initSettings();
   addEventListener('hashchange', () => { const k = (location.hash.match(/tab=(\w+)/) || [])[1]; if (k && k !== tab) { const a = $('#subnav a[data-tab="' + k + '"]'); if (a) a.click(); } });
   (async () => {                                              // first-visit source from the sign-in link (new accounts only; the database ignores everyone else)
     if (DEMO || AS) return;
