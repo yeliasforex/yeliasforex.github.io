@@ -440,7 +440,7 @@
         <div class="st-prof"><button class="st-av-b" id="stavb" type="button" aria-label="Change photo"><span class="st-av" id="stav"></span><i class="ma-cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></i></button>
           <div class="st-pf"><label for="stname">Your name</label>
             <div class="st-nm"><input id="stname" type="text" maxlength="60" minlength="2" autocomplete="name" placeholder="Your name" value="${esc(name)}"><button class="btn sm mint" id="stsave" type="button">Save</button></div>
-            <div class="st-ph"><button class="btn sm" id="pp-up" type="button">Upload photo</button><button class="btn sm" id="pp-rm" type="button" hidden>Remove</button></div></div></div>
+            </div></div>
       </section>
       <section class="st-s"><h3>${sic('bell')}Alerts</h3>
         ${window.gteDevice ? gteDevice.rowsPhone() : ''}

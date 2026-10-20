@@ -637,3 +637,5 @@ html.st-lock{overflow:hidden}
 .st-av-b .ma-cam{opacity:1;transform:none;right:-2px;bottom:-2px;width:24px;height:24px}
 .st-av-b .ma-cam svg{width:13px;height:13px}
 .st-av-b:hover .st-av{filter:brightness(.95)}
+.st-rm{font:inherit;font-size:.8rem;color:var(--muted);background:none;border:0;padding:6px 0 0;cursor:pointer;text-decoration:underline}.st-rm:hover{color:var(--fg)}
+.st-ph{margin-top:2px}
