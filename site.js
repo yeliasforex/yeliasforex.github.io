@@ -202,9 +202,10 @@
   /* Equity crosshair */
   var wrap=d.querySelector('.eq-wrap');
   if(wrap){
-    var svg=wrap.querySelector('svg'), pts=JSON.parse(wrap.getAttribute('data-pts')), xh=svg.querySelector('.xh'), xd=svg.querySelector('.xd'), tip=wrap.querySelector('.eq-tip');
+    var svg=wrap.querySelector('svg'), tip=wrap.querySelector('.eq-tip');
     var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     function at(clientX){
+      var pts=JSON.parse(wrap.getAttribute('data-pts')), xh=svg.querySelector('.xh'), xd=svg.querySelector('.xd');   // read each time: the curve can be replaced by bt-live.js
       var r=svg.getBoundingClientRect(), vb=svg.viewBox.baseVal, x=(clientX-r.left)/r.width*vb.width;
       var best=0,bd=1e9; for(var i=0;i<pts.length;i++){var dd=Math.abs(pts[i][0]-x);if(dd<bd){bd=dd;best=i;}}
       var p=pts[best]; xh.setAttribute('x1',p[0]);xh.setAttribute('x2',p[0]);xd.setAttribute('cx',p[0]);xd.setAttribute('cy',p[1]);
@@ -239,8 +240,9 @@
 })();
 
 /* backtest months: hover, focus or tap shows what the month won or lost */
-(function () {
+window.gteMonthsInit = function () {
   var g = document.querySelector('.mgrid'); if (!g) return;
+  if (window._mtip) window._mtip.remove();
   var out = document.getElementById('mread'), cells = g.querySelectorAll('.m[data-v]'), host = g.parentElement, tip = document.createElement('div');
   tip.className = 'mtip'; if (getComputedStyle(host).position === 'static') host.style.position = 'relative'; host.appendChild(tip);
   function money(v) { return '$' + Math.abs(v).toLocaleString('en-US'); }
@@ -261,5 +263,7 @@
     c.addEventListener('click', function () { show(c, true); });
     c.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(c, true); } });
   });
-  document.addEventListener('click', function (e) { if (!g.contains(e.target)) tip.classList.remove('on'); });
-})();
+  window._mg = g; window._mtip = tip;
+  if (!window._mgBound) { window._mgBound = 1; document.addEventListener('click', function (e) { if (window._mg && window._mtip && !window._mg.contains(e.target)) window._mtip.classList.remove('on'); }); }
+};
+window.gteMonthsInit();

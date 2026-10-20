@@ -135,6 +135,7 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
 <div id="acv" class="acv hide"><div class="acv-h"><b id="acvt"></b><span style="flex:1"></span><button class="b" id="acvx">Close</button></div><iframe id="acvf" title="Customer account view"></iframe></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="../bt-build.js?v=20261020bt1"></script>
 <script>
 const SB_URL = 'https://ekljeyquxvlfbeadgszx.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrbGpleXF1eHZsZmJlYWRnc3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyOTI5MzYsImV4cCI6MjEwNzg2ODkzNn0.SlM13aMEy-mTO_iuPTvZz5l4BO0xZnvPBJKAVnZKVx8'; // public anon key
@@ -159,7 +160,7 @@ function demoClient() {
     {id:'o2',ref:'GTE-5D20B7',kind:'unbind',plan_id:'investor',amount_usd:100,status:'pending',email:'omar@example.com',created_at:iso(-0.5)},
     {id:'o3',ref:'GTE-77F0A1',kind:'renewal',plan_id:'mogul',amount_usd:3600,status:'paid',email:'lee@example.com',created_at:iso(-20),license_key:'GTE-BB92-KT3C-PL7Y'}];
   const P = [{id:'investor',name:'Investor',limit_usd:5000,price_usd:1000,popular:false,active:true,sort:1},{id:'tycoon',name:'Tycoon',limit_usd:10000,price_usd:1900,popular:true,active:true,sort:2},{id:'mogul',name:'Mogul',limit_usd:20000,price_usd:3600,popular:false,active:true,sort:3},{id:'billionaire',name:'Billionaire',limit_usd:null,price_usd:5000,popular:false,active:true,sort:4}];
-  const rpc = async n => n === 'admin_events' ? ({data: demoEvents()}) : n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
+  const rpc = async n => n === 'admin_backtest_list' ? ({data: window._demoBt || []}) : n.startsWith('admin_backtest') ? ({data: null}) : n === 'admin_events' ? ({data: demoEvents()}) : n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_export:{}}[n], error: null});
   const q = t => ({select: () => ({order: async () => ({data: t === 'plans' ? P : []})})});
   return {rpc, from: q, auth: {getSession: async () => ({data: {session: {user: {email: 'demo@admin'}}}}), mfa: {}}};
 }
@@ -250,12 +251,12 @@ async function accountView(id) {
 $('#acvx').onclick = () => { $('#acv').classList.add('hide'); $('#acvf').src = 'about:blank'; };
 
 // ---------- views ----------
-const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['videos', 'Videos'], ['audit', 'Audit log']];
+const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['backtest', 'Backtest'], ['videos', 'Videos'], ['audit', 'Audit log']];
 function render() {
   const waiting = data.orders.filter(o => o.status === 'paid_claimed').length;
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
-  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
+  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, backtest: vBacktest, videos: vVideos, audit: vAudit})[tab]();
   const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw); markTiles();
 }
 const kx = (label, val, sub, color, hot, pre) => `<div class="kpi kx ${hot ? 'hot' : ''}">${label}<b ${color ? `style="color:${color}"` : ''} ${pre ? `data-pre="${pre}"` : ''} data-n="${val}">${val}</b>${sub ? `<span class="mute">${sub}</span>` : ''}</div>`;
@@ -771,6 +772,51 @@ function vSettings() {
     $('#rp').disabled = false;
   };
   $('#exp').onclick = async () => { const j = await call('admin_export'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(j, null, 1)], {type: 'application/json'})); a.download = 'gte-export-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); };
+}
+
+// ---------- Backtest: upload an MT5 report, the website updates by itself ----------
+const BTM = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const btMoney = v => (v < 0 ? '-' : '+') + '$' + Math.abs(Math.round(v)).toLocaleString('en-US');
+function btPreview(r) {
+  const mx = Math.max(...r.years.map(y => y[1]), 1), part = +r.end.slice(5, 7) < 12 || +r.end.slice(8) < 20;
+  return `<div class="grid" style="margin:12px 0">
+    ${kx('Period', r.start.slice(0, 4) + ' to ' + r.end.slice(0, 4), r.start + ' to ' + r.end)}
+    ${kx('Trades', r.trades, 'profit factor ' + r.pf.toFixed(2))}
+    ${kx('Winning trades', r.win_pct1.toFixed(1) + '%', 'average win ' + r.payoff.toFixed(2) + 'x the average loss')}
+    ${kx('Largest drawdown', r.eq_dd_rel.toFixed(1) + '%', 'relative equity')}
+    ${kx('Months positive', r.months_pos + ' of ' + r.months_total, 'start $' + r.deposit.toLocaleString('en-US'))}</div>
+  <div class="row" style="gap:10px;flex-wrap:wrap">${r.years.map(([y, v], i) => `<div class="kpi" style="min-width:120px"><span class="mute">${y}${part && i === r.years.length - 1 ? ' so far' : ''}</span><b style="color:var(--ok,#3fb27f)">+${v}%</b></div>`).join('')}</div>
+  <div class="mute" style="margin-top:10px">Best month ${(m => BTM[m[1] - 1] + ' ' + m[0] + ' ' + btMoney(m[2]))(r.months.reduce((a, b) => b[2] > a[2] ? b : a))} · worst month ${(m => BTM[m[1] - 1] + ' ' + m[0] + ' ' + btMoney(m[2]))(r.months.reduce((a, b) => b[2] < a[2] ? b : a))} · balance ends at $${Math.round(r.final).toLocaleString('en-US')}</div>`;
+}
+async function vBacktest() {
+  $('#view').innerHTML = `<div class="card"><b>Website backtest</b> <span class="mute">the home page shows the report marked Live</span>
+    <p class="mute" style="margin:8px 0 12px">Save your MT5 Strategy Tester report as <b>HTML</b> (right-click the report, Save as Report, HTML), then choose it here. The return by year (2024, 2025, 2026, 2027...), the months grid with amounts, the balance curve and the numbers update by themselves. A new year appears on its own when the report covers it.</p>
+    <div class="row"><input type="file" id="btf" accept=".htm,.html,text/html" style="flex:1;min-width:200px"><input id="btl" placeholder="Name, e.g. v1.08 to Dec 2027" style="flex:1;min-width:200px"></div>
+    <div id="btp"></div></div>
+    <div class="card" style="margin-top:14px"><b>Uploaded reports</b> <span class="mute" id="btc"></span><div id="btlist" class="mute" style="margin-top:8px">Loading...</div></div>`;
+  let draft = null;
+  const drawList = async () => {
+    const L = await call('admin_backtest_list');
+    $('#btc').textContent = L.length ? L.length + ' saved' : '';
+    $('#btlist').innerHTML = L.length ? `<div class="tblw"><table class="tbl"><tr><th>Name</th><th>Period</th><th>Trades</th><th>PF</th><th>Uploaded</th><th></th></tr>${L.map(x => `<tr><td>${esc(x.label || 'Backtest')} ${x.active ? '<span class="pill okk">Live on the website</span>' : ''}</td><td class="mono">${esc(x.start)} to ${esc(x.end)}</td><td>${x.trades}</td><td>${Number(x.pf).toFixed(2)}</td><td>${fmt(x.created_at)}</td><td style="white-space:nowrap">${x.active ? `<button class="b" data-off="${x.id}" title="The website goes back to its built-in numbers">Switch off</button>` : `<button class="b pri" data-on="${x.id}">Make live</button>`} <button class="b dng" data-del="${x.id}">Delete</button></td></tr>`).join('')}</table></div>`
+      : 'Nothing uploaded yet. The website shows its built-in numbers until you upload a report.';
+    $('#btlist').querySelectorAll('[data-on]').forEach(b => b.onclick = async () => { await call('admin_backtest_activate', {p_id: b.dataset.on}); toast('Live on the website now'); drawList(); });
+    $('#btlist').querySelectorAll('[data-off]').forEach(b => b.onclick = async () => { await call('admin_backtest_deactivate'); toast('Website back to its built-in numbers'); drawList(); });
+    $('#btlist').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (!confirm('Delete this report? If it is live, the website goes back to its built-in numbers.')) return; await call('admin_backtest_delete', {p_id: b.dataset.del}); toast('Deleted'); drawList(); });
+  };
+  $('#btf').onchange = async e => {
+    const f = e.target.files[0]; draft = null; $('#btp').innerHTML = '';
+    if (!f) return;
+    try {
+      draft = gteBt.build(await f.arrayBuffer(), '');
+      if (!$('#btl').value) $('#btl').value = (f.name.replace(/\.html?$/i, '').replace(/[_,]+/g, ' ').trim() || 'Backtest').slice(0, 80);
+      $('#btp').innerHTML = `<div style="margin-top:14px"><b>Preview</b> <span class="mute">check it looks right, then publish</span>${btPreview(draft)}
+        <div class="row" style="margin-top:12px"><button class="b pri" id="btpub">Publish to the website</button><button class="b" id="btsave">Save without publishing</button></div></div>`;
+      const go = live => async () => { draft.label = $('#btl').value.trim(); await call('admin_backtest_save', {p_label: draft.label, p_data: draft, p_activate: live}); toast(live ? 'Published: the website now shows this report' : 'Saved'); $('#btp').innerHTML = ''; $('#btf').value = ''; draft = null; drawList(); };
+      $('#btpub').onclick = go(true); $('#btsave').onclick = go(false);
+    } catch (err) { $('#btp').innerHTML = `<div class="msg err" style="margin-top:12px">${esc(err.message || 'Could not read that file.')}</div>`; }
+  };
+  drawList();
 }
 function vVideos() {
   $('#view').innerHTML = `<div class="card"><b>Videos</b> <span class="mute">paste YouTube links; nothing is hosted here</span>
