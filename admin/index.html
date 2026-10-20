@@ -96,6 +96,13 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
 .vz-utm{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}.vz-utm input,.vz-utm select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px;font:inherit}
 .vz-link{margin-top:8px;word-break:break-all;background:var(--panel2);border:1px dashed var(--line);border-radius:8px;padding:9px 11px;font-family:ui-monospace,monospace;font-size:12px}
 .vz-cc{display:inline-block;min-width:26px;padding:1px 5px;margin-right:6px;border-radius:5px;background:var(--panel2);border:1px solid var(--line);font:600 10px/1.5 ui-monospace,monospace;text-align:center;color:var(--mute)}
+
+#view.kclk .kpi.kx,#view.kclk .fr{cursor:pointer}
+#view.kclk .kpi.kx{position:relative}
+#view.kclk .kpi.kx::after{content:"\203A";position:absolute;right:12px;top:8px;color:var(--mute);font-size:20px;line-height:1;transition:transform .2s,color .2s}
+#view.kclk .kpi.kx:hover::after{transform:translateX(3px);color:var(--gold)}
+.kpi.kx.act-on{border-color:var(--gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 28%,transparent)}
+#view.kclk .fr:hover b{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -249,9 +256,46 @@ function render() {
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
   ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, videos: vVideos, audit: vAudit})[tab]();
-  const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw);
+  const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw); markTiles();
 }
 const kx = (label, val, sub, color, hot, pre) => `<div class="kpi kx ${hot ? 'hot' : ''}">${label}<b ${color ? `style="color:${color}"` : ''} ${pre ? `data-pre="${pre}"` : ''} data-n="${val}">${val}</b>${sub ? `<span class="mute">${sub}</span>` : ''}</div>`;
+
+// ---------- clickable summary tiles: a tile opens the list behind its number ----------
+const TILE = {
+  orders: {'To check': 'o:check', 'Started, not paid': 'o:notpaid', 'Money received': 'o:paid', 'Orders in total': 'o:all'},
+  licenses: {'Licenses': 'l:all', 'Active': 'l:active', 'Over plan limit': 'l:over', 'Disabled or expired': 'l:bad'},
+  health: {'Active licenses': 'L:active', 'Online': 'L:online', 'Offline': 'L:offline', 'Over plan limit': 'L:over'},
+  customers: {'People': 'c:all', 'With a license': 'c:license', 'Telegram connected': 'c:telegram'},
+  funnel: {'Sign-ups': 's:all', 'EA downloads': 's:dl', 'Have a license': 's:lic', 'To follow up now': 's:todo'},
+  visitors: {'Visitors today': 'v:Visitors per day', 'Visitors,': 'v:Visitors per day', 'Avg time on a page': 'v:Most viewed pages', 'Left after one page': 'v:Most viewed pages', 'Opened in the app': 'v:App and alerts'}};
+const ROWACT = {'Signed up': 's:all', 'Downloaded the EA': 's:dl', 'Ordered': 's:order', 'Own a license': 's:lic'};
+function tileAct(el) {
+  const m = TILE[tab]; if (!m) return null;
+  const fr = el.closest('.fr'); if (fr && tab === 'funnel') { const n = fr.querySelector('span'); return n ? ROWACT[n.textContent.trim()] || null : null; }
+  const label = el.firstChild ? String(el.firstChild.textContent).trim() : ''; const k = Object.keys(m).find(x => label === x || (x.endsWith(',') && label.startsWith(x)));
+  return k ? m[k] : null;
+}
+function curAct() { return tab === 'orders' ? 'o:' + (window._of2 || 'check') : tab === 'licenses' ? 'l:' + (window._lf || 'all') : tab === 'customers' ? 'c:' + (window._cf || 'all') : tab === 'funnel' ? 's:' + crm.view : ''; }
+function markTiles() {
+  const vw = $('#view'); if (!vw) return; vw.classList.toggle('kclk', !!TILE[tab]); const cur = curAct();
+  vw.querySelectorAll('.kpi.kx').forEach(el => el.classList.toggle('act-on', !!cur && tileAct(el) === cur));
+}
+function jumpTo(el) { if (el) setTimeout(() => el.scrollIntoView({behavior: 'smooth', block: 'start'}), 80); }
+function runAct(a) {
+  const i = a.indexOf(':'), g = a.slice(0, i), v = a.slice(i + 1);
+  if (g === 'o') { window._of2 = v; vOrders(); markTiles(); jumpTo($('#view .tblw')); }
+  else if (g === 'l') { window._lf = v; vLicenses(); markTiles(); jumpTo($('#view .tblw')); }
+  else if (g === 'L') { window._lf = v; tab = 'licenses'; render(); jumpTo($('#view .tblw')); }
+  else if (g === 'c') { window._cf = v; vCustomers(); markTiles(); jumpTo($('#view .tblw')); }
+  else if (g === 's') { crm.view = v; crmDraw(); markTiles(); jumpTo($('#view button.gt') ? $('#view button.gt').parentElement : null); }
+  else if (g === 'v') jumpTo([...document.querySelectorAll('#view .card')].find(c => { const b = c.querySelector('b'); return b && b.textContent.trim().startsWith(v); }));
+}
+(function () {
+  const vw = document.getElementById('view'); if (!vw || vw.dataset.tiles) return; vw.dataset.tiles = '1';
+  const hit = e => { const el = e.target.closest('.kpi.kx, .fr'); const a = el && tileAct(el); if (a) { e.preventDefault(); runAct(a); } };
+  vw.addEventListener('click', hit);
+  vw.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') hit(e); });
+})();
 const countUp = root => root.querySelectorAll('[data-n]').forEach(el => { const to = +el.dataset.n, t0 = performance.now(), pre = el.dataset.pre || ''; (function f(now) { const k = Math.min(1, (now - t0) / 800); el.textContent = pre + Math.round(to * (1 - Math.pow(1 - k, 3))).toLocaleString('en-US'); if (k < 1) requestAnimationFrame(f); })(t0); });
 const seg = (parts, tot) => `<div class="sg">${parts.filter(x => x[1] > 0).map(([n, v, c], i) => `<i style="--w:${v / Math.max(tot, 1) * 100}%;--c:${c};animation-delay:${i * 90}ms" title="${esc(n)}: ${v}"></i>`).join('')}</div><div class="sgl">${parts.map(([n, v, c]) => `<span><u style="background:${c}"></u>${esc(n)} <b>${v}</b></span>`).join('')}</div>`;
 const initial = e => esc(String(e || '?').trim().charAt(0).toUpperCase());
@@ -441,7 +485,7 @@ function vOrders() {
 }
 
 function licFilter(l, f) {
-  return f === 'all' || l.status === f || (f === 'over' && l.over_limit) || (f === 'offline' && l.status === 'active' && l.online === false) || (f === 'online' && l.online);
+  return f === 'all' || (f === 'bad' && (l.status === 'disabled' || l.status === 'expired')) || l.status === f || (f === 'over' && l.over_limit) || (f === 'offline' && l.status === 'active' && l.online === false) || (f === 'online' && l.online);
 }
 function vLicenses() {
   const f = window._lf || 'all', q = (window._lq || '').toLowerCase();
@@ -449,7 +493,7 @@ function vLicenses() {
   const cn = s => data.licenses.filter(l => l.status === s).length, onl = data.licenses.filter(l => l.online).length;
   const head = `<div class="grid" style="margin-bottom:14px">${kx('Licenses', data.licenses.length, cn('unused') + ' not used yet')}${kx('Active', cn('active'), onl + ' online now', 'var(--ok)')}${kx('Over plan limit', data.licenses.filter(l => l.over_limit).length, 'needs a look', 'var(--warn)')}${kx('Disabled or expired', cn('disabled') + cn('expired'), '', 'var(--bad)')}</div><div class="card">${seg([['Active', cn('active'), '#3fb27f'], ['Unused', cn('unused'), '#4f8ff7'], ['Expired', cn('expired'), '#e0a03a'], ['Disabled', cn('disabled'), '#e5534b']], data.licenses.length)}</div>`;
   $('#view').innerHTML = head + `<div class="card"><div class="row"><input id="lq" placeholder="Search key, email, account\" value="${esc(window._lq || '')}" style="flex:1;min-width:200px">
-  <select id="lf">${['all','active','unused','expired','disabled','over','online','offline'].map(x => `<option value="${x}" ${x === f ? 'selected' : ''}>${x === 'over' ? 'over plan limit' : x}</option>`).join('')}</select>
+  <select id="lf">${['all','active','unused','expired','disabled','bad','over','online','offline'].map(x => `<option value="${x}" ${x === f ? 'selected' : ''}>${x === 'over' ? 'over plan limit' : x === 'bad' ? 'disabled or expired' : x}</option>`).join('')}</select>
   <button class="b" id="mk">Create keys</button></div>
   <div class="tblw"><table class="tbl"><tr><th></th><th>Key</th><th>Plan</th><th>Status</th><th>Customer</th><th>Account</th><th>Funded</th><th>Equity</th><th>Expires</th></tr>
   ${rows.map(l => `<tr class="click" data-id="${l.id}"><td><span class="dot ${l.online ? 'on' : l.status === 'active' ? 'off' : ''}"></span></td><td class="mono">${esc(l.key)}</td><td>${esc(planName(l.plan_id))}</td><td>${stPill(l.status)}${l.over_limit ? ' <span class="pill p-bad">over limit</span>' : ''}</td><td>${esc(l.owner_email || '-')}</td><td>${l.bound_account ? esc(l.bound_account) + (l.bound_is_demo ? ' <span class="pill p-info">demo</span>' : '') : '-'}</td><td>${usd(l.funded_usd)}</td><td>${usd(l.equity)}</td><td class="mute">${l.expires_at ? fmt(l.expires_at).slice(0, 10) : '-'}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">No licenses match.</td></tr>'}
@@ -555,7 +599,7 @@ function crmDraw() {
   const buyers = n(st.license_holders), pct = n(st.signups) ? Math.round(buyers / n(st.signups) * 100) : 0;
   const count = f => L.filter(f).length;
   const chips = [['todo', 'To follow up', count(due)], ['all', 'All sign-ups', L.length], ...Object.entries(GRP).map(([k, v]) => [k, v[0], count(l => l.grp === k)]), ['optout', 'Unsubscribed', count(l => l.optout)]];
-  const rows = L.filter(l => (crm.view === 'todo' ? due(l) : crm.view === 'all' ? true : crm.view === 'optout' ? l.optout : l.grp === crm.view) && (!q || (String(l.email) + ' ' + String(l.full_name || '')).toLowerCase().includes(q) || String(l.note).toLowerCase().includes(q)));
+  const rows = L.filter(l => (crm.view === 'todo' ? due(l) : crm.view === 'all' ? true : crm.view === 'optout' ? l.optout : crm.view === 'dl' ? !!l.last_download : crm.view === 'order' ? (l.open_order || l.licenses > 0) : crm.view === 'lic' ? l.licenses > 0 : l.grp === crm.view) && (!q || (String(l.email) + ' ' + String(l.full_name || '')).toLowerCase().includes(q) || String(l.note).toLowerCase().includes(q)));
   const since = st.first_download ? fmt(st.first_download).slice(0, 10) : null;
   const GC = {new: '#4f8ff7', downloaded: '#e0a03a', order_waiting: '#f0c35a', cold: '#8b95a3', key_unused: '#7aa7ff', customer: '#3fb27f', expiring: '#e0a03a', expired: '#e5534b'};
   const dl = L.filter(l => l.last_download).length, od = L.filter(l => l.open_order || l.licenses > 0).length, tot = Math.max(L.length, 1);
@@ -666,10 +710,11 @@ function vHealth() {
   $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openLicense(r.dataset.id));
 }
 function vCustomers() {
-  const q = (window._cq || '').toLowerCase(), rows = data.customers.filter(c => !q || (String(c.email) + ' ' + String(c.full_name || '')).toLowerCase().includes(q));
+  const q = (window._cq || '').toLowerCase(), cf = window._cf || 'all', CFL = {license: 'with a license', telegram: 'Telegram connected'}, rows = data.customers.filter(c => (!q || (String(c.email) + ' ' + String(c.full_name || '')).toLowerCase().includes(q)) && (cf === 'all' || (cf === 'license' ? c.licenses > 0 : cf === 'telegram' ? c.telegram : true)));
   const tg = data.customers.filter(c => c.telegram).length, wl = data.customers.filter(c => c.licenses > 0).length;
   const head = `<div class="grid" style="margin-bottom:14px">${kx('People', data.customers.length)}${kx('With a license', wl, Math.round(wl / Math.max(1, data.customers.length) * 100) + '%', 'var(--ok)')}${kx('Telegram connected', tg, Math.round(tg / Math.max(1, data.customers.length) * 100) + '%', 'var(--info)')}</div>`;
-  $('#view').innerHTML = head + `<div class="card"><div class="row"><input id="cq" placeholder="Search name or email" value="${esc(window._cq || '')}" style="flex:1;min-width:200px"><span class="mute">Click a customer to see everything about them</span></div><div class="tblw"><table class="tbl"><tr><th>Person</th><th>Came from</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${rows.map(c => `<tr class="click" data-u="${esc(c.user_id)}"><td><span class="av" style="--c:${hue(c.email)}">${initial(c.full_name || c.email)}</span>${c.full_name ? '<b>' + esc(c.full_name) + '</b> <span class="mute">' + esc(c.email) + '</span>' : esc(c.email)}</td><td>${c.first_src ? '<span class="pill">' + esc(c.first_src) + '</span>' : '<span class="mute">unknown</span>'}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('') || '<tr><td colspan="5" class="mute">No customers match.</td></tr>'}</table></div></div>`;
+  $('#view').innerHTML = head + `<div class="card"><div class="row"><input id="cq" placeholder="Search name or email" value="${esc(window._cq || '')}" style="flex:1;min-width:200px"><span class="mute">Click a customer to see everything about them</span>${cf !== 'all' ? `<button class="b" id="cfx">Showing only: ${CFL[cf]} &times;</button>` : ''}</div><div class="tblw"><table class="tbl"><tr><th>Person</th><th>Came from</th><th>Joined</th><th>Telegram</th><th>Licenses</th></tr>${rows.map(c => `<tr class="click" data-u="${esc(c.user_id)}"><td><span class="av" style="--c:${hue(c.email)}">${initial(c.full_name || c.email)}</span>${c.full_name ? '<b>' + esc(c.full_name) + '</b> <span class="mute">' + esc(c.email) + '</span>' : esc(c.email)}</td><td>${c.first_src ? '<span class="pill">' + esc(c.first_src) + '</span>' : '<span class="mute">unknown</span>'}</td><td class="mute">${fmt(c.created_at)}</td><td>${c.telegram ? '<span class="pill p-ok">connected</span>' : '<span class="pill p-mute">no</span>'}</td><td>${c.licenses}</td></tr>`).join('') || '<tr><td colspan="5" class="mute">No customers match.</td></tr>'}</table></div></div>`;
+  const cfx = $('#cfx'); if (cfx) cfx.onclick = () => { window._cf = 'all'; vCustomers(); };
   $('#cq').oninput = e => { window._cq = e.target.value; clearTimeout(window._t); window._t = setTimeout(vCustomers, 200); };
   const cq = $('#cq'); cq.focus(); cq.setSelectionRange(cq.value.length, cq.value.length);
   $('#view').querySelectorAll('tr.click').forEach(r => r.onclick = () => openCustomer(r.dataset.u));
