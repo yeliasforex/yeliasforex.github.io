@@ -78,11 +78,11 @@
       + '<svg class="lv-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[m.s] + '</svg></div>'
       + '<div class="lv-main"><div class="lv-eyebrow"><span class="lv-live"></span>Live status</div>'
       + '<h2 class="lv-title" role="status">' + esc(m.title) + '</h2><p class="lv-sub">' + esc(m.sub) + '</p>'
-      + '<div class="lv-meta"><span class="lv-ago">' + (m.ago ? 'Last report ' + esc(m.ago) : 'No report yet') + '</span>' + (st.ea_version ? '<span>EA v' + esc(st.ea_version) + '</span>' : '') + '<span class="lv-chk">Checked just now</span></div>'
+      + '<div class="lv-meta"><span class="lv-ago">' + (m.ago ? 'Last report ' + esc(m.ago) : 'No report yet') + '</span>' + (st.ea_version ? '<span>EA v' + esc(st.ea_version) + '</span>' : '') + (d.upd ? '<a class="lv-up" href="download.html">Update v' + esc(d.upd) + ' available</a>' : '') + '<span class="lv-chk">Checked just now</span></div>'
       + '<svg class="lv-ecg" viewBox="0 0 240 36" preserveAspectRatio="none" aria-hidden="true"><path class="lv-flat" d="M0 18H240"/><path class="lv-base" pathLength="1" d="M0 18H40L48 18L54 6L62 30L68 12L74 18H120L128 18L134 6L142 30L148 12L154 18H200L208 18L214 6L222 30L228 12L234 18H240"/><path class="lv-beat" pathLength="1" d="M0 18H40L48 18L54 6L62 30L68 12L74 18H120L128 18L134 6L142 30L148 12L154 18H200L208 18L214 6L222 30L228 12L234 18H240"/></svg></div>'
       + '<div class="lv-stats"><div><span>Today, closed</span><b style="color:' + d.col(d.today) + '" data-cu="' + d.today + '" data-f="sgn">' + d.sgn(d.today) + '</b></div>'
       + '<div><span>Open trades</span><b class="lv-open">' + esc(openTxt) + '</b></div>'
-      + '<div><span>Equity</span><b' + (st.equity != null ? ' data-cu="' + st.equity + '" data-f="usd"' : '') + '>' + (st.equity != null ? d.usd(st.equity) : '-') + '</b></div></div>'
+      + '<div><span>Floating</span><b style="color:' + (fl == null ? 'inherit' : d.col(fl)) + '">' + (fl == null || !online ? '-' : d.sgn(fl)) + '</b></div></div>'
       + detail(d)
       + '<div class="lv-foot">' + foot(m.s, d) + '</div></section>';
   }

@@ -11,7 +11,7 @@
   const QS = new URLSearchParams(location.search), INJ = QS.has('inject');
   const AS = QS.get('as') || (INJ ? 'inject' : null);      // admin "view as customer" (read-only). inject = the admin panel posts the data in
   let quiet = false, calM = null;                      // quiet = background refresh: no replayed animations
-  const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const REDUCED = window.GTE_REDUCED !== undefined ? window.GTE_REDUCED : (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   // numbers count up from zero: any element with data-cu (target) and data-f (format)
   function countUp(root) {
     const fmt = {usd: v => R.usd(v, 2), sgn: v => R.sgn(v, 2), pct: v => v.toFixed(0) + '%', dec: v => v.toFixed(2), int: v => String(Math.round(v))};
@@ -81,13 +81,65 @@
       catalog: [{code: 'OVER_LIMIT', severity: 'warning', title: 'Deposits above your plan limit', explanation: 'The money deposited on this account is above your plan size. New trades are paused; open trades are still managed and nothing is closed.', solution: 'Upgrade your plan on your account page, or withdraw the excess. Trading resumes by itself within minutes.'},
         {code: 'TELEGRAM_NOT_CONNECTED', severity: 'info', title: 'Telegram not connected', explanation: 'You will not get notifications on Telegram.', solution: 'Open your account page and tap Connect Telegram.'}],
       orders: [], settings: {salesOpen: true, supportUrl: 'https://t.me/GoldTriEngine_Support', botUsername: 'GoldTriEngine_Bot', unbindFeeUsd: 100, toleranceActive: 5, latestVersion: '1.09', downloadUrl: '', releaseNotes: 'Smoother exits and a faster panel.'},
-      notices: [{id: 2, kind: 'update', title: 'New EA version 1.09 is available', body: 'Smoother exits and a faster panel. Download it from your account page, replace the old file and restart MT5.', link: 'download.html', created_at: d(-0.1), read_at: null}, {id: 1, kind: 'license', title: 'Deposits above your plan limit', body: 'New trades are paused until you upgrade or withdraw the excess.', link: null, created_at: d(-2), read_at: d(-1.9)}]};
+      notices: [{id: 2, kind: 'update', title: 'New EA version 1.09 is available', body: 'Smoother exits and a faster panel. Download it from your account page, replace the old file and restart MT5.', link: 'download.html', created_at: d(-0.1), read_at: null}, {id: 1, kind: 'license', title: 'Deposits above your plan limit', body: 'New trades are paused until you upgrade or withdraw the excess.', link: null, created_at: d(-2), read_at: d(-1.9)}, {id: 3, kind: 'offline', title: 'EA offline for 18 minutes', body: 'Check that MT5 is open and Algo Trading is on. Open trades keep their stop loss.', link: null, created_at: d(-0.3), read_at: null}, {id: 4, kind: 'order', title: 'Payment confirmed', body: 'Your Tycoon license key is ready.', link: null, created_at: d(-6), read_at: d(-5.9)}]};
   }
-  function toast(t, err) { const e = document.createElement('div'); e.className = 'msg ' + (err ? 'err' : 'ok'); e.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:99;min-width:260px;max-width:92vw'; e.textContent = t; document.body.appendChild(e); setTimeout(() => e.remove(), 4000); }
+  function toast(t, err) {
+    const e = document.createElement('div'); e.className = 'gt ' + (err ? 'err' : 'ok'); e.setAttribute('role', err ? 'alert' : 'status');
+    e.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (err ? '<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/>' : '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>') + '</svg><span></span>';
+    e.querySelector('span').textContent = t; document.body.appendChild(e);
+    setTimeout(() => { e.classList.add('out'); setTimeout(() => e.remove(), 300); }, err ? 4500 : 2800);
+  }
   const guard = f => async (...a) => { try { await f(...a); } catch (e) { toast(e.message || String(e), true); } };
 
   // ---------- helpers ----------
   const unread = () => (S.notices || []).filter(x => !x.read_at).length;
+  const KI = {
+    update: '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8.5 12.5 12 16l3.5-3.5"/>',
+    offline: '<path d="M2 2l20 20"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5-2.7M19 12.9a10 10 0 0 0-2.4-1.9"/><path d="M12 20h.01"/>',
+    license: '<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/>',
+    order: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    warn: '<path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/>',
+    ok: '<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>'};
+  const svgI = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${KI[k] || KI.info}</svg>`;
+  const sago = d => { const s = (Date.now() - new Date(d)) / 1000; return s < 60 ? 'now' : s < 3600 ? Math.floor(s / 60) + 'm' : s < 86400 ? Math.floor(s / 3600) + 'h' : Math.floor(s / 86400) + 'd'; };
+  function notifRows(list) {
+    if (!list.length) return `<div class="np-empty">${svgI('ok')}<b>You are all caught up</b><span>Important messages appear here.</span></div>`;
+    return list.map(n => {
+      const k = KI[n.kind] ? n.kind : 'info';
+      const act = n.link ? `<a class="btn sm ${n.kind === 'update' ? 'mint' : ''}" href="${esc(n.link)}">${n.kind === 'update' ? 'Download' : 'Open'}</a>`
+        : /^A license key was added/.test(n.title) ? '<a class="btn sm mint" href="#tab=billing" data-go="billing">See your keys</a>' : '';
+      return `<div class="ni ${n.read_at ? '' : 'new'}"><button class="ni-h" type="button" aria-expanded="false"><i class="ni-ic k-${k}">${svgI(k)}</i><span class="ni-t">${esc(n.title)}</span><time>${sago(n.created_at)}</time><u class="ni-dot"></u></button>${n.body || act ? `<div class="ni-b">${n.body ? `<p>${esc(n.body).replace(/\n/g, '<br>')}</p>` : ''}${act}</div>` : ''}</div>`;
+    }).join('');
+  }
+  function paintBell() {
+    const bell = $('#mabell'), bdg = $('#mabdg'); if (!bell) return;
+    if (AS || INJ) { bell.hidden = true; return; }
+    const n = unread(), was = bdg.textContent; bdg.hidden = !n; bdg.textContent = n > 9 ? '9+' : String(n); bell.classList.toggle('has', !!n);
+    if (n && was !== bdg.textContent) { bdg.classList.remove('pop'); void bdg.offsetWidth; bdg.classList.add('pop'); }
+    const np = $('#np'); if (np && !np.hidden) { const l = np.querySelector('.np-list'); if (l) l.innerHTML = notifRows((S.notices || []).slice(0, 8)); }
+  }
+  function initBell() {
+    const bell = $('#mabell'), np = $('#np'), bk = $('#npbk'); if (!bell || !np) return;
+    const close = () => { np.hidden = true; bk.hidden = true; bell.setAttribute('aria-expanded', 'false'); };
+    const open = () => {
+      np.innerHTML = '<div class="np-h"><b>Notifications</b><button class="np-mk" type="button">Mark all read</button></div><div class="np-list"></div><a class="np-f" href="#tab=inbox" data-go="inbox">See all</a>';
+      np.querySelector('.np-list').innerHTML = notifRows((S.notices || []).slice(0, 8));
+      np.hidden = false; bk.hidden = false; bell.setAttribute('aria-expanded', 'true');
+      np.querySelector('.np-mk').onclick = guard(async () => { await markRead(true); });
+      if (unread() && !DEMO) setTimeout(() => { if (!np.hidden) markRead(); }, 1500);
+    };
+    bell.onclick = e => { e.stopPropagation(); np.hidden ? open() : close(); };
+    bk.onclick = close;
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !np.hidden) close(); });
+    document.addEventListener('click', e => {
+      const h = e.target.closest && e.target.closest('.ni-h');
+      if (h) { const it = h.parentElement, o = !it.classList.contains('open'); it.classList.toggle('open', o); h.setAttribute('aria-expanded', o); return; }
+      const go = e.target.closest && e.target.closest('#np [data-go]');
+      if (go) { e.preventDefault(); const tb = $('#subnav a[data-tab="' + go.dataset.go + '"]'); if (tb) tb.click(); close(); window.scrollTo({top: 0, behavior: 'smooth'}); return; }
+      if (!np.hidden && !np.contains(e.target) && !bell.contains(e.target)) close();
+    });
+  }
   const planOf = id => S.plans.find(p => p.id === id) || {name: id};
   const stOf = id => S.statuses.find(s => s.license_id === id) || {};
   const fill = t => String(t || '').replace('{SUPPORT}', S.settings.supportUrl || 'the support link');
@@ -117,16 +169,14 @@
     if (window.gteLive) {
       const lst = stOf(lic.id), lprobs = problems(lic, lst), td = trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()).reduce((a, x) => a + x.profit, 0);
       const fs = DEMO ? new URLSearchParams(location.search).get('state') : null;
-      parts.push(gteLive.html({l: lic, st: lst, today: td, err: lprobs.find(p => (p.severity === 'error' || p.severity === 'warning') && p.code !== 'HEARTBEAT_MISSING') || null, force: fs, offMin: Number(S.settings.offlineMinutes) || 15, beatMin: Number(S.settings.heartbeatMinutes) || 5, at: Date.now(), R, todayTrades: trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()), usd, sgn: R.sgn, col: R.col, fill}));
+      parts.push(gteLive.html({upd: (S.settings.latestVersion && stOf(lic.id).ea_version && lic.status === 'active' && (x => { const p = String(S.settings.latestVersion).split('.').map(Number), q = String(stOf(lic.id).ea_version).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d > 0; } return false; })() ) ? S.settings.latestVersion : null, l: lic, st: lst, today: td, err: lprobs.find(p => (p.severity === 'error' || p.severity === 'warning') && p.code !== 'HEARTBEAT_MISSING') || null, update: null, force: fs, offMin: Number(S.settings.offlineMinutes) || 15, beatMin: Number(S.settings.heartbeatMinutes) || 5, at: Date.now(), R, todayTrades: trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()), usd, sgn: R.sgn, col: R.col, fill}));
     }
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · ${esc(l.key)}</option>`).join('')}</select></div>`);
     const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
-    if (lv && cv && lic.status === 'active' && vc(lv, cv) > 0) parts.push(`<div class="msg" style="border-color:var(--gold);margin-bottom:12px"><b>A new EA version is available: v${esc(lv)}.</b> Your EA reports v${esc(cv)}. ${S.settings.releaseNotes ? esc(S.settings.releaseNotes) + ' ' : ''}<a href="${esc(S.settings.downloadUrl || 'download.html')}">Download the new file</a>, replace the old one in MetaTrader's MQL5 &rarr; Experts folder, and restart MT5. Open trades are not affected.</div>`);
-    const nn = unread();
-    if (nn && tab !== 'inbox') parts.push(`<div class="msg" style="border-color:var(--blue-hi);margin-bottom:12px"><b>You have ${nn} new notification${nn > 1 ? 's' : ''}.</b> ${esc((S.notices.find(x => !x.read_at) || {}).title || '')} <a href="#tab=inbox" data-go="inbox">Open</a></div>`);
+    const updAvail = !!(lv && cv && lic.status === 'active' && vc(lv, cv) > 0);
     parts.push(hero(lic, trades));
     parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}${k === 'inbox' && unread() ? `<span class="nb">${unread()}</span>` : ''}</a>`).join('')}</div><div id="tabbody"></div>`);
-    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount();
+    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount(); paintBell();
     const sel = $('#licSel'); if (sel) sel.onchange = e => { cur = e.target.value; render(); };
     A.querySelectorAll('#subnav a').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.tab; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x === a)); drawTab(lic, trades); });
     drawTab(lic, trades);
@@ -137,6 +187,7 @@
     const days = l.expires_at ? Math.ceil((new Date(l.expires_at) - Date.now()) / 864e5) : null, pct = days == null ? 0 : Math.max(0, Math.min(100, days / 365 * 100));
     const today = trades.filter(t => new Date(t.closed_at).toDateString() === new Date().toDateString()).reduce((a, t) => a + t.profit, 0);
     const week = trades.filter(t => new Date(t.closed_at).getTime() >= Date.now() - 7 * 864e5).reduce((a, t) => a + t.profit, 0);
+    const mon = trades.filter(t => { const d = new Date(t.closed_at), n = new Date(); return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth(); }).reduce((a, t) => a + t.profit, 0);
     const online = l.status === 'active' ? (st.online ? 'on' : 'off') : '';
     const fl = (st.equity != null && st.balance != null) ? st.equity - st.balance : null;
     return `<div class="hero">
@@ -145,11 +196,10 @@
         <div class="eyebrow">EQUITY</div>
         <div class="eqbig"${st.equity != null ? ` data-cu="${st.equity}" data-f="usd"` : ''}>${st.equity != null ? usd(st.equity) : '-'}</div>
         <div class="hint">Balance ${st.balance != null ? usd(st.balance) : '-'}${fl != null ? ' · Floating <b style="color:' + R.col(fl) + '">' + R.sgn(fl) + '</b>' : ''} · ${st.open_positions ?? 0} open position${(st.open_positions ?? 0) === 1 ? '' : 's'}</div>
-        <div class="live"><span class="dot2 ${online}"></span> ${l.status !== 'active' ? 'EA not running' : st.online ? esc(prettyState(st.engine_state)) : 'EA offline'}<span class="hint"> · ${st.last_heartbeat ? 'last report ' + ago(st.last_heartbeat) : 'no report yet'}${st.ea_version ? ' · v' + esc(st.ea_version) : ''}</span></div>
         ${R.spark(R.curve(trades).map(p => p.c), '#3EE09A', 54)}
       </div>
       <div class="hero-r">
-        <div class="tile"><div class="l">Today (closed)</div><div class="v" style="color:${R.col(today)}" data-cu="${today}" data-f="sgn">${R.sgn(today)}</div></div>
+        <div class="tile"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div></div>
         <div class="tile"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div></div>
         <div class="tile"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades</div></div>
         <div class="tile"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2)}</div></div>
@@ -218,9 +268,7 @@
       <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 230, {full: true})}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
   }
   function tInbox() {
-    const list = S.notices || [];
-    return `<div class="panel"><div class="row sp"><div><h2>Notifications</h2><p class="sub" style="margin:0">Important messages about your license, deposits, orders and EA updates. Trade alerts go to Telegram.</p></div></div>
-      ${list.length ? list.map(n => `<div class="nt ${n.read_at ? '' : 'new'}"><div class="row sp"><b>${esc(n.title)}</b><span class="hint">${ago(n.created_at)}</span></div>${n.body ? `<div class="nb2">${esc(n.body).replace(/\n/g, '<br>')}</div>` : ''}${n.link ? `<a class="btn sm" href="${esc(n.link)}" style="margin-top:8px">${n.kind === 'update' ? 'Download the update' : 'Open'}</a>` : ''}${/^A license key was added/.test(n.title) ? '<a class="btn sm mint" href="#tab=billing" data-go="billing" style="margin-top:8px">See your keys</a>' : ''}</div>`).join('') : '<div class="empty">No notifications yet. Important messages appear here.</div>'}</div>`;
+    return `<div class="panel"><div class="row sp"><div><h2>Notifications</h2><p class="sub" style="margin:0">Messages about your license, deposits, orders and updates. Trade alerts go to Telegram.</p></div></div><div class="np-list full">${notifRows(S.notices || [])}</div></div>`;
   }
   function tTrades(l, all) {
     if (!all.length) return `<div class="panel"><h2>Trades</h2><div class="empty">No closed trades yet.</div></div>`;
@@ -267,10 +315,12 @@
     A.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.go; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x.dataset.tab === tab)); drawTab(l, all); });
   }
 
-  async function markRead() {
-    const now = new Date().toISOString();
-    try { const {error} = await c.from('customer_notices').update({read_at: now}).is('read_at', null); if (error) throw error; } catch (e) { return; }
-    setTimeout(() => { (S.notices || []).forEach(n => { if (!n.read_at) n.read_at = now; }); const b = A.querySelector('#subnav [data-tab="inbox"] .nb'); if (b) b.remove(); }, 2500);
+  async function markRead(now) {
+    const stamp = new Date().toISOString();
+    if (DEMO) { (S.notices || []).forEach(n => { n.read_at = n.read_at || stamp; }); paintBell(); return; }
+    try { const {error} = await c.from('customer_notices').update({read_at: stamp}).is('read_at', null); if (error) throw error; } catch (e) { return; }
+    const done = () => { (S.notices || []).forEach(n => { if (!n.read_at) n.read_at = stamp; }); const b = A.querySelector('#subnav [data-tab="inbox"] .nb'); if (b) b.remove(); paintBell(); };
+    if (now) done(); else setTimeout(done, 2500);
   }
   function emptyPanel() { return `<div class="panel"><h2>You don't have a license yet</h2><p class="sub">Choose a plan by the account size you trade. If we sent you a key, add it below.</p><a class="btn mint" href="pricing.html">See plans</a></div>`; }
   function orderPanel(o) {
@@ -405,7 +455,8 @@
   $('#out').onclick = async () => { if (!DEMO) await c.auth.signOut(); location.href = 'index.html'; };
   try { S = await load(); } catch (e) { A.innerHTML = '<div class="msg err">Could not load your account: ' + esc(e.message || e) + '</div>'; return; }
   await render();
-  initAvatar();
+  initAvatar(); initBell(); paintBell();
+  addEventListener('hashchange', () => { const k = (location.hash.match(/tab=(\w+)/) || [])[1]; if (k && k !== tab) { const a = $('#subnav a[data-tab="' + k + '"]'); if (a) a.click(); } });
   (async () => {                                              // first-visit source from the sign-in link (new accounts only; the database ignores everyone else)
     if (DEMO || AS) return;
     try {

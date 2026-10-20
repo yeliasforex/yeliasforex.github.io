@@ -2,7 +2,7 @@
 (function(){
   var d=document, root=d.documentElement;
   root.classList.add('js');
-  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce=(window.GTE_REDUCED!==undefined?window.GTE_REDUCED:(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches));
 
   /* header state */
   var top=d.querySelector('.top');
@@ -172,7 +172,7 @@
 
 /* ---------- progress, host moods, equity crosshair (independent of the console) ---------- */
 (function(){
-  var d=document, reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var d=document, reduce=(window.GTE_REDUCED!==undefined?window.GTE_REDUCED:(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches));
   var pb=d.querySelector('.progress');
   if(pb){var raf=0;function up(){raf=0;var h=d.documentElement.scrollHeight-innerHeight;pb.style.setProperty('--p',h>0?Math.min(1,scrollY/h):0);}
     addEventListener('scroll',function(){if(!raf)raf=requestAnimationFrame(up);},{passive:true});up();}
@@ -223,7 +223,7 @@
 (function(){
   var feed=document.querySelector('.tg-feed'); if(!feed)return;
   var items=feed.querySelectorAll('.tg-msg');
-  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var reduce=(window.GTE_REDUCED!==undefined?window.GTE_REDUCED:(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches));
   function play(){items.forEach(function(m,i){setTimeout(function(){m.classList.add('in');},reduce?0:300+i*650);});}
   if(!('IntersectionObserver' in window)){play();return;}
   var io=new IntersectionObserver(function(es){if(es[0].isIntersecting){play();io.disconnect();}},{threshold:.3});

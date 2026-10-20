@@ -32,8 +32,39 @@
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-install]'); if (b) { e.preventDefault(); window.gteApp.install(); }
   });
+
+  /* ---- installed app only: bottom bar and a one-time welcome ---- */
+  function appUi() {
+    if ((!window.gteApp.standalone && !/[?&]appui=1/.test(location.search)) || window.innerWidth > 760) return;
+    var I = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
+    var items = [['Account', 'my-account.html#tab=overview', I('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'), 'overview'],
+                 ['Results', 'my-account.html#tab=results', I('<path d="M3 17l5-6 4 3 8-9"/><path d="M14 5h6v6"/>'), 'results'],
+                 ['Alerts', 'my-account.html#tab=alerts', I('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'), 'alerts'],
+                 ['Plans', 'pricing.html', I('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/>'), 'plans']];
+    var nav = document.createElement('nav'); nav.className = 'app-tabs'; nav.setAttribute('aria-label', 'App');
+    nav.innerHTML = items.map(function (x) { return '<a href="' + x[1] + '" data-k="' + x[3] + '">' + x[2] + '<span>' + x[0] + '</span></a>'; }).join('') + '<button type="button" class="tab-menu" aria-label="Menu">' + I('<path d="M4 7h16M4 12h16M4 17h16"/>') + '<span>Menu</span></button>';
+    document.body.appendChild(nav); document.documentElement.classList.add('has-tabbar');
+    function mark() {
+      var path = location.pathname.split('/').pop() || 'index.html', h = (location.hash.match(/tab=(\w+)/) || [])[1] || 'overview';
+      nav.querySelectorAll('a').forEach(function (a) { var k = a.dataset.k, on = path === 'pricing.html' ? k === 'plans' : path === 'my-account.html' ? (k === h || (k === 'overview' && ['trades', 'inbox', 'billing', 'overview'].indexOf(h) > -1)) : false; a.classList.toggle('on', on); });
+    }
+    mark(); window.addEventListener('hashchange', mark);
+    nav.querySelector('.tab-menu').onclick = function () { var b = document.querySelector('.menu-btn'); if (b) b.click(); };
+    try { if (!localStorage.getItem('gte_welcome')) setTimeout(welcome, 1200); } catch (e) {}
+  }
+  function welcome() {
+    if (document.getElementById('gte-welcome')) return;
+    var o = document.createElement('div'); o.id = 'gte-welcome'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Welcome');
+    o.innerHTML = '<div class="wl-card"><img src="icon-192.png" alt="" width="56" height="56"><h2>Welcome to GoldTriEngine</h2><p>Three steps to get going:</p>'
+      + '<ol><li><b>Get the EA on your PC.</b> <a href="download.html">Download and set up</a> (MetaTrader 5 on Windows).</li><li><b>Paste your key</b> and attach it to a gold chart. Your status turns green here.</li><li><b>Turn on phone alerts</b> in <a href="my-account.html#tab=alerts">Alerts</a>.</li></ol>'
+      + '<button type="button" class="wl-ok">Got it</button></div>';
+    o.querySelector('.wl-ok').onclick = function () { try { localStorage.setItem('gte_welcome', '1'); } catch (e) {} o.remove(); };
+    o.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { try { localStorage.setItem('gte_welcome', '1'); } catch (e) {} }); });
+    document.body.appendChild(o);
+  }
   document.addEventListener('DOMContentLoaded', function () {
     sync();
+    appUi();
     var m = document.querySelector('[data-os-' + os + ']');
     document.querySelectorAll('.ap-os').forEach(function (t) { t.classList.toggle('on', t.getAttribute('data-os') === os); });
   });

@@ -41,12 +41,13 @@
   gte.planCard = (p, open) => `<article class="plan${p.popular ? ' pop' : ''}" id="plan-${esc(p.id)}">${p.popular ? '<span class="flag">Most popular</span>' : ''}
     <h3>${esc(p.name)}</h3><div class="price">${gte.usd(p.price_usd)}<small> / year</small></div>
     <div class="covers">${p.limit_usd == null ? 'Covers <b>any deposit size</b>' : 'Covers deposits up to <b>' + gte.usd(p.limit_usd) + '</b>'}</div>
-    <ul>${FEATURES.map(f => '<li>' + f + '</li>').join('')}</ul>
+    
     <a class="btn ${p.popular ? 'mint' : 'primary'}${open === false ? ' off' : ''}" href="pricing.html#buy-${esc(p.id)}" data-buy="${esc(p.id)}">${open === false ? 'Opening soon' : 'Get ' + esc(p.name)}</a></article>`;
   gte.renderPlans = async (el, onBuy) => {
     const [plans, st] = await Promise.all([gte.plans(), gte.settings()]);
     const open = st.salesOpen !== false;
     el.innerHTML = plans.map(p => gte.planCard(p, open)).join('');
+    if (!el.previousElementSibling || !el.previousElementSibling.classList.contains('plan-inc')) el.insertAdjacentHTML('beforebegin', '<div class="plan-inc"><b>Every plan includes</b><ul>' + FEATURES.map(f => '<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>' + f + '</li>').join('') + '</ul></div>');
     if (onBuy) el.querySelectorAll('[data-buy]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); onBuy(a.dataset.buy); }));
   };
   gte.buy = async planId => {

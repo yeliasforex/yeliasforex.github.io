@@ -2,7 +2,7 @@
    Only real data is shown (the public account feed and the plan list). Nothing here changes any number. */
 (function () {
   'use strict';
-  const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const REDUCED = window.GTE_REDUCED !== undefined ? window.GTE_REDUCED : (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const FINE = window.matchMedia && matchMedia('(pointer: fine)').matches;
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
   const usd = (n, d) => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString('en-US', {minimumFractionDigits: d === undefined ? 2 : d, maximumFractionDigits: d === undefined ? 2 : d});

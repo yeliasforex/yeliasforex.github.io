@@ -11,6 +11,7 @@
         + '<div class="tog"><span><b>Profile photo</b><br><span class="hint">Shown in the circle at the top of My account.</span></span><span class="row"><button class="btn sm" id="pp-up" type="button">Upload</button><button class="btn sm" id="pp-rm" type="button" hidden>Remove</button></span></div>'
         + '<div class="tog"><span><b>Phone alerts</b><br><span class="hint" id="pa-h">Checking...</span></span><label class="sw"><input type="checkbox" id="pa" disabled><span></span></label></div>'
         + '<div class="row" style="margin:2px 0 8px"><button class="btn sm" id="pa-test" type="button" hidden>Send a test alert</button></div>'
+        + '<div class="tog"><span><b>Animations</b><br><span class="hint" id="mo-h">Auto follows your phone. If animations look switched off, choose On.</span></span><span class="seg3" id="mo"><button type="button" data-m="auto">Auto</button><button type="button" data-m="on">On</button><button type="button" data-m="off">Off</button></span></div>'
         + '<div class="tog"><span><b>Quick unlock</b><br><span class="hint" id="ql-h">Checking...</span></span><label class="sw"><input type="checkbox" id="ql" disabled><span></span></label></div></div>';
     },
     wire: function (rpc, toast, guard) {
@@ -59,7 +60,9 @@
       });
       pt.onclick = guard(async function () { await rpc('push_test'); toast('Test alert sent'); });
       pushState().catch(function () { ph.textContent = 'Could not check alerts on this device.'; });
-      /* ---- quick unlock ---- */
+      var mo = document.getElementById('mo'), cur = 'auto'; try { cur = localStorage.getItem('gte_motion') || 'auto'; } catch (x) {}
+      if (mo) { mo.querySelectorAll('button').forEach(function (b) { b.classList.toggle('on', b.dataset.m === cur); b.onclick = function () { try { if (b.dataset.m === 'auto') localStorage.removeItem('gte_motion'); else localStorage.setItem('gte_motion', b.dataset.m); } catch (x) {} location.reload(); }; }); }
+            /* ---- quick unlock ---- */
       async function lockState() {
         var ok = false;
         try { ok = !!(window.PublicKeyCredential && await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()); } catch (e) {}

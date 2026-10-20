@@ -1,3 +1,17 @@
+/* Animations: Auto follows the phone's setting; On ignores "reduce motion"; Off stops them (saved on this device). */
+(function () {
+  var mo = null; try { mo = localStorage.getItem('gte_motion'); } catch (e) {}
+  var os = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.GTE_REDUCED = mo === 'off' ? true : mo === 'on' ? false : os;
+  var r = document.documentElement; if (mo === 'off') r.classList.add('motion-off');
+  if (mo === 'on' && os) {
+    var strip = function () {
+      try { for (var i = 0; i < document.styleSheets.length; i++) { var sh = document.styleSheets[i], rules; try { rules = sh.cssRules; } catch (e) { continue; }
+        for (var j = rules.length - 1; j >= 0; j--) { var ru = rules[j]; if (ru.type === 4 && /prefers-reduced-motion/.test(ru.conditionText || (ru.media && ru.media.mediaText) || '')) sh.deleteRule(j); } } } catch (e) {}
+    };
+    document.addEventListener('DOMContentLoaded', strip); window.addEventListener('load', strip);
+  }
+})();
 /* Day / night switch. Loaded in <head> so the chosen theme is applied before the page paints (no flash). Day mode is the default until the visitor switches; the choice is remembered. */
 (function () {
   var KEY = 'gte_theme_v2', root = document.documentElement, t = null;
