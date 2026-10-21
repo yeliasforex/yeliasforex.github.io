@@ -75,6 +75,16 @@
     o.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { try { localStorage.setItem('gte_welcome', '1'); } catch (e) {} }); });
     document.body.appendChild(o);
   }
+  /* back to top: a small round button that appears only after scrolling down */
+  document.addEventListener('DOMContentLoaded', function () {
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'totop'; b.setAttribute('aria-label', 'Back to top');
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>';
+    document.body.appendChild(b);
+    var on = false, tk = false;
+    function upd() { tk = false; var s = (window.scrollY || document.documentElement.scrollTop) > 600; if (s !== on) { on = s; b.classList.toggle('show', s); } }
+    window.addEventListener('scroll', function () { if (!tk) { tk = true; requestAnimationFrame(upd); } }, { passive: true }); upd();
+    b.onclick = function () { var r = window.matchMedia('(prefers-reduced-motion: reduce)').matches; window.scrollTo({ top: 0, behavior: r ? 'auto' : 'smooth' }); };
+  });
   document.addEventListener('DOMContentLoaded', function () {
     sync();
     appOnly();

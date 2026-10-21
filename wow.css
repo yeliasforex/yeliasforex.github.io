@@ -651,3 +651,10 @@ html.st-lock{overflow:hidden}
 .mtip{position:absolute;z-index:6;pointer-events:none;padding:6px 10px;border-radius:9px;background:var(--fg);color:var(--panel);font:600 .78rem/1.2 var(--mono);white-space:nowrap;opacity:0;transform:translate(-50%,-6px);transition:opacity .12s}
 .mtip.on{opacity:1}
 @media(max-width:700px){.mgrid .m[data-v]::after{display:none}.mread{font-size:.88rem}}
+
+/* ---- back to top ---- */
+.totop{position:fixed;left:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:70;width:44px;height:44px;border-radius:50%;border:1px solid var(--line-2);background:color-mix(in srgb,var(--panel) 88%,transparent);color:var(--fg);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px rgba(10,20,50,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;transform:translateY(12px) scale(.9);pointer-events:none;transition:opacity .25s,transform .25s,background .2s}
+.totop svg{width:20px;height:20px}
+.totop.show{opacity:1;transform:none;pointer-events:auto}
+.totop:hover{background:var(--gold);color:#1b1405}
+.totop:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
