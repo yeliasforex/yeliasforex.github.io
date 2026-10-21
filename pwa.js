@@ -78,7 +78,7 @@
   /* back to top: a small round button that appears only after scrolling down */
   document.addEventListener('DOMContentLoaded', function () {
     var b = document.createElement('button'); b.type = 'button'; b.className = 'totop'; b.setAttribute('aria-label', 'Back to top');
-    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>';
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg><span>Top</span>';
     document.body.appendChild(b);
     var on = false, tk = false;
     function upd() { tk = false; var s = (window.scrollY || document.documentElement.scrollTop) > 600; if (s !== on) { on = s; b.classList.toggle('show', s); } }

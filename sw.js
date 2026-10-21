@@ -1,7 +1,7 @@
 /* GoldTriEngine app shell.
    Pages: network first (4 s limit), then the saved copy. Versioned files (?v=...) and images: saved copy first, so the app opens fast.
    Live data (Supabase, YouTube) is never saved. */
-const V = 'gte-app-v3';
+const V = 'gte-app-v4';
 const SHELL = ['offline.html', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 const FONTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 self.addEventListener('install', e => {
