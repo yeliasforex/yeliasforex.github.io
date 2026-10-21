@@ -47,6 +47,8 @@
   /* ---- installed app only: bottom bar and a one-time welcome ---- */
   function appUi() {
     if ((!window.gteApp.standalone && !/[?&]appui=1/.test(location.search)) || window.innerWidth > 760) return;
+    try { if (!localStorage.getItem('gte_welcome')) setTimeout(welcome, 1200); } catch (e) {}
+    return;   // no bottom bar: account, results, settings and the menu are all at the top
     var I = function (d) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>'; };
     var items = [['Account', 'my-account.html#tab=overview', I('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'), 'overview'],
                  ['Results', 'my-account.html#tab=results', I('<path d="M3 17l5-6 4 3 8-9"/><path d="M14 5h6v6"/>'), 'results'],
