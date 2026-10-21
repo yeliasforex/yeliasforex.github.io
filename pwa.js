@@ -33,6 +33,17 @@
     var b = e.target.closest && e.target.closest('[data-install]'); if (b) { e.preventDefault(); window.gteApp.install(); }
   });
 
+  /* ---- installed app only: no marketing site, just the account and its related pages ---- */
+  function appOnly() {
+    if (!window.gteApp.standalone && !/[?&]appui=1/.test(location.search)) return;
+    var path = location.pathname.split('/').pop() || 'index.html';
+    if (/^(index\.html|free-backtest\.html|gold-ea-mt5\.html|best-gold-ea-mt5\.html|goldtriengine-review\.html|fusion-markets-ic-markets-gold-ea\.html)$/.test(path) && !/appui=1/.test(location.search)) { location.replace('my-account.html'); return; }
+    var keep = /^(my-account|pricing|guide|faq|download|apps)\.html/;
+    document.querySelectorAll('.nav a').forEach(function (a) { var h = a.getAttribute('href') || ''; if (!keep.test(h) || a.classList.contains('pill')) a.hidden = true; });
+    var br = document.querySelector('.brand'); if (br) br.setAttribute('href', 'my-account.html');
+    var f = document.querySelector('body > footer, footer'); if (f) f.hidden = true;
+  }
+
   /* ---- installed app only: bottom bar and a one-time welcome ---- */
   function appUi() {
     if ((!window.gteApp.standalone && !/[?&]appui=1/.test(location.search)) || window.innerWidth > 760) return;
@@ -64,6 +75,7 @@
   }
   document.addEventListener('DOMContentLoaded', function () {
     sync();
+    appOnly();
     appUi();
     var m = document.querySelector('[data-os-' + os + ']');
     document.querySelectorAll('.ap-os').forEach(function (t) { t.classList.toggle('on', t.getAttribute('data-os') === os); });
