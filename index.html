@@ -119,6 +119,33 @@
 </script>
 <link rel="stylesheet" href="wow.css?v=20261021app5">
 <link rel="stylesheet" href="theme.css?v=20261021app5">
+<link rel="stylesheet" href="chart3d.css?v=20261026gx1">
+<!-- gx-detect --><script>(function(){try{var c=document.createElement("canvas"),g=c.getContext("webgl2")||c.getContext("webgl"),n=navigator,cn=n.connection||{};if(g&&!cn.saveData&&!(n.deviceMemory&&n.deviceMemory<=1)){document.documentElement.classList.add("gx-on");var l=document.createElement("link");l.rel="modulepreload";l.href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";document.head.appendChild(l)}var x=g&&g.getExtension("WEBGL_lose_context");if(x)x.loseContext()}catch(e){}window.gxFallback=function(){document.documentElement.classList.remove("gx-on");requestAnimationFrame(function(){window.dispatchEvent(new Event("resize"));document.querySelectorAll("#hero-classic .rv").forEach(function(e){e.classList.add("in")})})}})()</script><!-- /gx-detect -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
 <script src="theme.js?v=20261021app5"></script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -144,7 +171,80 @@
 <main id="main">
 
 <!-- HERO -->
-<section class="hero">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- GX START: interactive 3D first screen (built by tools/make_prod.py) -->
+<section class="hero gx-first" aria-label="GoldTriEngine, interactive backtest">
+  <div class="wrap" id="gx">
+    <div class="gx-grid">
+      <div class="gx-area-copy"><span class="eyebrow rv"><span class="dot"></span>Gold EA for MT5 · Live 24/5 · AI-hosted</span>
+<h1 class="split" aria-label="A gold trading robot you can watch trade."><span class="w" aria-hidden="true"><span style="--i:0">A</span></span> <span class="w" aria-hidden="true"><span style="--i:1">gold</span></span> <span class="w" aria-hidden="true"><span style="--i:2">trading</span></span> <span class="w" aria-hidden="true"><span style="--i:3">robot</span></span> <span class="w" aria-hidden="true"><span style="--i:4">you</span></span> <span class="w" aria-hidden="true"><span style="--i:5">can</span></span> <span class="w" aria-hidden="true"><span style="--i:6"><em class="s">watch</em></span></span> <span class="w" aria-hidden="true"><span style="--i:7">trade.</span></span></h1>
+<p class="lead rv" style="--d:.12s">GoldTriEngine is an Expert Advisor (EA) for MetaTrader 5 that trades gold (XAUUSD) automatically. Every trade it takes, win or loss, runs live on YouTube, with an AI host explaining it as it happens.</p>
+<div class="btns rv" style="--d:.18s">
+<a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch live on YouTube <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+<a class="btn" href="free-backtest.html">Backtest it free</a>
+</div>
+<div class="hero-meta rv" style="--d:.24s">
+<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Stop loss on every trade</span>
+<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No martingale, no grid</span>
+<span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Public track record</span>
+</div></div>
+      <div class="gx-area-try"><div class="try" id="gx-try">
+      <h4>TRY IT WITH YOUR OWN MONEY <span>simulated backtest · not a promise</span></h4>
+      <div class="row"><label>If you started with</label><span id="gx-chips" style="display:flex;gap:8px;flex-wrap:wrap"></span></div>
+      <p class="fine" id="gx-warn" style="display:none;color:#B45309;margin-top:8px"></p>
+      <div class="row"><label>Travel through</label><button class="play" id="gx-play" aria-label="Play or pause">❚❚</button><input type="range" id="gx-sl" min="0" max="34" step="0.01" value="0" aria-label="Month in the backtest" data-say="Drag me through time. I will comment on the interesting months.|point"><button class="mini" id="gx-spd" title="Speed">1×</button><button class="mini" id="gx-rst" title="Start over">⟲</button></div>
+      <div class="stats"><div class="big"><span>YOUR BALANCE</span><b id="gx-sb">-</b></div><div data-say="The best month so far in the run.|cheer"><span>BEST MONTH SO FAR</span><b id="gx-sbest" style="color:#0F9D63">-</b></div><div data-say="The worst month so far. I never hide these.|concerned"><span>WORST MONTH SO FAR</span><b id="gx-sworst" style="color:#D8393F">-</b></div></div>
+      
+    </div></div>
+      <div class="gx-area-screen"><div class="screen" id="gx-screen">
+    <div class="sc-top"><div class="t">3D BALANCE CHART · SIMULATED<small>Drag to rotate · hover to preview a month · click to travel there</small></div></div>
+    <div class="readout" id="gx-readout"><span class="lab" id="gx-rdLab">NOW</span><span class="m" id="gx-rdM">-</span><span class="bal" id="gx-rdB">-</span><span class="chg" id="gx-rdC"></span><div id="gx-toast"></div></div>
+    <div class="tourline" id="gx-tourline" hidden><span class="tl" id="gx-tlStep">TOUR</span><span class="tt" id="gx-tlTxt"></span><span class="tb"><button id="gx-tNext">Next →</button><button id="gx-tStop">Stop</button></span></div>
+    <div class="hostline" id="gx-hostline" hidden><span class="hl">HOST</span><span id="gx-hlTxt"></span></div>
+    <div class="plot" id="gx-plot"><canvas id="gx-gl" tabindex="0" role="img" aria-label="Interactive 3D chart of the simulated balance, month by month. Drag to rotate, hover to preview a month, press the arrow keys to step."></canvas><div id="gx-axes"></div></div>
+    <div class="sc-foot"><div class="lg"><button id="gx-lgBest"><i style="background:#F0B429"></i><em>Best month </em><span id="gx-lgBestT"></span></button><button id="gx-lgDD"><i style="background:#E5484D"></i><em>Biggest dip </em><span id="gx-lgDDT"></span></button></div><div class="sc-ctrl"><button id="gx-tourBtn" class="tourbtn" title="A short guided tour">▶ Tour</button><button id="gx-zin" title="Zoom in">＋</button><button id="gx-zout" title="Zoom out">－</button><button id="gx-rv" title="Reset view">⌂<span> Reset view</span></button></div></div>
+  </div></div>
+      <div class="gx-area-side"><aside class="side" id="gx-side">
+    <div id="gx-talk"><div id="gx-bub" aria-live="polite"><small><span>YOUR HOST</span><span><button id="gx-vt" title="Let the host speak out loud">🔇 voice off</button></span></small><span id="gx-bt">Hi, I'm the GoldTriEngine host.</span></div><div id="gx-qs"></div></div>
+    <div id="gx-rbw" title="Click me"></div>
+  </aside></div>
+    </div>
+    <div class="strip" id="gx-strip">
+    <div class="yrs" id="gx-yrs"></div>
+    <div id="gx-sPF"><span>PROFIT FACTOR</span><b>-</b></div>
+    <div id="gx-sTR"><span>TRADES</span><b>-</b></div>
+    <div id="gx-sWN"><span>WINNING TRADES</span><b>-</b></div>
+    <div id="gx-sDD"><span>LARGEST DRAWDOWN</span><b>-</b></div>
+    
+  </div>
+    <div class="gx-foot"><p class="fine" id="gx-fine"></p><p class="fine" id="gx-warn" style="display:none;color:#B45309"></p></div>
+  </div>
+</section>
+<!-- GX END -->
+
+<section class="hero" id="hero-classic">
   <div class="wrap hero-grid">
     <div>
       <span class="eyebrow rv"><span class="dot"></span>Gold EA for MT5 · Live 24/5 · AI-hosted</span>
@@ -191,6 +291,21 @@
     </div>
   </div>
 </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <!-- TOPICS BAND -->
 <div class="band" aria-label="What the live stream covers">
@@ -690,7 +805,9 @@
   </div>
 </footer>
 <a class="fab" href="https://t.me/GoldTriEngine_Support" rel="noopener" aria-label="Message GoldTriEngine on Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg><span>Contact us</span></a>
-<script src="site.js?v=20261021app5" defer></script><script src="bt-live.js?v=20261021app5" defer></script>
+<script src="site.js?v=20261021app5" defer></script>
+<script>if(document.documentElement.classList.contains("gx-on")){import("./chart3d.js?v=20261026gx1").catch(function(){window.gxFallback&&window.gxFallback()})}</script>
+<script src="bt-live.js?v=20261021app5" defer></script>
 <script src="app.js?v=20261021app5"></script>
 <script>gte.renderPlans(document.getElementById("homePlans"), id => gte.buy(id));</script>
 <script src="account.js" defer></script>

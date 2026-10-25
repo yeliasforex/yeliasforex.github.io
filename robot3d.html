@@ -1,0 +1,907 @@
+<!doctype html><html><head><meta charset="utf-8"><title>GTE robot</title><style>
+/* The GoldTriEngine host robot, drawn in real time with WebGL: our own 3D humanoid (glossy black helmet with a light
+   line and a face display, white chest plate with the logo, black yoke and waist, white limbs with black pads) with a
+   skeleton - arms move by IK, hands have fingers, legs walk, the display talks and shows emotions.
+   The bot drives it through /state (voice loudness, scene, pose, effects). Test: /?pose=wave&scene=happy&talk=1 */
+html,body{margin:0;background:transparent;overflow:hidden}
+#r{position:absolute;left:0;top:0;width:100vw;height:100vh;transform-origin:35% 95%}
+#gl,#fx{position:absolute;left:0;top:0;width:100vw;height:100vh}
+#fx{pointer-events:none}
+.tele{animation:tele 2.2s ease-in-out 1}
+@keyframes tele{0%{transform:none;filter:none;opacity:1}25%{transform:scaleX(.9);filter:brightness(2.2) saturate(.3);opacity:1}
+ 45%{transform:scaleX(.06) scaleY(1.08);filter:brightness(4);opacity:.5}55%,62%{transform:scaleX(0);opacity:0}
+ 80%{transform:scaleX(.5);filter:brightness(2.5);opacity:.8}100%{transform:none;filter:none;opacity:1}}
+.p{position:absolute;font:900 4vh 'Segoe UI Emoji','Segoe UI',Arial,sans-serif;pointer-events:none;
+ color:#ffd23f;text-shadow:0 .4vh 1vh rgba(0,0,0,.45);animation:rise 1.8s ease-out forwards}
+@keyframes rise{0%{opacity:0;transform:translateY(0) scale(.5)}15%{opacity:1;transform:translateY(-3vh) scale(1.1)}
+ 100%{opacity:0;transform:translateY(-20vh) scale(1)}}
+</style></head><body><div id="r"><canvas id="gl"></canvas></div><canvas id="fx"></canvas><script>
+"use strict";
+const TEST = new URLSearchParams(location.search), SNAP = TEST.has("snap");
+if (TEST.has("bg")) document.documentElement.style.background = "#" + TEST.get("bg");
+// ================================================================= math (column-major 4x4) ========================
+const M = {
+  id() { const m = new Float32Array(16); m[0] = m[5] = m[10] = m[15] = 1; return m; },
+  mul(a, b) { const o = new Float32Array(16);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k]; o[c * 4 + r] = s; }
+    return o; },
+  T(x, y, z) { const m = M.id(); m[12] = x; m[13] = y; m[14] = z; return m; },
+  S(x, y, z) { const m = M.id(); m[0] = x; m[5] = y; m[10] = z; return m; },
+  RX(a) { const m = M.id(), c = Math.cos(a), s = Math.sin(a); m[5] = c; m[6] = s; m[9] = -s; m[10] = c; return m; },
+  RY(a) { const m = M.id(), c = Math.cos(a), s = Math.sin(a); m[0] = c; m[2] = -s; m[8] = s; m[10] = c; return m; },
+  RZ(a) { const m = M.id(), c = Math.cos(a), s = Math.sin(a); m[0] = c; m[1] = s; m[4] = -s; m[5] = c; return m; },
+  persp(fy, asp, n, f) { const t = 1 / Math.tan(fy / 2), m = new Float32Array(16);
+    m[0] = t / asp; m[5] = t; m[10] = (f + n) / (n - f); m[11] = -1; m[14] = 2 * f * n / (n - f); return m; },
+  chain(...ms) { return ms.reduce((a, b) => M.mul(a, b)); },
+  pt(m, v) { return [m[0] * v[0] + m[4] * v[1] + m[8] * v[2] + m[12], m[1] * v[0] + m[5] * v[1] + m[9] * v[2] + m[13],
+                     m[2] * v[0] + m[6] * v[1] + m[10] * v[2] + m[14]]; },
+  dir(m, v) { return [m[0] * v[0] + m[4] * v[1] + m[8] * v[2], m[1] * v[0] + m[5] * v[1] + m[9] * v[2], m[2] * v[0] + m[6] * v[1] + m[10] * v[2]]; },
+  frame(p, x, y, z) { return new Float32Array([x[0], x[1], x[2], 0, y[0], y[1], y[2], 0, z[0], z[1], z[2], 0, p[0], p[1], p[2], 1]); },
+  nmat(m) { const a00 = m[0], a01 = m[4], a02 = m[8], a10 = m[1], a11 = m[5], a12 = m[9], a20 = m[2], a21 = m[6], a22 = m[10];
+    const c00 = a11 * a22 - a12 * a21, c01 = -(a10 * a22 - a12 * a20), c02 = a10 * a21 - a11 * a20;
+    const c10 = -(a01 * a22 - a02 * a21), c11 = a00 * a22 - a02 * a20, c12 = -(a00 * a21 - a01 * a20);
+    const c20 = a01 * a12 - a02 * a11, c21 = -(a00 * a12 - a02 * a10), c22 = a00 * a11 - a01 * a10;
+    const d = a00 * c00 + a01 * c01 + a02 * c02 || 1;
+    return new Float32Array([c00 / d, c10 / d, c20 / d, c01 / d, c11 / d, c21 / d, c02 / d, c12 / d, c22 / d]); }
+};
+const V = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+  mul: (a, k) => [a[0] * k, a[1] * k, a[2] * k], dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
+  len: a => Math.hypot(a[0], a[1], a[2]), norm: a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; },
+  mix: (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t],
+};
+// a frame whose local -Y runs along dir (bones hang along -Y) and local +Z leans toward ref
+function boneFrame(p, dir, ref) {
+  const y = V.norm(V.mul(dir, -1));
+  let z = V.sub(ref, V.mul(y, V.dot(ref, y)));
+  if (V.len(z) < 1e-4) z = Math.abs(y[2]) < .9 ? [0, 0, 1] : [1, 0, 0];
+  z = V.norm(z); const x = V.cross(y, z);
+  return M.frame(p, x, y, z);
+}
+
+// ================================================================= WebGL setup ====================================
+const glc = document.getElementById("gl");
+const gl = glc.getContext("webgl", {alpha: true, antialias: true, premultipliedAlpha: true, preserveDrawingBuffer: TEST.has("snap")});
+gl.getExtension("OES_standard_derivatives");
+const VS = `attribute vec3 aP, aN; attribute vec2 aU;
+uniform mat4 uPV, uM; uniform mat3 uNM;
+varying vec3 vN, vW, vO; varying vec2 vU;
+void main(){ vec4 w = uM * vec4(aP, 1.); vW = w.xyz; vN = uNM * aN; vO = aP; vU = aU; gl_Position = uPV * w; }`;
+const FS = `precision highp float;
+varying vec3 vN, vW, vO; varying vec2 vU;
+uniform vec3 uCol, uEmit, uCam, uGlowCol; uniform float uSpec, uGloss, uEnv, uTex;
+uniform sampler2D uAlb, uGlo; uniform vec4 uRect; uniform float uDis;
+void main(){
+  vec3 N = normalize(vN), Vd = normalize(uCam - vW);
+  if (dot(N, Vd) < 0.) N = -N;
+  vec3 base = uCol, emit = uEmit;
+  if (uTex > .5) {                                      // texture projected from the front (face, logo, screen)
+    vec2 uv = (vO.xy - uRect.xy) / uRect.zw;
+    float inside = step(0., uv.x) * step(uv.x, 1.) * step(0., uv.y) * step(uv.y, 1.);
+    float front = smoothstep(.05, .35, normalize(vO).z) * inside;
+    vec2 tc = vec2(uv.x, 1. - uv.y);
+    vec4 t = texture2D(uAlb, tc);
+    base = mix(base, t.rgb, t.a * front);
+    vec3 gt = texture2D(uGlo, tc).rgb;
+    base *= 1. - min(1., max(gt.r, max(gt.g, gt.b)) * 1.4) * front;
+    emit += gt * front * 1.7;
+  }
+  vec3 L1 = normalize(vec3(-.55, .7, .9)), L2 = normalize(vec3(.85, .2, .45)), L3 = normalize(vec3(.2, .35, -1.));
+  float d1 = max(dot(N, L1), 0.), d2 = max(dot(N, L2), 0.);
+  float s1 = pow(max(dot(N, normalize(L1 + Vd)), 0.), uGloss), s2 = pow(max(dot(N, normalize(L2 + Vd)), 0.), uGloss * .6);
+  float fres = pow(1. - max(dot(N, Vd), 0.), 3.);
+  vec3 R = reflect(-Vd, N);
+  vec3 env = mix(vec3(.03, .035, .05), vec3(.55, .6, .7), smoothstep(-.35, .8, R.y))
+           + vec3(1.) * exp(-pow((R.x + .4) * 3.4, 2.)) * smoothstep(.0, .55, R.y) * 1.1          // tall softbox, left
+           + vec3(.8, .88, 1.) * exp(-pow((R.x - .55) * 5., 2.)) * smoothstep(-.1, .4, R.y) * .6  // strip light, right
+           + vec3(1.) * smoothstep(.82, .97, R.y) * .7;                                              // ceiling light
+  float occ = .72 + .28 * smoothstep(-.8, .6, N.y);
+  vec3 amb = mix(vec3(.08, .085, .1), vec3(.3, .32, .37), N.y * .5 + .5) * occ;
+  vec3 c = base * (amb + d1 * vec3(1., .97, .93) * .9 + d2 * vec3(.6, .7, .95) * .3)
+         + (s1 * .9 + s2 * .35) * uSpec
+         + env * uEnv * (.1 + .9 * fres)
+         + uGlowCol * fres * max(dot(N, L3) + .35, 0.) * .4
+         + emit;
+  if (uDis > 0.) {                                      // teleport: the body breaks into light, cell by cell
+    float n = fract(sin(dot(floor(vW * 70.), vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+    n = mix(n, clamp(vW.y / 2.1, 0., 1.), .35);
+    if (n < uDis) discard;
+    if (n < uDis + .06) c += vec3(.4, .9, 1.) * 1.6;
+  }
+  gl_FragColor = vec4(min(c, vec3(1.)), 1.);
+}`;
+function shader(t, s) { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o);
+  if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(o); return o; }
+const prog = gl.createProgram();
+gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw gl.getProgramInfoLog(prog);
+gl.useProgram(prog);
+const A = {P: gl.getAttribLocation(prog, "aP"), N: gl.getAttribLocation(prog, "aN"), U: gl.getAttribLocation(prog, "aU")};
+const U = {}; ["uPV", "uM", "uNM", "uCol", "uEmit", "uCam", "uGlowCol", "uSpec", "uGloss", "uEnv", "uTex", "uAlb", "uGlo", "uRect", "uDis"]
+  .forEach(n => U[n] = gl.getUniformLocation(prog, n));
+gl.enable(gl.DEPTH_TEST);
+
+// ================================================================= meshes ========================================
+function upload(pos, idx, uv) {
+  // smooth normals, welded by position so seams and poles stay smooth; flipped outward if needed
+  const n = new Float32Array(pos.length), key = new Map(), cen = [0, 0, 0], vc = pos.length / 3;
+  for (let i = 0; i < pos.length; i += 3) { cen[0] += pos[i] / vc; cen[1] += pos[i + 1] / vc; cen[2] += pos[i + 2] / vc; }
+  const acc = {};
+  for (let i = 0; i < idx.length; i += 3) {
+    const a = idx[i] * 3, b = idx[i + 1] * 3, c = idx[i + 2] * 3;
+    const e1 = [pos[b] - pos[a], pos[b + 1] - pos[a + 1], pos[b + 2] - pos[a + 2]], e2 = [pos[c] - pos[a], pos[c + 1] - pos[a + 1], pos[c + 2] - pos[a + 2]];
+    const f = V.cross(e1, e2);
+    for (const v of [a, b, c]) { const k = pos[v].toFixed(4) + "," + pos[v + 1].toFixed(4) + "," + pos[v + 2].toFixed(4);
+      const s = acc[k] || (acc[k] = [0, 0, 0]); s[0] += f[0]; s[1] += f[1]; s[2] += f[2]; }
+  }
+  let out = 0;
+  for (let v = 0; v < pos.length; v += 3) { const k = pos[v].toFixed(4) + "," + pos[v + 1].toFixed(4) + "," + pos[v + 2].toFixed(4);
+    const s = V.norm(acc[k] || [0, 1, 0]); n[v] = s[0]; n[v + 1] = s[1]; n[v + 2] = s[2];
+    out += V.dot(s, [pos[v] - cen[0], pos[v + 1] - cen[1], pos[v + 2] - cen[2]]); }
+  if (out < 0) for (let i = 0; i < n.length; i++) n[i] = -n[i];
+  const mk = (data, type) => { const b = gl.createBuffer(); gl.bindBuffer(type, b); gl.bufferData(type, data, gl.STATIC_DRAW); return b; };
+  return {p: mk(new Float32Array(pos), gl.ARRAY_BUFFER), n: mk(n, gl.ARRAY_BUFFER), u: mk(new Float32Array(uv), gl.ARRAY_BUFFER),
+          i: mk(new Uint16Array(idx), gl.ELEMENT_ARRAY_BUFFER), count: idx.length};
+}
+function grid(nu, nv, f) {
+  const pos = [], uv = [], idx = [];
+  for (let j = 0; j <= nv; j++) for (let i = 0; i <= nu; i++) { pos.push(...f(i / nu, j / nv)); uv.push(i / nu, j / nv); }
+  for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) { const a = j * (nu + 1) + i, b = a + 1, c = a + nu + 1, d = c + 1; idx.push(a, c, b, b, c, d); }
+  return upload(pos, idx, uv);
+}
+const sp = (x, p) => Math.sign(x) * Math.pow(Math.abs(x), p);
+const MESH = {};
+MESH.sphere = grid(28, 18, (u, v) => { const t = u * 6.2832, p = v * Math.PI; return [Math.sin(p) * Math.sin(t), Math.cos(p), Math.sin(p) * Math.cos(t)]; });
+function superE(e) { return grid(28, 20, (u, v) => { const t = u * 6.2832 - Math.PI, p = v * Math.PI;
+  return [sp(Math.sin(p), e) * sp(Math.sin(t), e), sp(Math.cos(p), e), sp(Math.sin(p), e) * sp(Math.cos(t), e)]; }); }
+MESH.chest = grid(32, 24, (u, v) => { const t = u * 6.2832 - Math.PI, p = v * Math.PI, e = .42;   // sculpted chest
+  let x = sp(Math.sin(p), e) * sp(Math.sin(t), e), y = sp(Math.cos(p), e), z = sp(Math.sin(p), e) * sp(Math.cos(t), e);
+  const k = (y + 1) / 2; x *= .74 + .26 * k; z *= .86 + .14 * k;
+  z += .1 * Math.max(0, z) * Math.exp(-(((Math.abs(x) - .42) / .32) ** 2) - ((y - .2) / .4) ** 2);
+  return [x, y, z]; });
+MESH.box = superE(.25); MESH.rbox = superE(.5); MESH.soft = superE(.75);
+MESH.torus = grid(32, 10, (u, v) => { const t = u * 6.2832, p = v * 6.2832, R = 1, r = .16;
+  return [(R + r * Math.cos(p)) * Math.cos(t), r * Math.sin(p), (R + r * Math.cos(p)) * Math.sin(t)]; });
+const capCache = {};
+function capsule(r1, r2, len) {            // tapered capsule from y=0 down to y=-len (limbs, fingers)
+  const k = [r1, r2, len].join(); if (capCache[k]) return capCache[k];
+  const prof = [];
+  for (let i = 0; i <= 6; i++) { const a = i / 6 * Math.PI / 2; prof.push([r1 * Math.sin(a), r1 * Math.cos(a)]); }
+  for (let i = 1; i <= 4; i++) { const t = i / 5; prof.push([r1 + (r2 - r1) * t, -len * t]); }
+  for (let i = 0; i <= 6; i++) { const a = i / 6 * Math.PI / 2; prof.push([r2 * Math.cos(a), -len - r2 * Math.sin(a)]); }
+  return capCache[k] = grid(20, prof.length - 1, (u, v) => { const j = Math.round(v * (prof.length - 1)), t = u * 6.2832;
+    return [prof[j][0] * Math.sin(t), prof[j][1], prof[j][0] * Math.cos(t)]; });
+}
+// the head: a smooth humanoid helmet (egg-shaped, narrow chin, flat face area) - a glossy black display in front
+function headShape(t, p) {
+  // correction sheet: lower, wider dome; the face (a smooth domed lens) hangs lower at the front like a mask, so the
+  // chin sits low and forward; the jaw edge rises diagonally from the chin back up to the neck (a V from side and front)
+  let x = Math.sin(p) * Math.sin(t), y = Math.cos(p), z = Math.sin(p) * Math.cos(t);
+  if (y > 0) y *= .9;
+  if (y < 0 && z > 0) y -= .45 * z * Math.min(1, -y * 1.4);          // the face reaches down: low chin
+  const k = Math.min(1.1, (1 - y) / 2); x *= 1.03 - .4 * k * k;        // tapering toward the chin
+  z *= z > 0 ? .98 : 1.1;
+  const jaw = Math.min(-.5, -1.12 + (.75 - z) * .75);                  // jaw plane: chin low, rising back to the neck (the skull back stays round)
+  if (y < jaw) y = jaw;
+  return [x, y, z];
+}
+MESH.head = grid(80, 60, (u, v) => headShape(u * 6.2832 - Math.PI, v * Math.PI));
+// the LED line: down both sides of the face plate from the temples, joining under the chin (a thin glowing tube)
+const LEDK = [[0, -.95, 0], [.12, -.9, .5], [.25, -.75, 1.0], [.38, -.55, 1.4], [.5, -.3, 1.8], [.62, -.1, 1.78], [.75, .28, 1.58], [.88, .6, 1.28], [1, .82, .85]];   // [q, y, azimuth]: top of the dome, down the side, along the jaw edge to the chin
+function ledAz(yy) { const K = LEDK; if (yy <= K[0][1]) return 0;
+  for (let i = 0; i < K.length - 1; i++) if (yy <= K[i + 1][1]) return K[i][2] + (K[i + 1][2] - K[i][2]) * (yy - K[i][1]) / (K[i + 1][1] - K[i][1]);
+  return K[K.length - 1][2]; }
+// the matte rear casing: everything behind the LED line (the gloss visor stays in front)
+MESH.headBack = grid(72, 44, (u, v) => { const yy = .82 - v * 1.8, a0 = ledAz(yy), az = a0 + u * (6.2832 - 2 * a0);
+  return V.mul(headShape(az, Math.acos(Math.max(-1, Math.min(1, yy)))), 1.007); });
+MESH.led = (function () {
+  const K = LEDK;
+  const at = u => { const q = Math.abs(2 * u - 1), sg = Math.sign(2 * u - 1) || 1;
+    let i = 0; while (i < K.length - 2 && q > K[i + 1][0]) i++;
+    const f = (q - K[i][0]) / (K[i + 1][0] - K[i][0]), e = f * f * (3 - 2 * f);
+    const yy = K[i][1] + (K[i + 1][1] - K[i][1]) * e, az = sg * (K[i][2] + (K[i + 1][2] - K[i][2]) * e);
+    return V.mul(headShape(az, Math.acos(Math.max(-1, Math.min(1, yy)))), 1.015); };
+  return grid(90, 8, (u, v) => {
+    const P = at(u), T = V.norm(V.sub(at(Math.min(1, u + .004)), at(Math.max(0, u - .004)))), N0 = V.norm(P), B = V.norm(V.cross(T, N0));
+    const a = v * 6.2832, r = .018; return V.add(P, V.add(V.mul(N0, Math.cos(a) * r), V.mul(B, Math.sin(a) * r)));
+  });
+})();
+// chest plate: compound-curved - a V-notch at the top centre, two soft pec curves with a centre valley, the lower
+// edge chamfered and narrowing (it covers the upper chest; the waist below is exposed mechanics)
+MESH.plate = grid(56, 40, (u, v) => { const t = u * 6.2832 - Math.PI, p = v * Math.PI, e = .26;
+  let x = sp(Math.sin(p), e) * sp(Math.sin(t), e), y = sp(Math.cos(p), e), z = sp(Math.sin(p), e) * sp(Math.cos(t), e);
+  if (y > .5) { const n = Math.max(0, .32 - Math.abs(x)) / .32; y -= n * n * .5 * (y - .5); }
+  if (z > 0) { z *= .78; z += .2 * z * Math.exp(-(((Math.abs(x) - .45) / .34) ** 2) - ((y - .15) / .5) ** 2) - .05 * z * Math.exp(-((x / .12) ** 2)); }
+  if (y < -.3) { const q = (-.3 - y) / .7; x *= 1 - .2 * q; if (z > 0) z *= 1 - .35 * q * q; }
+  return [x, y, z]; });
+
+// ================================================================= textures (face, logo, tablet) =================
+function canvasTex(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return {c, x: c.getContext("2d"), t, push() { gl.bindTexture(gl.TEXTURE_2D, t); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c); }}; }
+const BLANK = canvasTex(4, 4); BLANK.push();
+const FACE = canvasTex(512, 512), FGLOW = canvasTex(512, 512);
+const FR = [-1, -1, 2, 2];                      // part of the head (object space) the face picture covers
+const fxp = x => (x - FR[0]) / FR[2] * 512, fyp = y => (1 - (y - FR[1]) / FR[3]) * 512;
+// The face display: big, bold expressions that viewers notice. Each mood has its own eyes and mouth (hearts to
+// greet, ^ ^ happy, $ $ on a win, stars for a tip, > < laughing, O O surprised, a scanner bar when it reads the chart,
+// sharp eyes for a warning, sad eyes for a loss, eyes looking up when it thinks). Drawn bright with a glow, then an
+// LED grid over it (so it looks like a real display behind the glass); moods cross-fade.
+const FACE_MODE = {welcome: "love", goodbye: "happy", happy: "happy", win: "money", tip: "star", surprised: "wow", question: "question",
+  focused: "focus", warning: "concern", danger: "concern", loss: "sad", rest: "normal", explain: "normal", trade: "normal"};
+let faceMode = "normal", prevMode = "normal", modeAt = -1e9;
+function drawFace(F, glow, now, mode) {
+  if (mode !== faceMode) { prevMode = faceMode; faceMode = mode; modeAt = now; }
+  const g = FGLOW.x, fade = Math.min(1, (now - modeAt) / 250);
+  g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.fillStyle = "#000"; g.fillRect(0, 0, 512, 512);
+  if (fade < 1) { g.globalAlpha = 1 - fade; paintFace(g, F, glow, now, prevMode); }
+  g.globalAlpha = fade; paintFace(g, F, glow, now, faceMode); g.globalAlpha = 1;
+  g.fillStyle = "rgba(0,0,0,.42)";                                   // the LED grid
+  for (let i = 0; i < 512; i += 6) { g.fillRect(i, 0, 1.6, 512); g.fillRect(0, i, 512, 1.6); }
+  FGLOW.push();
+}
+function paintFace(g, F, glow, now, mode) {
+  const ex = [174, 338], ey = 222, cl = Math.max(0, 1 - F.blink), lx = F.lx * 13, ly = F.ly * 9, talk = F.open > .08;
+  const col = mode === "money" ? "#ffd23f" : mode === "love" ? "#ff5c8a" : mode === "star" ? "#ffe066" : glow;
+  g.save(); g.lineCap = g.lineJoin = "round"; g.shadowColor = col; g.shadowBlur = 22; g.fillStyle = g.strokeStyle = col;
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x - w + r, y - h); g.arcTo(x + w, y - h, x + w, y + h, r); g.arcTo(x + w, y + h, x - w, y + h, r);
+    g.arcTo(x - w, y + h, x - w, y - h, r); g.arcTo(x - w, y - h, x + w, y - h, r); g.closePath(); };
+  const pupil = (x, y, r) => { g.save(); g.shadowBlur = 0; g.fillStyle = "#000"; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
+    g.fillStyle = "#fff"; g.beginPath(); g.arc(x - r * .35, y - r * .4, r * .32, 0, 7); g.fill(); g.restore(); };
+  const heart = (x, y, r) => { g.beginPath(); g.moveTo(x, y + r * .9); g.bezierCurveTo(x - r * 1.5, y - r * .1, x - r * .9, y - r * 1.2, x, y - r * .45);
+    g.bezierCurveTo(x + r * .9, y - r * 1.2, x + r * 1.5, y - r * .1, x, y + r * .9); g.fill(); };
+  const star = (x, y, r) => { g.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, q = i % 2 ? r * .42 : r; g.lineTo(x + Math.cos(a) * q, y + Math.sin(a) * q); } g.closePath(); g.fill(); };
+  const pulse = 1 + .06 * Math.sin(now / 160);
+  // ---- eyes ----
+  ex.forEach((x, i) => { const s = i ? 1 : -1;
+    g.save(); g.translate(x, ey); g.scale(.8, .8); g.translate(-x, -ey);
+    if (mode === "love") heart(x, ey, 40 * pulse);
+    else if (mode === "happy") { g.lineWidth = 17; g.beginPath(); g.arc(x, ey + 18, 36, Math.PI * 1.12, Math.PI * 1.88); g.stroke(); }
+    else if (mode === "money") { g.font = "900 118px Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("$", x, ey + 4); }
+    else if (mode === "star") { g.save(); g.translate(x, ey); g.rotate(now / 900 * s); star(0, 0, 46 * pulse); g.restore(); }
+    else if (mode === "laugh") { g.lineWidth = 16; g.beginPath(); g.moveTo(x + s * 32, ey - 28); g.lineTo(x - s * 22, ey); g.lineTo(x + s * 32, ey + 28); g.stroke(); }
+    else if (mode === "wow") { g.lineWidth = 13; g.beginPath(); g.arc(x, ey, 44, 0, 7); g.stroke(); g.beginPath(); g.arc(x + lx * .4, ey + ly * .4, 13, 0, 7); g.fill(); }
+    else if (mode === "angry") { g.beginPath(); g.moveTo(x - 44, ey - 26 + (s > 0 ? 22 : 0)); g.lineTo(x + 44, ey - 26 + (s > 0 ? 0 : 22)); g.lineTo(x + 40, ey + 26 * cl); g.lineTo(x - 40, ey + 26 * cl); g.closePath(); g.fill();
+      pupil(x + lx * .5, ey + 4, 11); }
+    else if (mode === "sad") { g.beginPath(); g.moveTo(x - 42, ey - 4 + (s > 0 ? -14 : 8)); g.lineTo(x + 42, ey - 4 + (s > 0 ? 8 : -14)); g.lineTo(x + 34, ey + 30 * cl); g.lineTo(x - 34, ey + 30 * cl); g.closePath(); g.fill();
+      pupil(x + lx * .4, ey + 14, 11);
+      if (s > 0) { const tk = (now / 2200) % 1; g.fillStyle = "#7cc8ff"; g.shadowColor = "#7cc8ff"; g.beginPath(); g.ellipse(x + 22, ey + 44 + tk * 70, 7, 11, 0, 0, 7); g.fill(); g.fillStyle = col; g.shadowColor = col; } }
+    else if (mode === "think") { rr(x, ey, 42, 32 * cl * .55 + 2, 14); g.fill(); pupil(x + 18, ey - 8 * cl, 10); }
+    else if (mode === "question") { rr(x, ey - (s > 0 ? 10 : 0), 42, 34 * cl * (s > 0 ? 1.1 : .8) + 2, 26); g.fill(); pupil(x + lx, ey + ly - (s > 0 ? 10 : 0), 13); }
+    else if (mode === "concern") {                         // caring / worried: inner brows up, softer eyes, pupils up
+      g.beginPath(); g.moveTo(x - 42, ey - 20 + (s > 0 ? 8 : -6)); g.lineTo(x + 42, ey - 20 + (s > 0 ? -6 : 8)); g.lineTo(x + 38, ey + 26 * cl); g.lineTo(x - 38, ey + 26 * cl); g.closePath(); g.fill();
+      if (cl > .3) pupil(x + lx * .5, ey + 2, 13); }
+    else if (mode === "focus") { rr(x, ey + 6, 44, 24 * cl + 2, 20); g.fill(); if (cl > .3) pupil(x + lx + 10, ey + 6 + ly * .5, 13); }   // narrowed, on the chart
+    else if (mode !== "scan") { rr(x, ey, 44, 36 * cl + 2, 28); g.fill(); if (cl > .3) pupil(x + lx, ey + ly, 15); }
+    g.restore();
+  });
+  if (mode === "scan") {                                             // one visor bar with a light sweeping along it
+    rr(256, ey, 140, 22, 18); g.globalAlpha *= .55; g.fill(); g.globalAlpha /= .55;
+    const sx = 256 + Math.sin(now / 260) * 115; g.shadowBlur = 30; g.beginPath(); g.ellipse(sx, ey, 30, 17, 0, 0, 7); g.fill();
+  }
+  if (mode === "love" || mode === "happy") {                          // blush marks on the cheeks
+    g.lineWidth = 6; g.globalAlpha *= .8; [-1, 1].forEach(s => { for (let i = 0; i < 3; i++) { const x = 256 + s * 120 + i * 14 - 14; g.beginPath(); g.moveTo(x + 6, 284); g.lineTo(x - 6, 302); g.stroke(); } }); g.globalAlpha /= .8;
+  }
+  if (mode === "question") { g.font = "900 64px Arial"; g.textAlign = "center"; g.fillText("?", 420, 140); }
+  // ---- mouth ----
+  const mx = 256, my = 362, op = Math.min(1, F.open);
+  if (talk) {                                                         // talking: an open mouth that follows the voice
+    const w = mode === "wow" ? 34 : mode === "happy" || mode === "love" || mode === "money" || mode === "star" ? 74 : 62, h = 12 + op * 52;
+    if (mode === "happy" || mode === "love" || mode === "money" || mode === "star" || mode === "laugh") {
+      g.beginPath(); g.moveTo(mx - w, my - 8); g.lineTo(mx + w, my - 8); g.quadraticCurveTo(mx + w, my + h * 1.1, mx, my + h * 1.1); g.quadraticCurveTo(mx - w, my + h * 1.1, mx - w, my - 8); g.fill();
+    } else { g.beginPath(); g.ellipse(mx, my + h * .3, w * (.75 + .25 * (1 - op)), h * .6, 0, 0, 7); g.fill(); }
+    g.save(); g.shadowBlur = 0; g.fillStyle = "rgba(0,0,0,.55)"; g.beginPath(); g.ellipse(mx, my + h * .45, w * .55, h * .32, 0, 0, 7); g.fill(); g.restore();
+  } else if (mode === "laugh") {
+    const h = 34 + 14 * Math.abs(Math.sin(now / 110));
+    g.beginPath(); g.moveTo(mx - 76, my - 10); g.lineTo(mx + 76, my - 10); g.quadraticCurveTo(mx + 76, my + h, mx, my + h); g.quadraticCurveTo(mx - 76, my + h, mx - 76, my - 10); g.fill();
+  } else if (mode === "wow") { g.lineWidth = 12; g.beginPath(); g.ellipse(mx, my + 8, 24, 30, 0, 0, 7); g.stroke(); }
+  else if (mode === "happy" || mode === "love" || mode === "money" || mode === "star") {
+    g.beginPath(); g.moveTo(mx - 72, my - 14); g.quadraticCurveTo(mx, my + 66, mx + 72, my - 14); g.quadraticCurveTo(mx, my + 26, mx - 72, my - 14); g.fill(); }
+  else if (mode === "sad") { g.lineWidth = 12; g.beginPath(); g.moveTo(mx - 52, my + 24); g.quadraticCurveTo(mx, my - 22, mx + 52, my + 24); g.stroke(); }
+  else if (mode === "angry") { g.lineWidth = 12; g.beginPath(); g.moveTo(mx - 50, my + 10); g.lineTo(mx + 50, my + 2); g.stroke(); }
+  else if (mode === "concern") { g.lineWidth = 11; g.beginPath(); g.moveTo(mx - 42, my + 12); g.quadraticCurveTo(mx, my - 4, mx + 42, my + 12); g.stroke(); }
+  else if (mode === "think") { g.lineWidth = 10; g.beginPath(); for (let i = 0; i <= 20; i++) { const x = mx - 44 + i * 4.4; g.lineTo(x, my + 6 + Math.sin(i / 20 * Math.PI * 3 + now / 300) * 7); } g.stroke(); }
+  else if (mode === "scan") { g.lineWidth = 9; g.beginPath(); g.moveTo(mx - 40, my + 4); g.lineTo(mx + 40, my + 4); g.stroke(); }
+  else { const sm = Math.max(-.5, F.smile); g.lineWidth = 12; g.beginPath(); g.moveTo(mx - 56, my - sm * 16); g.quadraticCurveTo(mx, my + sm * 46, mx + 56, my - sm * 16); g.stroke(); }
+  g.restore();
+}
+// chest plate: the GoldTriEngine logo
+const LOGO = canvasTex(512, 512), LOGOG = canvasTex(4, 4); LOGOG.push();
+(function () {
+  const a = LOGO.x, cx = 256, cy = 168; a.clearRect(0, 0, 512, 512);
+  const tri = (x, h, w) => { a.beginPath(); a.moveTo(x, cy + 24 - h); a.lineTo(x - w, cy + 24); a.lineTo(x + w, cy + 24); a.closePath(); a.fill(); };
+  a.fillStyle = "#1f4fd6"; tri(cx - 27, 36, 15); tri(cx + 27, 36, 15);
+  a.fillStyle = "#1fae5c"; a.beginPath(); a.moveTo(cx, cy - 34); a.lineTo(cx + 13, cy - 17); a.lineTo(cx + 13, cy + 24); a.lineTo(cx - 13, cy + 24); a.lineTo(cx - 13, cy - 17); a.closePath(); a.fill();
+  a.fillRect(cx - 1.5, cy - 44, 3, 11); a.fillRect(cx - 1.5, cy + 23, 3, 8);
+  a.fillStyle = "#222a36"; a.font = "500 26px 'Segoe UI', Arial, sans-serif"; a.textAlign = "center";
+  if (a.letterSpacing !== undefined) a.letterSpacing = "9px";
+  a.fillText("GOLDTRIENGINE", cx + 4, cy + 68);
+  LOGO.push();
+})();
+const TAB = canvasTex(256, 192), TABG = canvasTex(256, 192);
+function drawTablet(label) {
+  const a = TAB.x, g = TABG.x; a.fillStyle = "#05070c"; a.fillRect(0, 0, 256, 192); g.fillStyle = "#000"; g.fillRect(0, 0, 256, 192);
+  g.fillStyle = "rgba(10,30,60,1)"; g.fillRect(8, 8, 240, 176);
+  const down = label === "SELL";                                   // the candles lean the way of the trade
+  let p = down ? 70 : 120; for (let i = 0; i < 16; i++) { const o = p, c = p + (Math.sin(i * 1.7) * 14 + (down ? 4 : -4) + (i > 9 ? (down ? 6 : -6) : 0)); const up = c < o;
+    g.fillStyle = up ? "#30e080" : "#ff5060"; g.fillRect(16 + i * 14, Math.min(o, c), 9, Math.max(3, Math.abs(c - o)));
+    g.fillRect(19 + i * 14, Math.min(o, c) - 8, 3, Math.abs(c - o) + 16); p = c; }
+  if (label) { g.fillStyle = down ? "#ff4d5e" : "#30e080"; g.fillRect(146, 16, 96, 38); g.fillStyle = down ? "#2a0006" : "#001a08";
+    g.font = "800 27px Arial"; g.textAlign = "center"; g.fillText(label, 194, 45); }
+  TAB.push(); TABG.push();
+}
+drawTablet("");
+
+// ================================================================= materials & drawing ============================
+let glowCol = [.25, .55, 1.0];
+const MAT = {
+  white: {col: [.86, .87, .88], spec: .75, gloss: 55, env: .32},     // high-gloss white armour
+  metal: {col: [.55, .57, .61], spec: 1.1, gloss: 80, env: .85},    // metallic joint actuators
+  black: {col: [.018, .02, .025], spec: 1.2, gloss: 110, env: .75},  // glossy black
+  helmet: {col: [.01, .012, .016], spec: 0, gloss: 160, env: 1.},     // piano-black head glass (shine from env, no white light spots)
+  mech: {col: [.1, .105, .12], spec: .7, gloss: 50, env: .4},        // dark metal parts
+  matte: {col: [.035, .037, .042], spec: .25, gloss: 18, env: .1},   // matte black neck collar
+  seam: {col: [.25, .26, .28], spec: .2, gloss: 10, env: .05},
+  glow: {col: [0, 0, 0], spec: 0, gloss: 1, env: 0, emit: 1.35},
+};
+let PV = M.id(), CAM = [0, 0, 5], DIS = 0;
+const A3 = {};                                           // world points for the 3D effects (feet, chest, eyes)
+const draws = [];
+function part(base, mesh, mat, t, s, r, tex) {
+  let m = M.mul(base, M.T(t[0], t[1], t[2]));
+  if (r) m = M.chain(m, M.RY(r[1] || 0), M.RX(r[0] || 0), M.RZ(r[2] || 0));
+  if (s) m = M.mul(m, M.S(s[0], s[1], s[2]));
+  draws.push({m, mesh, mat, tex});
+  return m;
+}
+function flush() {
+  gl.uniformMatrix4fv(U.uPV, false, PV); gl.uniform3fv(U.uCam, CAM); gl.uniform3fv(U.uGlowCol, glowCol);
+  gl.uniform1i(U.uAlb, 0); gl.uniform1i(U.uGlo, 1); gl.uniform1f(U.uDis, DIS);
+  for (const d of draws) {
+    const ms = d.mesh, mt = d.mat;
+    gl.bindBuffer(gl.ARRAY_BUFFER, ms.p); gl.enableVertexAttribArray(A.P); gl.vertexAttribPointer(A.P, 3, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, ms.n); gl.enableVertexAttribArray(A.N); gl.vertexAttribPointer(A.N, 3, gl.FLOAT, false, 0, 0);
+    if (A.U >= 0) { gl.bindBuffer(gl.ARRAY_BUFFER, ms.u); gl.enableVertexAttribArray(A.U); gl.vertexAttribPointer(A.U, 2, gl.FLOAT, false, 0, 0); }
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ms.i);
+    gl.uniformMatrix4fv(U.uM, false, d.m); gl.uniformMatrix3fv(U.uNM, false, M.nmat(d.m));
+    gl.uniform3fv(U.uCol, mt.col); gl.uniform1f(U.uSpec, mt.spec); gl.uniform1f(U.uGloss, mt.gloss); gl.uniform1f(U.uEnv, mt.env);
+    const e = mt.emit || 0; gl.uniform3f(U.uEmit, glowCol[0] * e, glowCol[1] * e, glowCol[2] * e);
+    if (d.tex) { gl.uniform1f(U.uTex, 1); gl.uniform4fv(U.uRect, d.tex.rect);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, d.tex.a.t); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, d.tex.g.t); }
+    else { gl.uniform1f(U.uTex, 0); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, BLANK.t); gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, BLANK.t); }
+    gl.drawElements(gl.TRIANGLES, ms.count, gl.UNSIGNED_SHORT, 0);
+  }
+  draws.length = 0;
+}
+
+// ================================================================= the robot ======================================
+const ARM_A = .28, ARM_B = .26;                           // upper arm, forearm
+const anchors = {};                                       // screen points for the effects (eyes, feet, hands ...)
+const glowPts = [];
+function proj(p) { const c = [PV[0] * p[0] + PV[4] * p[1] + PV[8] * p[2] + PV[12], PV[1] * p[0] + PV[5] * p[1] + PV[9] * p[2] + PV[13],
+  PV[3] * p[0] + PV[7] * p[1] + PV[11] * p[2] + PV[15]]; return [(c[0] / c[2] * .5 + .5) * glc.clientWidth, (1 - (c[1] / c[2] * .5 + .5)) * glc.clientHeight]; }
+
+function hand(m, s, H, holding) {
+  // palm faces local +Z, fingers along -Y, thumb on the s*X side: dark mechanical hand with a white back plate
+  part(m, MESH.rbox, MAT.mech, [0, -.045, 0], [.04, .05, .019]);
+  part(m, MESH.rbox, MAT.white, [0, -.042, -.016], [.034, .04, .008]);
+  const xs = [-.027, -.009, .009, .027].map(x => x * s);   // little ... index
+  const lens = [[.03, .022, .018], [.036, .026, .02], [.038, .028, .021], [.034, .025, .02]];
+  for (let i = 0; i < 4; i++) {
+    const c = H.c[3 - i];                                 // H.c = [index, middle, ring, little]
+    let f = M.chain(m, M.T(xs[i], -.092, 0), M.RZ(-s * (i - 1.5) * .05 * (1 - c)), M.RX(-c * 1.2));
+    for (let k = 0; k < 3; k++) {
+      part(f, capsule(.0102, .0092, lens[i][k]), k === 1 ? MAT.mech : MAT.black, [0, 0, 0]);
+      f = M.chain(f, M.T(0, -lens[i][k], 0), M.RX(-c * (k === 0 ? 1.4 : 1.05)));
+    }
+  }
+  const open = V.norm([s * (.55 + .45 * H.sp), -.65 + .45 * H.sp, .3]), shut = V.norm([-s * .7, -.45, .75]);
+  const td = V.norm(V.mix(open, shut, H.t));
+  let tf = M.mul(m, boneFrame([s * .034, -.03, .012], td, [0, 0, 1]));
+  part(tf, capsule(.013, .011, .035), MAT.black, [0, 0, 0]);
+  tf = M.chain(tf, M.T(0, -.035, 0), M.RX(-H.t * .5));
+  part(tf, capsule(.012, .01, .03), MAT.mech, [0, 0, 0]);
+  if (holding) { A3.tab = M.pt(m, [0, -.05, .03]); A3.tabOn = true;          // no tablet: the palm projects a hologram
+    part(m, MESH.torus, MAT.glow, [0, -.05, .021], [.018, .018, .018], [Math.PI / 2, 0, 0]); }
+}
+function arm(torso, s, H, holding) {
+  const S = [s * .25, .4, 0];
+  let T = V.add(S, H.p); const d0 = V.sub(T, S); let d = V.len(d0);
+  const reach = ARM_A + ARM_B - .002; if (d > reach) { T = V.add(S, V.mul(d0, reach / d)); d = reach; }
+  if (d < .08) { T = V.add(S, V.mul(V.norm(d0), .08)); d = .08; }
+  const u = V.norm(V.sub(T, S));
+  const ca = Math.max(-1, Math.min(1, (ARM_A * ARM_A + d * d - ARM_B * ARM_B) / (2 * ARM_A * d))), al = Math.acos(ca);
+  let pp = V.sub(H.pole, V.mul(u, V.dot(H.pole, u))); pp = V.len(pp) < 1e-4 ? [0, -1, 0] : V.norm(pp);
+  const E = V.add(S, V.mul(V.add(V.mul(u, Math.cos(al)), V.mul(pp, Math.sin(al))), ARM_A));
+  const up = M.mul(torso, boneFrame(S, V.sub(E, S), pp));                 // reference = elbow direction: never flips
+  part(up, MESH.sphere, MAT.black, [0, 0, 0], [.056, .056, .056]);
+  part(up, MESH.rbox, MAT.white, [0, -.04, 0], [.075, .1, .078]);                      // big rounded shoulder cap
+  part(up, capsule(.045, .04, ARM_A - .06), MAT.mech, [0, -.03, 0]);                    // dark core
+  part(up, MESH.soft, MAT.white, [0, -.11, .004], [.054, .11, .052]);                     // upper-arm shell
+  part(up, capsule(.008, .008, .13), MAT.metal, [0, -.09, -.045]);                       // piston
+  part(up, MESH.torus, MAT.seam, [0, -.17, 0], [.0475, .03, .0475]);
+  const fdir = V.sub(T, E), back = V.add(V.mul(H.n, -1), V.mul(pp, -.4));
+  const fo = M.mul(torso, boneFrame(E, fdir, back));
+  part(fo, MESH.sphere, MAT.mech, [0, 0, 0], [.043, .043, .043]);
+  [-1, 1].forEach(k => part(fo, MESH.soft, MAT.metal, [k * .043, 0, 0], [.01, .034, .034]));   // elbow hinge discs
+  part(fo, capsule(.036, .03, ARM_B - .06), MAT.mech, [0, -.03, 0]);                     // dark core
+  part(fo, MESH.soft, MAT.white, [0, -.12, -.008], [.044, .1, .04]);                      // forearm shell
+  part(fo, MESH.rbox, MAT.black, [0, -.07, .034], [.03, .05, .012]);                      // pad
+  part(fo, MESH.soft, MAT.metal, [0, -ARM_B + .01, 0], [.034, .012, .034]);                 // wrist actuation disc
+  const hm = M.mul(torso, boneFrame(T, H.f, H.n));
+  hand(hm, s, H, holding);
+  anchors[s > 0 ? "handL" : "handR"] = proj(M.pt(hm, [0, -.08, 0]));
+}
+function leg(pelvis, s, L) {
+  let m = M.chain(pelvis, M.T(s * .095, -.05, 0), M.RZ(s * L.out), M.RX(-L.hip));
+  part(m, MESH.rbox, MAT.mech, [s * .01, -.01, 0], [.07, .06, .075]);                    // hip actuator housing
+  part(m, capsule(.06, .048, .36), MAT.mech, [0, -.04, 0]);                              // dark core
+  part(m, MESH.soft, MAT.white, [0, -.2, .014], [.064, .17, .056]);                      // thigh panel
+  part(m, MESH.box, MAT.seam, [0, -.2, .078], [.04, .003, .003]);                        // panel gap
+  m = M.chain(m, M.T(0, -.43, 0), M.RX(L.knee));
+  part(m, MESH.sphere, MAT.mech, [0, 0, 0], [.05, .05, .05]);
+  [-1, 1].forEach(k => { part(m, MESH.soft, MAT.metal, [k * .05, 0, 0], [.012, .04, .04]);      // knee hinge discs
+                         part(m, MESH.torus, MAT.mech, [k * .056, 0, 0], [.03, .03, .03], [0, 0, Math.PI / 2]); });
+  part(m, MESH.soft, MAT.white, [0, .0, .045], [.035, .035, .02]);                       // knee cap
+  part(m, capsule(.045, .036, .38), MAT.mech, [0, -.02, 0]);                             // dark core
+  part(m, MESH.soft, MAT.white, [0, -.17, .016], [.056, .15, .05]);                      // shin guard
+  part(m, capsule(.011, .011, .22), MAT.metal, [0, -.06, -.055]);                        // linear actuator rod
+  part(m, capsule(.018, .018, .08), MAT.black, [0, -.05, -.055]);
+  m = M.chain(m, M.T(0, -.42, 0), M.RX(-L.ankle));
+  part(m, MESH.sphere, MAT.mech, [0, 0, 0], [.032, .032, .032]);
+  [-1, 1].forEach(k => part(m, MESH.soft, MAT.metal, [k * .035, 0, 0], [.008, .026, .026]));   // ankle joint discs
+  part(m, MESH.soft, MAT.white, [0, -.05, .045], [.055, .04, .115]);                     // white shoe
+  part(m, MESH.box, MAT.mech, [0, -.085, .045], [.056, .009, .116]);                     // sole
+  A3[s > 0 ? "footL" : "footR"] = M.pt(m, [0, -.09, .04]);
+  anchors[s > 0 ? "footL" : "footR"] = proj(A3[s > 0 ? "footL" : "footR"]);
+}
+function robot(P, F) {
+  const W = M.RY(P.yaw);
+  const pelvis = M.chain(W, M.T(0, 1.0 + P.bob, 0), M.RZ(P.sway));
+  part(pelvis, MESH.rbox, MAT.mech, [0, -.02, 0], [.16, .07, .1]);                      // hip frame
+  part(pelvis, MESH.soft, MAT.white, [0, -.04, .03], [.13, .07, .08]);                    // pelvic plate
+  [-1, 1].forEach(s => part(pelvis, MESH.soft, MAT.black, [s * .1, -.02, 0], [.06, .06, .08]));   // hip actuators
+  part(pelvis, MESH.rbox, MAT.mech, [0, .065, 0], [.13, .05, .09]);                // waist joint (no gap)
+  leg(pelvis, 1, P.legL); leg(pelvis, -1, P.legR);
+  const torso = M.chain(pelvis, M.T(0, .08, 0), M.RY(P.twist), M.RX(P.lean), M.RZ(P.tilt));
+  const br = 1 + P.breath * .01;
+  // waist: glossy black band; inner black core; the white chest plate with the logo; black yoke over the shoulders
+  // midsection: segmented plates, spine column, gears and cables (exposed mechanics)
+  part(torso, capsule(.1, .09, .2), MAT.mech, [0, .2, -.012]);
+  part(torso, capsule(.028, .028, .24), MAT.metal, [0, .23, -.06]);
+  [0, 1, 2].forEach(i => part(torso, MESH.rbox, MAT.black, [0, .14 - i * .042, .008], [.135 - i * .008, .019, .092 - i * .003]));
+  [-1, 1].forEach(s => { part(torso, MESH.torus, MAT.metal, [s * .085, .1, .075], [.03, .03, .03], [Math.PI / 2, 0, 0]);
+    part(torso, MESH.soft, MAT.mech, [s * .085, .1, .077], [.022, .022, .008]);
+    part(torso, capsule(.007, .007, .17), MAT.black, [s * .04, .2, .07], null, [0, 0, s * .22]); });
+  part(torso, MESH.torus, MAT.metal, [0, .06, .095], [.022, .022, .022], [Math.PI / 2, 0, 0]);
+  part(torso, MESH.rbox, MAT.mech, [0, .02, 0], [.15, .035, .1]);
+  part(torso, MESH.plate, MAT.white, [0, .325, .0], [.205 * br, .175 * br, .125 * br], null, {rect: [-1, -1, 2, 2], a: LOGO, g: LOGOG});
+  part(torso, MESH.box, MAT.seam, [0, .35, -.122], [.006, .11, .006]);                    // rear spine groove
+  // black yoke: sloping from the neck down to the shoulders (like the trapezius), the neck short and wide at the base
+  part(torso, capsule(.082, .215, .16), MAT.matte, [0, .625, -.03], [1, 1, .52]);            // neck flares into the shoulders
+  part(torso, capsule(.075, .085, .15), MAT.matte, [0, .72, -.045]);                          // neck, up into the back of the skull
+  [-1, 1].forEach(s => part(torso, MESH.rbox, MAT.black, [s * .2, .36, .0], [.025, .12, .085]));   // straps by the plate
+  // head: smooth glossy black helmet; the face is a display with a light line round it (expressions on the display)
+  const head = M.chain(torso, M.T(0, .63, -.02), M.RY(P.hy), M.RX(P.hx), M.RZ(P.hz), M.T(0, .15, .045));
+  part(head, MESH.head, MAT.helmet, [0, 0, 0], [.124, .158, .146], null, {rect: FR, a: BLANK, g: FGLOW});
+  part(head, MESH.led, MAT.glow, [0, 0, 0], [.124, .158, .146]);
+  part(head, MESH.headBack, MAT.matte, [0, 0, 0], [.124, .158, .146]);                 // matte rear casing
+  const eyeL = M.pt(head, [.036, .021, .124]), eyeR = M.pt(head, [-.036, .021, .124]);
+  A3.eye = V.mul(V.add(eyeL, eyeR), .5); A3.head = M.pt(head, [0, .05, 0]); A3.chest = M.pt(torso, [0, .3, 0]);
+  anchors.eyeL = proj(eyeL); anchors.eyeR = proj(eyeR); anchors.head = proj(M.pt(head, [0, .162, 0])); anchors.chest = proj(M.pt(torso, [0, .27, .12]));
+  const fwd = M.dir(head, [0, 0, 1]); anchors.face = Math.max(0, V.dot(V.norm(fwd), [0, 0, 1]));
+  arm(torso, 1, P.L, P.tabletL); arm(torso, -1, P.R, P.tabletR);
+}
+
+// ================================================================= poses (gestures) ===============================
+// hand target per arm, relative to its shoulder (x = to the viewer's right): p wrist position, f finger direction,
+// n palm direction, c finger curls [index, middle, ring, little], t thumb curl, sp thumb spread, pole elbow direction
+const mir = v => [-v[0], v[1], v[2]];
+function H(p, f, n, c, t, sp, pole) { return {p, f, n, c, t, sp, pole}; }
+function both(h) { return {L: h, R: {p: mir(h.p), f: mir(h.f), n: mir(h.n), c: h.c.slice(), t: h.t, sp: h.sp, pole: mir(h.pole)}}; }
+// relaxed: arms hang a little in front of the body, elbows soft, fingers loosely curled
+const RESTH = H([.03, -.5, .06], [-.05, -1, .2], [-1, 0, .25], [.35, .45, .55, .6], .35, .2, [.45, -1, -.6]);
+const REST = Object.assign({yaw: 0, twist: 0, lean: 0, tilt: 0, hx: 0, hy: 0, hz: 0,
+  legL: {hip: 0, out: .035, knee: 0, ankle: 0}, legR: {hip: 0, out: .035, knee: 0, ankle: 0}}, both(RESTH));
+// while talking, between gestures: forearms slightly up, hands loose in front of the hips
+const TALKH = H([.04, -.42, .15], [-.25, -.5, .8], [-.65, .45, .15], [.3, .4, .5, .55], .3, .3, [.45, -1, -.5]);
+const OPEN = H([.12, -.27, .27], [.3, .3, 1], [-.4, .85, .2], [.15, .22, .3, .35], .15, .55, [.55, -1, -.45]);
+const G = {
+  rest: {}, talk: both(TALKH),
+  // speech gestures the robot picks by itself while it talks
+  s_open: {L: OPEN, R: TALKH && both(TALKH).R, twist: .05},
+  s_openR: {R: both(OPEN).R, L: TALKH, twist: -.04},
+  s_both: both(H([.1, -.3, .26], [.25, .25, 1], [-.35, .9, .15], [.15, .2, .28, .33], .15, .5, [.55, -1, -.45])),
+  s_down: both(H([.07, -.33, .25], [-.25, -.05, 1], [-.1, -1, .1], [.18, .25, .3, .35], .25, .3, [.55, -1, -.4])),
+  s_steeple: both(H([-.1, -.31, .25], [-.45, .55, .65], [-1, 0, .25], [.1, .15, .2, .25], .2, .4, [.6, -1, -.35])),
+  s_count: {L: H([.11, -.22, .28], [.15, .65, .75], [-.6, 0, .6], [0, 1, 1, 1], .75, .1, [.55, -1, -.45]), R: TALKH && both(TALKH).R},
+  // moments the bot asks for
+  explain: both(OPEN),
+  friendly: Object.assign(both(OPEN), {hz: .04}),
+  confident: {L: H([.2, -.2, .28], [.7, .05, .7], [-.25, .9, .3], [.1, .15, .2, .25], .15, .6, [.6, -1, -.4]), twist: .08},
+  point: {L: H([.3, .06, .25], [1, .15, .25], [0, -.6, .8], [0, 1, 1, 1], .85, 0, [.3, -1, -.7]), twist: .2, hy: .32},
+  chart: {L: H([.28, -.14, .3], [1, -.05, .35], [0, .7, .7], [.05, .1, .15, .2], .1, .7, [.4, -1, -.6]), twist: .16, hy: .28},
+  wave: {L: H([.23, .15, .1], [.08, 1, .05], [0, 0, 1], [.04, .04, .04, .04], .05, .85, [1, -.6, -.3]), hz: .06},
+  thumbs: {L: H([.1, -.08, .33], [0, .12, 1], [-1, 0, 0], [1, 1, 1, 1], 0, 1, [.6, -1, -.2]), hz: .05},
+  stop: {L: H([.1, -.05, .38], [0, 1, .12], [0, 0, 1], [0, 0, 0, 0], .1, .6, [.7, -1, -.3])},
+  idea: {L: H([.13, .19, .18], [0, 1, .05], [0, -.15, 1], [0, 1, 1, 1], .8, 0, [1, -.7, -.2]), hz: -.05, hx: -.08},
+  think: {R: H([.17, .04, .2], [-.08, 1, .25], [0, .1, -1], [.55, 1, 1, 1], .6, .2, [-.3, -1, .1]),
+          L: H([-.22, -.32, .22], [-1, 0, .2], [0, 1, 0], [.4, .45, .5, .55], .3, .3, [.6, -1, -.3]), hz: .1, hx: -.06},
+  watching: {R: H([.17, .04, .2], [-.08, 1, .25], [0, .1, -1], [.55, 1, 1, 1], .6, .2, [-.3, -1, .1]), hy: .38, twist: .1},
+  surprised: Object.assign(both(H([.06, .02, .26], [.1, 1, .25], [0, .1, 1], [.1, .15, .2, .25], .1, 1, [1, -1, -.3])), {hx: -.08}),
+  concerned: {R: H([.14, -.22, .2], [.6, .6, .3], [0, 0, -1], [.2, .25, .3, .35], .3, .3, [-.6, -1, -.2]), hz: -.06},
+  determined: {L: H([.08, -.2, .3], [0, .4, 1], [-1, 0, 0], [1, 1, 1, 1], .7, .3, [.6, -1, -.2])},
+  // reading: the left palm (chart side) is turned up and projects the chart as a hologram; the robot studies it
+  tablet: {L: H([.12, -.2, .3], [.35, .05, 1], [0, 1, .1], [.2, .25, .3, .35], .25, .5, [.6, -1, -.4]),
+           R: H([-.06, -.4, .16], [-.25, -.5, .8], [.6, .45, .15], [.3, .4, .5, .55], .3, .3, [-.45, -1, -.5]),
+           tabletL: 1, hy: .32, hx: .08, twist: .08},
+  // showing BUY / SELL: the palm holds the hologram up and out toward the viewers; the robot looks at the viewers
+  show: {L: H([.24, -.1, .3], [.6, .3, .75], [-.1, .8, .45], [.1, .15, .2, .25], .2, .7, [.5, -1, -.5]),
+         R: H([-.06, -.4, .16], [-.25, -.5, .8], [.6, .45, .15], [.3, .4, .5, .55], .3, .3, [-.45, -1, -.5]),
+         tabletL: 1, hy: .05, twist: .1},
+  scan: {twist: .1},
+  cheer: Object.assign(both(H([.17, .42, .06], [.1, 1, 0], [-1, 0, .2], [1, 1, 1, 1], .7, .3, [1, -.3, -.4])), {hx: -.12}),
+  clap: both(H([-.2, -.1, .3], [0, .75, .65], [-1, 0, 0], [.08, .08, .1, .12], .25, .25, [.8, -1, -.3])),
+  power: Object.assign(both(H([.42, -.1, .12], [1, -.1, 0], [0, 0, 1], [0, 0, 0, 0], .1, 1, [.3, -1, -.4])), {hx: -.05}),
+  fly: Object.assign(both(H([.14, -.47, -.06], [.15, -1, -.1], [-1, 0, 0], [.8, .85, .9, .9], .6, .2, [.4, -1, .3])),
+         {legL: {hip: -.05, out: .02, knee: .15, ankle: -.5}, legR: {hip: .05, out: .02, knee: .1, ankle: -.5}, lean: .06}),
+  stand: {}, walk: {},
+};
+G.s_open.R = both(TALKH).R; G.s_count.R = both(TALKH).R;
+G.tablet_buy = G.tablet;                                  // the bot's pose name: reading (BUY/SELL only for real trades)
+G.show_buy = Object.assign({}, G.show, {buy: 1}); G.show_sell = Object.assign({}, G.show, {buy: 1});
+const SPEECH = [["talk", 3], ["s_open", 3], ["s_openR", 2], ["s_both", 2], ["s_down", 2], ["s_steeple", 1], ["s_count", 1]];
+const POSE_GESTURE = {side: "walk", side2: "walk", front: "fly"};
+function merge(base, add) { const o = Array.isArray(base) ? base.slice() : {};
+  if (!Array.isArray(base)) for (const k in base) o[k] = (typeof base[k] === "object") ? merge(base[k], add && add[k] !== undefined ? add[k] : undefined) : (add && add[k] !== undefined ? add[k] : base[k]);
+  else if (add) for (let i = 0; i < base.length; i++) o[i] = add[i] !== undefined ? add[i] : base[i];
+  return o; }
+const TEMPLATE = Object.assign(merge(REST), {tabletL: 0, tabletR: 0, buy: 0});
+function flat(o, out) { for (const k in o) { const v = o[k]; if (typeof v === "object") flat(v, out); else out.push(v); } return out; }
+function unflat(tpl, arr, st) { const o = Array.isArray(tpl) ? [] : {};
+  for (const k in tpl) { if (typeof tpl[k] === "object") o[k] = unflat(tpl[k], arr, st); else o[k] = arr[st.i++]; } return o; }
+function target(name) { return merge(TEMPLATE, G[name] || {}); }
+// how quickly each part follows (body slow, arms medium, head quicker) - like a person, not a machine
+const STIFF = (function () { const out = []; (function walk(o, top) { for (const k in o) { const t = top || k;
+  if (typeof o[k] === "object") walk(o[k], t); else out.push(t === "L" || t === "R" ? 11 : /^h[xyz]$/.test(t) ? 16 : /^(yaw|twist|lean|tilt)$/.test(t) ? 6 : /^leg/.test(t) ? 18 : 30); } })(TEMPLATE); return out; })();
+
+// ================================================================= state & behaviour ==============================
+const EMO = {   // scene -> face on the display
+  welcome: {smile: .8, brow: .25, squint: .35}, happy: {smile: .75, brow: .2, squint: .35}, win: {smile: 1, brow: .3, squint: .55},
+  tip: {smile: .5, brow: .3}, goodbye: {smile: .7, brow: .2, squint: .3}, explain: {smile: .3, brow: .1}, trade: {smile: .2},
+  focused: {browIn: .55, smile: 0}, question: {brow: .3, browOne: 1, smile: .15}, rest: {smile: .3},
+  surprised: {brow: 1, wide: 1, smile: 0}, warning: {browIn: .65, smile: -.25}, loss: {browIn: -.65, smile: -.4}, danger: {browIn: .95, smile: -.55},
+};
+const FACE0 = {smile: 0, brow: 0, browIn: 0, browOne: 0, squint: 0, wide: 0};
+let st = {env: [], fps: 20, delay: 0}, sid = -1, start = 0, fxId = -1, scene = TEST.get("scene") || "rest", poseName = TEST.get("pose") || "rest";
+let tint = "", walking = false, walkDir = 1, feet = false;
+let X = flat(target("rest"), []), Vv = X.map(() => 0), GE = X.slice();
+const Fs = Object.assign({}, FACE0, {open: 0, mwide: 0, mo: 0, blink: 0, lx: 0, ly: 0});
+let blinkAt = performance.now() + 2000, blinkT = -1, lookAt = 0, lookTo = [0, 0], beat = 0, lastLvl = 0, sylAt = -9999;
+let gestId = -1, flyAmt = 0, anchorAt = 0, react = {name: "", until: 0}, frameAmt = 0, walkPh = 0, beatS = 0, browKick = 0;
+let gest = {name: "", until: 0}, lastGest = -1e9, lastPose = "", speech = {name: "talk", until: 0}, speakFrom = 0;
+let yawS = 0;
+let headT = [0, 0, 0], headS = [0, 0, 0], headAt = 0, swayT = 0, swayS = 0, swayAt = 0;
+const HOLD = {show_buy: 5, show_sell: 5, wave: 2.8, thumbs: 2.6, point: 4, chart: 4.5, idea: 2.6, stop: 2.4, surprised: 2.2, think: 4, watching: 4,
+  tablet: 5, tablet_buy: 5, concerned: 3, determined: 2.4, cheer: 2.6};
+function level(now) {
+  if (window.__talkUntil && now < window.__talkUntil) return [0, 1, 2, 3, 2, 1, 0, 0, 2, 3, 3, 1, 1, 2, 0, 0, 0][Math.floor(now / 90) % 17];
+  if (TEST.has("talk")) return [0, 1, 2, 3, 2, 1, 0, 0, 2, 3, 3, 1, 1, 2, 0, 0, 0][Math.floor(now / 90) % 17];
+  const i = Math.floor((now - start - st.delay) / 1000 * st.fps);
+  return (i >= 0 && i < st.env.length) ? st.env[i] : 0;
+}
+function pick(list, not) { const l = list.filter(x => x[0] !== not), tot = l.reduce((a, x) => a + x[1], 0); let r = Math.random() * tot;
+  for (const x of l) { r -= x[1]; if (r <= 0) return x[0]; } return l[0][0]; }
+const TINTS = {"": [.25, .62, 1.0], green: [.2, 1, .5], amber: [1, .6, .15], red: [1, .25, .25]};
+let lastT = performance.now();
+function frame(now) {
+  if (window.__paused) { lastFrameAt = performance.now(); setTimeout(() => frame(performance.now()), 300); return; }
+  lastFrameAt = performance.now();
+  const dt = Math.min(.05, (now - lastT) / 1000); lastT = now; const t = now / 1000;
+  const W = SNAP ? 1200 : Math.round(glc.clientWidth), Hh = SNAP ? 1600 : Math.round(glc.clientHeight);
+  if (glc.width !== W || glc.height !== Hh) { glc.width = W; glc.height = Hh; }
+  // ---- what the body does now ----
+  const lvl = level(now), talking = lvl > 0 || now - sylAt < 1300; if (lvl > 0) sylAt = now;
+  if (poseName !== lastPose) {                              // the bot picked a new pose: a real gesture now and then
+    lastPose = poseName;
+    const gn = poseName === "tablet_buy" ? "tablet" : poseName;     // BUY / SELL screens come only as bot gestures
+    const must = /^(wave|thumbs|surprised|concerned|cheer)$/.test(poseName);
+    if (HOLD[gn] && (must || now - lastGest > 11000)) { gest = {name: gn, until: now + HOLD[gn] * 1000}; lastGest = now; }
+  }
+  if (talking) { if (!speakFrom) speakFrom = now;
+    if (now - speakFrom > 400 && now > speech.until) speech = {name: pick(SPEECH, speech.name), until: now + 2300 + Math.random() * 2200}; }
+  else { speakFrom = 0; speech.until = 0; }
+  let gname = POSE_GESTURE[poseName] || (TEST.has("pose") && G[poseName] ? poseName : now < gest.until ? gest.name
+              : talking ? (speakFrom && now - speakFrom > 400 ? speech.name : "talk") : "rest");
+  if (now < react.until) gname = react.name;
+  walking = gname === "walk";
+  // two-stage smoothing: the target eases in, then each part follows on its own critically damped spring
+  const goal = flat(target(gname), []);
+  for (let i = 0; i < X.length; i++) {
+    GE[i] += (goal[i] - GE[i]) * Math.min(1, dt * 5);
+    const k = STIFF[i] * STIFF[i] * .25 + 4, d = 2 * Math.sqrt(k);
+    Vv[i] += ((GE[i] - X[i]) * k - Vv[i] * d) * dt; X[i] += Vv[i] * dt;
+  }
+  const P = unflat(TEMPLATE, X, {i: 0});
+  // ---- voice -> display mouth, beats ----
+  const tgt = lvl / 3;
+  Fs.open += (tgt - Fs.open) * Math.min(1, dt * (tgt > Fs.open ? 22 : 11));
+  if (lvl >= 2 && lastLvl < 2) { beat = 1; Fs.mwide = Math.random() < .35 ? 1 : 0; Fs.mo = Math.random() < .25 ? 1 : 0; }
+  if (lvl >= 3 && lastLvl < 3 && Math.random() < .35) browKick = 1;
+  lastLvl = lvl; beat *= Math.exp(-dt * 4); beatS += (beat - beatS) * Math.min(1, dt * 5); browKick *= Math.exp(-dt * 3);
+  // ---- face emotion ----
+  const e = Object.assign({}, FACE0, EMO[scene] || EMO.rest, gname === "laugh" ? {smile: 1, squint: .8} : {},
+    react.name === "scan" && now < react.until ? {browIn: .5, smile: 0, squint: 0} : {});
+  if (talking) { e.smile += .1 * Math.sin(now / 1700); e.brow += browKick * .4; }
+  for (const key in FACE0) Fs[key] += (e[key] - Fs[key]) * Math.min(1, dt * 4);
+  if (now > blinkAt && blinkT < 0) blinkT = now;
+  if (blinkT >= 0) { const b = (now - blinkT) / 170; Fs.blink = b < 1 ? Math.sin(b * Math.PI) : 0;
+    if (b >= 1) { blinkT = -1; blinkAt = now + (Math.random() < .2 ? 220 : 2400 + Math.random() * 3600); } }
+  // ---- head: calm glances (at the viewers mostly, sometimes the chart), not constant wobble ----
+  if (window.__look && now < window.__lookUntil) { headT=[window.__look[1]*.16,window.__look[0]*.5,window.__look[1]*.08]; lookTo=[headT[1]*2.5,-headT[0]*3]; headAt=now+120; } else if (now > headAt) { const r = Math.random(), chart = /point|chart|watching/.test(gname);
+    headT = chart ? [.02, .1, .02] : r < .55 ? [0, 0, 0] : r < .75 ? [.03, .22, .03] : r < .9 ? [-.03, -.1, -.03] : [.06, .05, .05];
+    headT = headT.map(v => v + (Math.random() - .5) * .04); headAt = now + 1800 + Math.random() * 3500;
+    lookTo = [headT[1] * 2.5, -headT[0] * 3]; }
+  for (let i = 0; i < 3; i++) headS[i] += (headT[i] - headS[i]) * Math.min(1, dt * 2.2);
+  const scanning = react.name === "scan" && now < react.until;
+  if (SNAP) { Fs.blink = 0; Fs.open = snapOpen; Fs.mwide = 0; Fs.mo = 0; lookTo = [0, 0]; headS = [0, 0, 0]; }
+  Fs.lx += (lookTo[0] - Fs.lx) * Math.min(1, dt * 8); Fs.ly += (lookTo[1] - Fs.ly) * Math.min(1, dt * 8);
+  // ---- weight shift every few seconds, breathing ----
+  if (now > swayAt) { swayT = (Math.random() - .5) * 2; swayAt = now + 5000 + Math.random() * 5000; }
+  swayS += (swayT - swayS) * Math.min(1, dt * .8);
+  P.breath = Math.sin(t * 1.4);
+  if (window.__yaw !== undefined) { yawS += (window.__yaw - yawS) * Math.min(1, dt * 4); P.yaw = yawS; }
+  if (TEST.has("yaw")) P.yaw = +TEST.get("yaw");                    // test: turn the robot to look at it from the side
+  P.hx += headS[0] + beatS * .04; P.hy += headS[1]; P.hz += headS[2] + swayS * .012;
+  P.sway = swayS * .012; P.tilt -= swayS * .01; P.bob = -Math.abs(swayS) * .004;
+  if (scanning) {                                         // the same sweep the laser beam makes on the chart (motion page)
+    const d = react.data, k = (now - react.t0) / (d.dur * 1000), w = Math.min(1, k * 6, (1 - k) * 6);
+    const tx = d.x1 + (d.x2 - d.x1) * (.5 + .5 * Math.sin(k * Math.PI * 2)), ty = d.y1 + (d.y2 - d.y1) * (.5 + .5 * Math.sin(k * Math.PI * 3));
+    const dx = tx - d.eye[0], dy = ty - d.eye[1], yaw = Math.max(-1.15, Math.min(1.15, Math.atan2(dx, 650)));
+    const pitch = Math.max(-.5, Math.min(.55, Math.atan2(dy, Math.hypot(dx, 650))));
+    P.hy += (yaw - P.hy) * w; P.hx += (pitch - P.hx) * w; P.hz *= 1 - w; P.twist += yaw * .22 * w;
+    if (A3.eye && Math.random() < .5) spawn(A3.eye, [0, 0, 0], .12, .09, [1, .2, .15], "glow");
+  }
+  P.L.p = V.add(P.L.p, [swayS * .008, P.breath * .003, 0]); P.R.p = V.add(P.R.p, [swayS * .008, P.breath * .003, 0]);
+  if (talking && /^(talk|s_|explain|friendly|confident)/.test(gname)) {     // the gesturing hand moves with the words
+    const main = /R$/.test(gname) ? P.R : P.L, other = main === P.L ? P.R : P.L;
+    main.p = V.add(main.p, [0, beatS * .04, beatS * .02]); other.p = V.add(other.p, [0, beatS * .012, 0]);
+  }
+  if (gname === "wave") { P.L.f = V.norm([.08 + .4 * Math.sin(t * 8), 1, .05]); P.L.p = V.add(P.L.p, [.018 * Math.sin(t * 8), 0, 0]); }
+  if (gname === "clap") {                                 // hands touch on every beat of the clap sound
+    const ph = ((now - (react.t0 || now)) / 220) % 1, o = .075 * Math.sin(Math.PI * ph) ** .7;
+    P.L.p = V.add(P.L.p, [o, 0, 0]); P.R.p = V.add(P.R.p, [-o, 0, 0]); }
+  if (gname === "laugh") { P.hx -= .1 + .035 * Math.sin(t * 16); P.bob = .005 * Math.sin(t * 16); Fs.open = .35 + .3 * Math.abs(Math.sin(t * 8)); }
+  if (walking) {                                          // a real walk cycle; OBS moves the robot across the screen
+    walkPh += dt * 7;
+    const sw = Math.sin(walkPh);
+    P.yaw = walkDir * 1.25; P.bob = .02 * Math.abs(Math.cos(walkPh)) - .01;
+    P.legL = {hip: .4 * sw, out: .03, knee: .7 * Math.max(0, -Math.sin(walkPh - .9)) + .08, ankle: -.22 * sw};
+    P.legR = {hip: -.4 * sw, out: .03, knee: .7 * Math.max(0, Math.sin(walkPh - .9)) + .08, ankle: .22 * sw};
+    P.L.p = V.add(RESTH.p, [0, .02, -.13 * sw]); P.R.p = V.add(mir(RESTH.p), [0, .02, .13 * sw]);
+    P.lean += .05; P.sway = .02 * Math.sin(walkPh);
+    ["footL", "footR"].forEach(k => { const f = A3[k]; if (f && Math.random() < .6)            // gold sparkles at every step
+      spawn(V.add(f, [rnd(-.04, .04), .01, rnd(-.04, .04)]), [rnd(-.6, .6), rnd(.6, 1.6), rnd(-.3, .3)], rnd(.5, 1), rnd(.012, .022), Math.random() < .3 ? [1, .97, .8] : [1, .78, .2], "spark", -3, true); });
+  }
+  if (gname === "fly") P.bob = .01 * Math.sin(t * 3);
+  // ---- camera: waist-up presenter view, or the full body for walking, standing and flying ----
+  const full = TEST.has("full") ? 1 : (/^(walk|fly|stand)$/.test(gname) || poseName === "stand" ? 1 : 0);
+  frameAmt += (full - frameAmt) * Math.min(1, dt * 3);
+  flyAmt += ((gname === "fly" ? 1 : 0) - flyAmt) * Math.min(1, dt * 3);   // flying: room under the feet for the jet flames
+  const ya = 1.0 + (-.03 - 1.0) * frameAmt - .5 * (TEST.has("full") ? 0 : flyAmt), yb = 2.03 + (2.04 - 2.03) * frameAmt, frac = .49 + ((TEST.has("full") ? .58 : .97) - .49) * frameAmt;
+  let Ht = (yb - ya) / frac, yc = ya + Ht / 2, xc = .15 * Ht;
+  if (TEST.has("full")) yc -= .32 * Ht * frameAmt;      // room under the feet for the jet flames
+  if (TEST.has("face")) { Ht = .5; yc = 1.82; xc = 0; }
+  const fov = .36, dist = Ht / 2 / Math.tan(fov / 2);
+  CAM = [xc, yc, dist];
+  PV = M.mul(M.persp(fov, glc.width / glc.height, .5, dist + 5), M.T(-xc, -yc, -dist));
+  // ---- draw ----
+  const gc = scanning ? TINTS.red : TINTS[TEST.has("tint") && !SNAP ? TEST.get("tint") : tint] || TINTS[""]; glowCol = SNAP ? gc.slice() : V.mix(glowCol, gc, Math.min(1, dt * 3));
+  const gcss = `rgb(${glowCol.map(v => Math.round(Math.min(1, v) * 255)).join(",")})`;
+  const label = gname === "show_buy" ? "BUY" : gname === "show_sell" ? "SELL" : "";
+  if (label !== drawTablet.label) { drawTablet.label = label; drawTablet(label); }
+  let fmode = FACE_MODE[scene] || "normal";
+  if (gname === "laugh") fmode = "laugh"; else if (gname === "think" || gname === "watching") fmode = "think";
+  else if (scanning) fmode = "scan"; else if (gname === "cheer") fmode = "money";
+  else if (gname === "wave") fmode = "love"; else if (gname === "idea") fmode = "star"; else if (gname === "surprised") fmode = "wow";
+  if (TEST.has("face_mode")) fmode = TEST.get("face_mode");
+  drawFace(Fs, gcss, now, fmode); MAT.glow.emit = 1.25 + .45 * Fs.open;
+  gl.viewport(0, 0, glc.width, glc.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  glowPts.length = 0;
+  P.tabletL = P.tabletL > .5; P.tabletR = false; A3.tabOn = false;
+  robot(P, Fs); flush();
+  fx3d(now, dt);
+  if (!SNAP && !TEST.toString() && innerWidth === 1200 && innerHeight === 1600 && /^(rest|talk|s_)/.test(gname) && now - anchorAt > 3000 && anchors.eyeL) {
+    anchorAt = now;                                       // tell the bot where the eyes are (for the laser beam)
+    const ex = (anchors.eyeL[0] + anchors.eyeR[0]) / 2, ey = (anchors.eyeL[1] + anchors.eyeR[1]) / 2;
+    fetch(`/anchor?x=${ex.toFixed(1)}&y=${ey.toFixed(1)}`, {method: "POST"}).catch(() => {});
+  }
+  try { if (window.parent !== window && window.parent.__robotFrame) window.parent.__robotFrame(glc); } catch (e) {}
+  next();
+}
+// self-healing: if the graphics card drops the 3D context, or the draw loop stops for 8 s (the robot would look frozen on the
+// stream), the page reloads itself - OBS shows the robot again within a second or two.
+let lastFrameAt = performance.now();
+glc.addEventListener("webglcontextlost", e => { e.preventDefault(); setTimeout(() => location.reload(), 800); });
+setInterval(() => { if (!SNAP && performance.now() - lastFrameAt > 8000) location.reload(); }, 2000);
+function next() { if (SNAP) return; if (document.hidden) setTimeout(() => frame(performance.now()), 33); else requestAnimationFrame(frame); }
+
+// ================================================================= effects (super powers), in 3D ==================
+const wrap = document.getElementById("r");
+const FXVS = `attribute vec3 aP; attribute vec2 aU; attribute vec4 aC; uniform mat4 uPV; varying vec2 vU; varying vec4 vC;
+void main(){ vU = aU; vC = aC; gl_Position = uPV * vec4(aP, 1.); }`;
+const FXFS = `precision mediump float; varying vec2 vU; varying vec4 vC; uniform float uMode; uniform sampler2D uT;
+void main(){
+  if (uMode > 2.5) { vec3 t = texture2D(uT, vU).rgb; float a = clamp(max(t.r, max(t.g, t.b)) * 2.4, 0., 1.);
+    a = max(a, .22) * vC.a * (.8 + .2 * step(.5, fract(vU.y * 40.)));                 // hologram scan lines
+    vec3 c = mix(vec3(.05, .45, .95), t, .7); gl_FragColor = vec4(c * a, a); return; }
+  if (uMode > 1.5) { vec4 t = texture2D(uT, vU); gl_FragColor = vec4(t.rgb * t.a * vC.a, t.a * vC.a); return; }
+  vec2 q = vU * 2. - 1.;
+  float a = uMode > .5 ? exp(-q.y * q.y * 5.) : exp(-dot(q, q) * 3.2);
+  a *= vC.a; gl_FragColor = vec4(vC.rgb * a, a);      // normal blending: visible on the white chart too
+}`;
+const fxProg = gl.createProgram();
+gl.attachShader(fxProg, shader(gl.VERTEX_SHADER, FXVS)); gl.attachShader(fxProg, shader(gl.FRAGMENT_SHADER, FXFS)); gl.linkProgram(fxProg);
+const FA = {P: gl.getAttribLocation(fxProg, "aP"), U: gl.getAttribLocation(fxProg, "aU"), C: gl.getAttribLocation(fxProg, "aC")};
+const FU = {PV: gl.getUniformLocation(fxProg, "uPV"), Mode: gl.getUniformLocation(fxProg, "uMode"), T: gl.getUniformLocation(fxProg, "uT")};
+const fxBuf = gl.createBuffer();
+// emoji drawn into a small atlas, shown as billboards in the scene
+const EMOJI = {laugh: ["HA", "HA", "😂", "HA", "😄"], clap: ["👏", "👏", "👏", "👏"], cheer: ["🎉", "✨", "🎉", "⭐", "🎉"]};
+const ATL = canvasTex(1024, 128), ATL_I = {};
+(function () { const a = ATL.x; a.clearRect(0, 0, 1024, 128); a.textAlign = "center"; a.textBaseline = "middle";
+  ["HA", "😂", "😄", "👏", "🎉", "✨", "⭐"].forEach((e, i) => { ATL_I[e] = i;
+    a.font = e === "HA" ? "900 70px 'Segoe UI', Arial" : "92px 'Segoe UI Emoji'"; a.fillStyle = "#ffd23f";
+    a.shadowColor = "rgba(0,0,0,.5)"; a.shadowBlur = 8; a.fillText(e, i * 128 + 64, 68); });
+  ATL.push(); })();
+let P3 = [], BOLTS = [], EMIT = [], EMO3 = [], TELE = null;
+const rnd = (a, b) => a + Math.random() * (b - a);
+function spawn(p, v, life, size, col, kind, grav, trail) { P3.push({p: p.slice(), v: v.slice(), life, age: 0, size, col, kind, grav: grav || 0, trail: !!trail}); }
+function bolt3(c, rad) {                                  // a jagged electric arc in the air around the body
+  const a = rnd(0, 6.283), b = rnd(-.8, .8); let x = [c[0] + Math.cos(a) * rad, c[1] + b * rad * .9, c[2] + Math.sin(a) * rad * .7];
+  const pts = [x.slice()], n = 6 + (Math.random() * 6 | 0);
+  for (let i = 0; i < n; i++) { x = V.add(x, [rnd(-.06, .06), rnd(-.06, .06), rnd(-.04, .04)]); pts.push(x.slice()); }
+  BOLTS.push({pts, life: rnd(.07, .15), age: 0});
+}
+function doReact(name, data) {
+  const now = performance.now();
+  const MAP = {laugh: ["laugh", 2600], clap: ["clap", 2600], cheer: ["cheer", 2800], power: ["power", 4000], fly: ["fly", 5600], teleport: ["rest", 2200]};
+  if (name === "laser" && data && data.eye) { react = {name: "scan", until: now + (data.dur || 4.5) * 1000, t0: now, data}; return; }
+  if (!MAP[name]) return;
+  react = {name: MAP[name][0], until: now + MAP[name][1], t0: now};
+  if (EMOJI[name]) EMOJI[name].forEach((e, i) => setTimeout(() => { if (A3.head) EMO3.push({i: ATL_I[e], p: V.add(A3.head, [rnd(-.25, .25), rnd(.05, .2), rnd(-.1, .25)]), age: 0, life: 1.8}); }, i * 260));
+  if (name === "fly") EMIT.push({until: now + 5600, tick() {               // jet flames from both feet
+    ["footL", "footR"].forEach(k => { const f = A3[k]; if (!f) return;
+      for (let i = 0; i < 7; i++) spawn(V.add(f, [rnd(-.025, .025), 0, rnd(-.025, .025)]), [rnd(-.18, .18), -rnd(1.8, 3), rnd(-.18, .18)], rnd(.18, .3), rnd(.05, .08), null, "flame");
+      spawn(V.add(f, [0, -.04, 0]), [0, 0, 0], .06, .14, [1, .5, .1], "glow"); }); }});
+  if (name === "power") EMIT.push({until: now + 4000, tick() { if (A3.chest) { if (Math.random() < .6) bolt3(A3.chest, .32); if (Math.random() < .3) bolt3(A3.head || A3.chest, .2); } }});
+  if (name === "cheer") [0, 380].forEach(dl => setTimeout(() => { if (!A3.head) return; const c = V.add(A3.head, [rnd(-.2, .2), rnd(.25, .4), 0]);
+    for (let i = 0; i < 80; i++) { const a = rnd(0, 6.283), b = rnd(-1, 1), sp = rnd(1, 2.6), r = Math.sqrt(1 - b * b);
+      spawn(c, [Math.cos(a) * r * sp, b * sp, Math.sin(a) * r * sp], rnd(.8, 1.4), rnd(.012, .02), Math.random() < .3 ? [1, .97, .9] : [1, .78, .3], "spark", -2.2, true); } }, dl));
+  if (name === "teleport") TELE = {t0: now, dur: 2200};
+}
+function fx3d(now, dt) {
+  EMIT = EMIT.filter(e => now < e.until); EMIT.forEach(e => { e.acc = (e.acc || 0) + dt * 60; while (e.acc >= 1) { e.acc -= 1; e.tick(); } });
+  DIS = 0;
+  if (TELE) { const k = (now - TELE.t0) / TELE.dur;
+    if (k >= 1) TELE = null;
+    else { DIS = k < .45 ? k / .45 : k < .6 ? 1.01 : 1 - (k - .6) / .4;               // dissolve away, hold, rebuild
+      const on = Math.sin(Math.min(1, k * 1.2) * Math.PI);
+      for (let i = 0; i < 6; i++) spawn([rnd(-.25, .25), rnd(.1, 2), rnd(-.12, .2)], [0, rnd(.6, 1.6), 0], rnd(.4, .9), rnd(.01, .018), [.15, .7, 1], "glow");
+      TELE.on = on; } }
+  P3.forEach(q => { q.age += dt; q.v[1] += q.grav * dt; q.v = V.mul(q.v, Math.pow(.2, dt)); q.prev = q.p; q.p = V.add(q.p, V.mul(q.v, dt)); });
+  P3 = P3.filter(q => q.age < q.life); BOLTS.forEach(b => b.age += dt); BOLTS = BOLTS.filter(b => b.age < b.life);
+  EMO3.forEach(e => { e.age += dt; e.p = V.add(e.p, [0, dt * .22, 0]); }); EMO3 = EMO3.filter(e => e.age < e.life);
+  if (!P3.length && !BOLTS.length && !EMO3.length && !TELE && !A3.tabOn) return;
+  const glow = [], rib = [], emo = [];
+  const vtx = (arr, p, u, v, c, a) => arr.push(p[0], p[1], p[2], u, v, c[0], c[1], c[2], a);
+  const quad = (arr, p, sz, c, a) => { const x0 = p[0] - sz, x1 = p[0] + sz, y0 = p[1] - sz, y1 = p[1] + sz, z = p[2];
+    vtx(arr, [x0, y0, z], 0, 0, c, a); vtx(arr, [x1, y0, z], 1, 0, c, a); vtx(arr, [x1, y1, z], 1, 1, c, a);
+    vtx(arr, [x0, y0, z], 0, 0, c, a); vtx(arr, [x1, y1, z], 1, 1, c, a); vtx(arr, [x0, y1, z], 0, 1, c, a); };
+  const ribbon = (arr, a0, b0, w, c, al) => { const d = V.sub(b0, a0), sd = V.mul(V.norm(V.cross(d, [0, 0, 1])), w);
+    const p1 = V.add(a0, sd), p2 = V.sub(a0, sd), p3 = V.add(b0, sd), p4 = V.sub(b0, sd);
+    vtx(arr, p1, 0, 1, c, al); vtx(arr, p2, 0, 0, c, al); vtx(arr, p4, 1, 0, c, al); vtx(arr, p1, 0, 1, c, al); vtx(arr, p4, 1, 0, c, al); vtx(arr, p3, 1, 1, c, al); };
+  P3.forEach(q => { const k = q.age / q.life;
+    if (q.kind === "flame") { const c = k < .15 ? [1, .9, .55] : k < .4 ? [1, .55, .08] : k < .7 ? [.95, .25, .05] : [.3, .27, .27];
+      quad(glow, q.p, q.size * (1 + k * 1.5), c, (1 - k) * (k > .7 ? .35 : 1)); }
+    else if (q.trail && q.prev) ribbon(rib, q.prev, V.add(q.p, V.mul(q.v, .02)), q.size * .6, q.col, 1 - k);
+    else quad(glow, q.p, q.size, q.col, 1 - k); });
+  BOLTS.forEach(b => { const al = 1 - b.age / b.life;
+    for (let i = 1; i < b.pts.length; i++) { ribbon(rib, b.pts[i - 1], b.pts[i], .026, [.1, .35, .95], al * .55); ribbon(rib, b.pts[i - 1], b.pts[i], .01, [.35, .7, 1], al); ribbon(rib, b.pts[i - 1], b.pts[i], .004, [.95, .98, 1], al); } });
+  if (TELE) { const w = .05 + .22 * TELE.on; ribbon(rib, [0, -.05, .12], [0, 2.25, .12], w, [.2, .75, 1], .45 * TELE.on);
+    for (let r = 0; r < 3; r++) { const h = ((now - TELE.t0) / 700 + r / 3) % 1 * 2.1;            // rings of light rising up the body
+      for (let i = 0; i < 28; i++) { const a = i / 28 * 6.283; quad(glow, [Math.cos(a) * .3, h, Math.sin(a) * .2 + .02], .022, [.15, .7, 1], .9 * TELE.on); } } }
+  EMO3.forEach(e => { const k = e.age / e.life, a = k < .15 ? k / .15 : 1 - (k - .15) / .85, sz = .07 * (.6 + .6 * Math.min(1, k * 4)), p = e.p;
+    const u0 = e.i / 8, u1 = (e.i + 1) / 8;
+    vtx(emo, [p[0] - sz, p[1] - sz, p[2]], u0, 1, [1, 1, 1], a); vtx(emo, [p[0] + sz, p[1] - sz, p[2]], u1, 1, [1, 1, 1], a); vtx(emo, [p[0] + sz, p[1] + sz, p[2]], u1, 0, [1, 1, 1], a);
+    vtx(emo, [p[0] - sz, p[1] - sz, p[2]], u0, 1, [1, 1, 1], a); vtx(emo, [p[0] + sz, p[1] + sz, p[2]], u1, 0, [1, 1, 1], a); vtx(emo, [p[0] - sz, p[1] + sz, p[2]], u0, 0, [1, 1, 1], a); });
+  gl.useProgram(fxProg); gl.uniformMatrix4fv(FU.PV, false, PV); gl.uniform1i(FU.T, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, fxBuf);
+  [FA.P, FA.U, FA.C].forEach(i => gl.enableVertexAttribArray(i));
+  gl.enable(gl.BLEND); gl.depthMask(false);
+  const draw = (arr, mode) => { if (!arr.length) return; gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.DYNAMIC_DRAW);
+    gl.vertexAttribPointer(FA.P, 3, gl.FLOAT, false, 36, 0); gl.vertexAttribPointer(FA.U, 2, gl.FLOAT, false, 36, 12); gl.vertexAttribPointer(FA.C, 4, gl.FLOAT, false, 36, 20);
+    gl.uniform1f(FU.Mode, mode); gl.drawArrays(gl.TRIANGLES, 0, arr.length / 9); };
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  draw(glow, 0); draw(rib, 1);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, ATL.t); draw(emo, 2);
+  if (A3.tabOn && A3.tab) {                                 // the chart floats above the tablet as a 3D hologram
+    const big = !!drawTablet.label, fl = .85 + .15 * Math.random(), holo = [];
+    const c = V.add(A3.tab, big ? [.12, .27 + .006 * Math.sin(now / 400), .1] : [.08, .2 + .006 * Math.sin(now / 400), .06]);
+    const w = big ? .23 : .19, h = big ? .16 : .13;
+    vtx(holo, [c[0] - w, c[1] - h, c[2]], 0, 1, [1, 1, 1], fl); vtx(holo, [c[0] + w, c[1] - h, c[2]], 1, 1, [1, 1, 1], fl); vtx(holo, [c[0] + w, c[1] + h, c[2]], 1, 0, [1, 1, 1], fl);
+    vtx(holo, [c[0] - w, c[1] - h, c[2]], 0, 1, [1, 1, 1], fl); vtx(holo, [c[0] + w, c[1] + h, c[2]], 1, 0, [1, 1, 1], fl); vtx(holo, [c[0] - w, c[1] + h, c[2]], 0, 0, [1, 1, 1], fl);
+    gl.bindTexture(gl.TEXTURE_2D, TABG.t); draw(holo, 3);
+    const beam = [], bc = drawTablet.label === "SELL" ? [1, .3, .35] : drawTablet.label === "BUY" ? [.2, .9, .5] : [.1, .55, 1];
+    ribbon(beam, A3.tab, [c[0], c[1] - h, c[2]], .07, bc, .28);                       // light rising from the palm
+    ribbon(beam, A3.tab, [c[0] - w * .8, c[1] - h, c[2]], .015, bc, .4); ribbon(beam, A3.tab, [c[0] + w * .8, c[1] - h, c[2]], .015, bc, .4);
+    if (Math.random() < .5) spawn(V.add(A3.tab, [rnd(-.02, .02), .01, rnd(-.02, .02)]), [rnd(-.05, .05), rnd(.25, .5), 0], .7, .008, bc, "glow");
+    const corners = [[-w, -h], [w, -h], [w, h], [-w, h], [-w, -h]].map(([x, y]) => [c[0] + x, c[1] + y, c[2]]);
+    for (let i = 1; i < 5; i++) { ribbon(beam, corners[i - 1], corners[i], .012, bc.map(v => v * .7), .9); ribbon(beam, corners[i - 1], corners[i], .004, [.85, .97, 1], 1); }
+    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); draw(beam, 1);
+  }
+  [FA.P, FA.U, FA.C].forEach(i => gl.disableVertexAttribArray(i));
+  gl.disable(gl.BLEND); gl.depthMask(true); gl.useProgram(prog);
+}
+G.laugh = Object.assign(both(H([.12, -.42, .14], [0, -1, .3], [-1, 0, .2], [.4, .45, .5, .55], .4, .3, [.5, -1, -.5])), {});
+
+// ================================================================= talk to the bot ================================
+async function poll() {
+  try {
+    if (SNAP) return;                  // snapshots: never copy the live robot (its voice, effects or gestures)
+    const s = await (await fetch("/state", {cache: "no-store"})).json();
+    st = s; if (!SNAP) tint = s.tint || ""; feet = !!s.feet;
+    if (!TEST.has("scene")) scene = s.scene || "rest";
+    if (s.sid !== sid) { sid = s.sid; start = performance.now() - s.age * 1000; }
+    const f = (s.frames || [])[0] || "";
+    const name = f.replace(/^pose_/, "").replace(/(~\w+)?\.png$/, "");
+    if (!TEST.has("pose") && name) { poseName = name; walkDir = name === "side2" ? -1 : 1; }
+    if (fxId === -1) fxId = s.fx_id; else if (s.fx_id !== fxId) { fxId = s.fx_id; doReact(s.fx, s.fx_data); }
+    const gs = s.gesture || [0, ""];
+    if (gestId === -1) gestId = gs[0]; else if (gs[0] !== gestId) { gestId = gs[0];      // from the dock or a real trade: now
+      if (G[gs[1]]) { gest = {name: gs[1], until: performance.now() + 5000}; lastGest = performance.now(); } }
+  } catch (e) {}
+  setTimeout(poll, 80);
+}
+// snapshot mode (/?snap=1): renders each Short host pose and saves it as data/avatar/host_<pose>.png
+const SNAPS = [["thumbs", "win", "green"], ["concerned", "loss", "amber"], ["chart", "explain", ""], ["confident", "happy", ""],
+  ["point", "explain", ""], ["friendly", "happy", ""], ["show", "trade", "", "tablet"], ["surprised", "surprised", ""], ["idea", "tip", ""],
+  ["think", "question", ""], ["wave", "welcome", ""]];
+let simNow = performance.now(), snapOpen = 0;
+const MOUTHS = [[1 / 3, "b"], [2 / 3, "c"], [1, "d"]];   // mouth openings for the lip-synced Shorts
+async function snapAll() {
+  for (const [pose, sc, tn, alias] of SNAPS) {
+    poseName = pose; scene = sc; tint = tn;
+    for (let i = 0; i < 120; i++) { simNow += 33; frame(simNow); }     // 4 s of animation, run straight through
+    await new Promise(r => setTimeout(r, 50));
+    const blob = await new Promise(r => glc.toBlob(r, "image/png"));
+    await fetch("/snap?name=" + (alias || pose) + (tn ? "~" + tn : ""), {method: "POST", body: blob});
+    for (const [open, letter] of MOUTHS) {       // the same body, only the mouth opens (time stands still: dt = 0)
+      snapOpen = open; frame(simNow);
+      const b2 = await (await fetch(glc.toDataURL("image/png"))).blob();   // captured right after this frame
+      await fetch("/snap?name=" + (alias || pose) + "_m" + letter + (tn ? "~" + tn : ""), {method: "POST", body: b2});
+    }
+    snapOpen = 0;
+  }
+  document.title = "snaps done";
+}
+if (SNAP) { TEST.set("pose", "x"); TEST.set("scene", "x"); TEST.set("tint", ""); setTimeout(snapAll, 800); }
+if (TEST.has("react")) setTimeout(() => doReact(TEST.get("react"), {x1: 1450, x2: 1760, y1: 260, y2: 860, dur: 4.5, eye: [150, 640]}), 500);
+if (TEST.get("pose") === "side2") walkDir = -1;
+next();   /* embedded on the website: there is no stream bot to poll */
+</script><script>
+/* demo: the page can steer the host (pose, mood, where the head looks) */
+addEventListener('message',function(e){var d=e.data||{};
+  if(d.pose){poseName=d.pose;lastPose='';lastGest=0;walkDir=d.pose==='side2'?-1:1;}
+  if(d.scene){scene=d.scene;}
+  if(d.look){window.__look=d.look;window.__lookUntil=performance.now()+3500;}
+  if(d.talk){window.__talkUntil=performance.now()+d.talk;}
+  if(d.fx&&typeof doReact==='function'){doReact(d.fx);}
+  if(d.paused!==undefined){window.__paused=!!d.paused;}
+  if(d.fxStop){EMIT=[];react={name:'',until:0};}
+  if(d.yaw!==undefined){window.__yaw=d.yaw;}
+});
+</script></body></html>
