@@ -70,7 +70,7 @@ varying vec3 vN, vW, vO; varying vec2 vU;
 void main(){ vec4 w = uM * vec4(aP, 1.); vW = w.xyz; vN = uNM * aN; vO = aP; vU = aU; gl_Position = uPV * w; }`;
 const FS = `precision highp float;
 varying vec3 vN, vW, vO; varying vec2 vU;
-uniform vec3 uCol, uEmit, uCam, uGlowCol; uniform float uSpec, uGloss, uEnv, uTex;
+uniform vec3 uCol, uEmit, uCam, uGlowCol; uniform float uSpec, uGloss, uEnv, uTex, uTime, uGoldY;
 uniform sampler2D uAlb, uGlo; uniform vec4 uRect; uniform float uDis;
 void main(){
   vec3 N = normalize(vN), Vd = normalize(uCam - vW);
@@ -82,11 +82,14 @@ void main(){
     float front = smoothstep(.05, .35, normalize(vO).z) * inside;
     vec2 tc = vec2(uv.x, 1. - uv.y);
     vec4 t = texture2D(uAlb, tc);
-    base = mix(base, t.rgb, t.a * front);
+    base = mix(base, t.rgb, t.a * front);   // (texture: face, logo)
     vec3 gt = texture2D(uGlo, tc).rgb;
     base *= 1. - min(1., max(gt.r, max(gt.g, gt.b)) * 1.4) * front;
     emit += gt * front * 1.7;
   }
+  float gw = smoothstep(uGoldY + .035, uGoldY - .035, vW.y);                              // GOLD: everything below the rising wave front turns to polished gold
+  float glum = dot(base, vec3(.3, .59, .11));
+  base = mix(base, vec3(.95, .66, .16) * (.32 + glum * 1.05), gw * step(-1., uGoldY));
   vec3 L1 = normalize(vec3(-.55, .7, .9)), L2 = normalize(vec3(.85, .2, .45)), L3 = normalize(vec3(.2, .35, -1.));
   float d1 = max(dot(N, L1), 0.), d2 = max(dot(N, L2), 0.);
   float s1 = pow(max(dot(N, normalize(L1 + Vd)), 0.), uGloss), s2 = pow(max(dot(N, normalize(L2 + Vd)), 0.), uGloss * .6);
@@ -96,13 +99,20 @@ void main(){
            + vec3(1.) * exp(-pow((R.x + .4) * 3.4, 2.)) * smoothstep(.0, .55, R.y) * 1.1          // tall softbox, left
            + vec3(.8, .88, 1.) * exp(-pow((R.x - .55) * 5., 2.)) * smoothstep(-.1, .4, R.y) * .6  // strip light, right
            + vec3(1.) * smoothstep(.82, .97, R.y) * .7;                                              // ceiling light
+  env += vec3(.85, .95, 1.) * exp(-pow((R.y - (.15 + .12 * sin(uTime * .55))) * 7., 2.)) * smoothstep(-.6, .5, R.x) * .5;          // a studio strip light slowly sweeping over the armour (moving reflections)
   float occ = .72 + .28 * smoothstep(-.8, .6, N.y);
   vec3 amb = mix(vec3(.08, .085, .1), vec3(.3, .32, .37), N.y * .5 + .5) * occ;
   vec3 c = base * (amb + d1 * vec3(1., .97, .93) * .9 + d2 * vec3(.6, .7, .95) * .3)
          + (s1 * .9 + s2 * .35) * uSpec
          + env * uEnv * (.1 + .9 * fres)
          + uGlowCol * fres * max(dot(N, L3) + .35, 0.) * .4
+         + vec3(1., .6, .26) * pow(1. - max(dot(N, Vd), 0.), 2.6) * max(dot(N, normalize(vec3(.9, .1, -.5))) + .15, 0.) * .5        // warm orange rim from the right-back ...
+         + vec3(.2, .8, 1.) * pow(1. - max(dot(N, Vd), 0.), 2.6) * max(dot(N, normalize(vec3(-.9, .15, -.5))) + .15, 0.) * .55       // ... cold teal rim from the left-back (cinema colour contrast)
+         + pow(max(dot(N, normalize(L1 + Vd)), 0.), 260.) * uSpec * 1.1                                                          // a tight clear-coat highlight on top of the glossy paint
          + emit;
+  c += gw * step(-1., uGoldY) * (vec3(1., .82, .38) * (s1 * 1.25 + s2 * .4) + env * vec3(1., .78, .36) * (.12 + .5 * fres));           // gold is metallic: sharp highlights and warm reflections
+  c += vec3(1., .88, .45) * smoothstep(.07, .0, abs(vW.y - uGoldY)) * step(-1., uGoldY) * 1.5;                              // the glowing front of the wave
+  c = mix(vec3(dot(c, vec3(.3, .59, .11))), c, 1.13); c = c / (1. + c * .1) * 1.1;                                             // a touch more colour and a filmic shoulder
   if (uDis > 0.) {                                      // teleport: the body breaks into light, cell by cell
     float n = fract(sin(dot(floor(vW * 70.), vec3(12.9898, 78.233, 37.719))) * 43758.5453);
     n = mix(n, clamp(vW.y / 2.1, 0., 1.), .35);
@@ -118,7 +128,7 @@ gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, shade
 if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw gl.getProgramInfoLog(prog);
 gl.useProgram(prog);
 const A = {P: gl.getAttribLocation(prog, "aP"), N: gl.getAttribLocation(prog, "aN"), U: gl.getAttribLocation(prog, "aU")};
-const U = {}; ["uPV", "uM", "uNM", "uCol", "uEmit", "uCam", "uGlowCol", "uSpec", "uGloss", "uEnv", "uTex", "uAlb", "uGlo", "uRect", "uDis"]
+const U = {}; ["uPV", "uM", "uNM", "uCol", "uEmit", "uCam", "uGlowCol", "uSpec", "uGloss", "uEnv", "uTex", "uAlb", "uGlo", "uRect", "uDis", "uTime", "uGoldY"]
   .forEach(n => U[n] = gl.getUniformLocation(prog, n));
 gl.enable(gl.DEPTH_TEST);
 
@@ -240,6 +250,10 @@ function drawFace(F, glow, now, mode) {
   g.globalCompositeOperation = "source-over"; g.globalAlpha = 1; g.fillStyle = "#000"; g.fillRect(0, 0, 512, 512);
   if (fade < 1) { g.globalAlpha = 1 - fade; paintFace(g, F, glow, now, prevMode); }
   g.globalAlpha = fade; paintFace(g, F, glow, now, faceMode); g.globalAlpha = 1;
+  const sw = (now % 6500) / 6500;                                    // a bright scan line sweeps the face screen now and then
+  if (!SNAP && sw < .1) { const yy = sw / .1 * 512; const gr = g.createLinearGradient(0, yy - 26, 0, yy + 26); gr.addColorStop(0, "rgba(255,255,255,0)"); gr.addColorStop(.5, "rgba(255,255,255,.28)"); gr.addColorStop(1, "rgba(255,255,255,0)"); g.fillStyle = gr; g.fillRect(0, yy - 26, 512, 52); }
+  if (!SNAP && Math.random() < .006) { const gy = 120 + Math.random() * 260, gh = 14 + Math.random() * 40, dx = (Math.random() - .5) * 46;      // a quick data glitch: a slice of the picture jumps sideways
+    g.save(); g.globalAlpha = .9; g.drawImage(g.canvas, 0, gy, 512, gh, dx, gy, 512, gh); g.restore(); }
   g.fillStyle = "rgba(0,0,0,.42)";                                   // the LED grid
   for (let i = 0; i < 512; i += 6) { g.fillRect(i, 0, 1.6, 512); g.fillRect(0, i, 512, 1.6); }
   FGLOW.push();
@@ -317,9 +331,11 @@ const LOGO = canvasTex(512, 512), LOGOG = canvasTex(4, 4); LOGOG.push();
   a.fillStyle = "#1f4fd6"; tri(cx - 27, 36, 15); tri(cx + 27, 36, 15);
   a.fillStyle = "#1fae5c"; a.beginPath(); a.moveTo(cx, cy - 34); a.lineTo(cx + 13, cy - 17); a.lineTo(cx + 13, cy + 24); a.lineTo(cx - 13, cy + 24); a.lineTo(cx - 13, cy - 17); a.closePath(); a.fill();
   a.fillRect(cx - 1.5, cy - 44, 3, 11); a.fillRect(cx - 1.5, cy + 23, 3, 8);
-  a.fillStyle = "#222a36"; a.font = "500 26px 'Segoe UI', Arial, sans-serif"; a.textAlign = "center";
-  if (a.letterSpacing !== undefined) a.letterSpacing = "9px";
-  a.fillText("GOLDTRIENGINE", cx + 4, cy + 68);
+  a.fillStyle = "#070d1c"; a.font = "900 40px 'Segoe UI Black', 'Segoe UI', Arial, sans-serif"; a.textAlign = "center";
+  if (a.letterSpacing !== undefined) a.letterSpacing = "4px";
+  a.fillText("GOLDTRIENGINE", cx + 2, cy + 82);
+  const gw = a.createLinearGradient(cx - 190, 0, cx + 190, 0); gw.addColorStop(0, "rgba(212,175,55,0)"); gw.addColorStop(.5, "#d4af37"); gw.addColorStop(1, "rgba(212,175,55,0)");
+  a.fillStyle = gw; a.fillRect(cx - 190, cy + 98, 380, 4);
   LOGO.push();
 })();
 const TAB = canvasTex(256, 192), TABG = canvasTex(256, 192);
@@ -338,6 +354,8 @@ drawTablet("");
 
 // ================================================================= materials & drawing ============================
 let glowCol = [.25, .55, 1.0];
+let goldOrn = 0;                                           // 0..1: how much of the gold jewellery is shown (scale), driven by walking
+let goldLvl = -5;                                          // height of the gold wave front (-5 = no gold)
 const MAT = {
   white: {col: [.86, .87, .88], spec: .75, gloss: 55, env: .32},     // high-gloss white armour
   metal: {col: [.55, .57, .61], spec: 1.1, gloss: 80, env: .85},    // metallic joint actuators
@@ -347,6 +365,7 @@ const MAT = {
   matte: {col: [.035, .037, .042], spec: .25, gloss: 18, env: .1},   // matte black neck collar
   seam: {col: [.25, .26, .28], spec: .2, gloss: 10, env: .05},
   glow: {col: [0, 0, 0], spec: 0, gloss: 1, env: 0, emit: 1.35},
+  gold: {col: [.95, .66, .16], spec: 1.5, gloss: 120, env: 1.0},           // polished gold ornaments
 };
 let PV = M.id(), CAM = [0, 0, 5], DIS = 0;
 const A3 = {};                                           // world points for the 3D effects (feet, chest, eyes)
@@ -359,7 +378,7 @@ function part(base, mesh, mat, t, s, r, tex) {
   return m;
 }
 function flush() {
-  gl.uniformMatrix4fv(U.uPV, false, PV); gl.uniform3fv(U.uCam, CAM); gl.uniform3fv(U.uGlowCol, glowCol);
+  gl.uniform1f(U.uTime, performance.now() / 1000); gl.uniform1f(U.uGoldY, goldLvl); gl.uniformMatrix4fv(U.uPV, false, PV); gl.uniform3fv(U.uCam, CAM); gl.uniform3fv(U.uGlowCol, glowCol);
   gl.uniform1i(U.uAlb, 0); gl.uniform1i(U.uGlo, 1); gl.uniform1f(U.uDis, DIS);
   for (const d of draws) {
     const ms = d.mesh, mt = d.mat;
@@ -432,9 +451,11 @@ function arm(torso, s, H, holding) {
   part(fo, MESH.soft, MAT.white, [0, -.12, -.008], [.044, .1, .04]);                      // forearm shell
   part(fo, MESH.rbox, MAT.black, [0, -.07, .034], [.03, .05, .012]);                      // pad
   part(fo, MESH.soft, MAT.metal, [0, -ARM_B + .01, 0], [.034, .012, .034]);                 // wrist actuation disc
+  if (goldOrn > .02) { const g = goldOrn; part(fo, MESH.torus, MAT.gold, [0, -.12, 0], [.05 * g, .02 * g, .05 * g]); part(fo, MESH.torus, MAT.gold, [0, -.17, 0], [.046 * g, .014 * g, .046 * g]); part(fo, MESH.torus, MAT.gold, [0, -.075, 0], [.052 * g, .012 * g, .052 * g]); }      // gold bracelets
   const hm = M.mul(torso, boneFrame(T, H.f, H.n));
   hand(hm, s, H, holding);
   anchors[s > 0 ? "handL" : "handR"] = proj(M.pt(hm, [0, -.08, 0]));
+  if (s > 0) { A3.tipL = M.pt(hm, [0, -.2, .01]); anchors.tipL = proj(A3.tipL); }            // the index fingertip (the drawing beam starts here)
 }
 function leg(pelvis, s, L) {
   let m = M.chain(pelvis, M.T(s * .095, -.05, 0), M.RZ(s * L.out), M.RX(-L.hip));
@@ -479,6 +500,10 @@ function robot(P, F) {
     part(torso, capsule(.007, .007, .17), MAT.black, [s * .04, .2, .07], null, [0, 0, s * .22]); });
   part(torso, MESH.torus, MAT.metal, [0, .06, .095], [.022, .022, .022], [Math.PI / 2, 0, 0]);
   part(torso, MESH.rbox, MAT.mech, [0, .02, 0], [.15, .035, .1]);
+  if (goldOrn > .02) { const g = goldOrn;
+    
+    part(torso, MESH.sphere, MAT.gold, [0, .36, .126], [.032 * g, .032 * g, .01 * g]);                                // chest medallion
+    }                       // a gold belt
   part(torso, MESH.plate, MAT.white, [0, .325, .0], [.205 * br, .175 * br, .125 * br], null, {rect: [-1, -1, 2, 2], a: LOGO, g: LOGOG});
   part(torso, MESH.box, MAT.seam, [0, .35, -.122], [.006, .11, .006]);                    // rear spine groove
   // black yoke: sloping from the neck down to the shoulders (like the trapezius), the neck short and wide at the base
@@ -490,6 +515,8 @@ function robot(P, F) {
   part(head, MESH.head, MAT.helmet, [0, 0, 0], [.124, .158, .146], null, {rect: FR, a: BLANK, g: FGLOW});
   part(head, MESH.led, MAT.glow, [0, 0, 0], [.124, .158, .146]);
   part(head, MESH.headBack, MAT.matte, [0, 0, 0], [.124, .158, .146]);                 // matte rear casing
+  if (goldOrn > .02) { const g = goldOrn; part(head, MESH.torus, MAT.gold, [0, .1, 0], [.105 * g, .105 * g, .018 * g], [Math.PI / 2, 0, 0]);          // a gold crown: a band with five spikes
+    for (let i = 0; i < 5; i++) { const a = -.8 + i * .4; part(head, MESH.sphere, MAT.gold, [Math.sin(a) * .09 * g, .12 + (i % 2 ? 0 : .012) * g, Math.cos(a) * .085 * g], [.012 * g, (i % 2 ? .02 : .03) * g, .012 * g]); } }
   const eyeL = M.pt(head, [.036, .021, .124]), eyeR = M.pt(head, [-.036, .021, .124]);
   A3.eye = V.mul(V.add(eyeL, eyeR), .5); A3.head = M.pt(head, [0, .05, 0]); A3.chest = M.pt(torso, [0, .3, 0]);
   anchors.eyeL = proj(eyeL); anchors.eyeR = proj(eyeR); anchors.head = proj(M.pt(head, [0, .162, 0])); anchors.chest = proj(M.pt(torso, [0, .27, .12]));
@@ -547,12 +574,14 @@ const G = {
   cheer: Object.assign(both(H([.17, .42, .06], [.1, 1, 0], [-1, 0, .2], [1, 1, 1, 1], .7, .3, [1, -.3, -.4])), {hx: -.12}),
   clap: both(H([-.2, -.1, .3], [0, .75, .65], [-1, 0, 0], [.08, .08, .1, .12], .25, .25, [.8, -1, -.3])),
   power: Object.assign(both(H([.42, -.1, .12], [1, -.1, 0], [0, 0, 1], [0, 0, 0, 0], .1, 1, [.3, -1, -.4])), {hx: -.05}),
-  fly: Object.assign(both(H([.14, -.47, -.06], [.15, -1, -.1], [-1, 0, 0], [.8, .85, .9, .9], .6, .2, [.4, -1, .3])),
-         {legL: {hip: -.05, out: .02, knee: .15, ankle: -.5}, legR: {hip: .05, out: .02, knee: .1, ankle: -.5}, lean: .06}),
+  fly: {L: H([.3, .17, .4], [.75, .35, 1], [0, -.6, .8], [0, 0, 0, 0], .3, .2, [.3, -1, -.7]),                    // the same relaxed "pointing" arm he uses when he talks about the chart
+        R: H([.05, -.6, .02], [.05, -1, .02], [-1, 0, .1], [.12, .15, .2, .25], .2, .2, [.05, -1, -.2]),          // the free arm hangs STRAIGHT down along the body (no bent elbow)            // the other arm hangs relaxed (his rest pose)
+        legL: {hip: -.22, out: .03, knee: .22, ankle: -.4}, legR: {hip: -.1, out: .03, knee: .16, ankle: -.35}, lean: .2, yaw: .5, hx: -.04, hy: -.2},
   stand: {}, walk: {},
 };
 G.s_open.R = both(TALKH).R; G.s_count.R = both(TALKH).R;
-G.tablet_buy = G.tablet;                                  // the bot's pose name: reading (BUY/SELL only for real trades)
+G.drawpt = G.point;                                       // marking on the chart: the pointing arm, aimed at the target every frame (see frame())
+G.tablet_buy = G.tablet;                                // the bot's pose name: reading (BUY/SELL only for real trades)
 G.show_buy = Object.assign({}, G.show, {buy: 1}); G.show_sell = Object.assign({}, G.show, {buy: 1});
 const SPEECH = [["talk", 3], ["s_open", 3], ["s_openR", 2], ["s_both", 2], ["s_down", 2], ["s_steeple", 1], ["s_count", 1]];
 const POSE_GESTURE = {side: "walk", side2: "walk", front: "fly"};
@@ -582,12 +611,14 @@ let tint = "", walking = false, walkDir = 1, feet = false;
 let X = flat(target("rest"), []), Vv = X.map(() => 0), GE = X.slice();
 const Fs = Object.assign({}, FACE0, {open: 0, mwide: 0, mo: 0, blink: 0, lx: 0, ly: 0});
 let blinkAt = performance.now() + 2000, blinkT = -1, lookAt = 0, lookTo = [0, 0], beat = 0, lastLvl = 0, sylAt = -9999;
+let camPunch = 0, camShake = 0, bodyKick = 0, prevG = "", windupUntil = 0;
+function kick(a, s) { camPunch = Math.max(camPunch, a); camShake = Math.max(camShake, s || 0); bodyKick = Math.max(bodyKick, a); }
 let gestId = -1, flyAmt = 0, anchorAt = 0, react = {name: "", until: 0}, frameAmt = 0, walkPh = 0, beatS = 0, browKick = 0;
 let gest = {name: "", until: 0}, lastGest = -1e9, lastPose = "", speech = {name: "talk", until: 0}, speakFrom = 0;
-let yawS = 0;
 let headT = [0, 0, 0], headS = [0, 0, 0], headAt = 0, swayT = 0, swayS = 0, swayAt = 0;
 const HOLD = {show_buy: 5, show_sell: 5, wave: 2.8, thumbs: 2.6, point: 4, chart: 4.5, idea: 2.6, stop: 2.4, surprised: 2.2, think: 4, watching: 4,
   tablet: 5, tablet_buy: 5, concerned: 3, determined: 2.4, cheer: 2.6};
+let yawS = 0;
 function level(now) {
   if (window.__talkUntil && now < window.__talkUntil) return [0, 1, 2, 3, 2, 1, 0, 0, 2, 3, 3, 1, 1, 2, 0, 0, 0][Math.floor(now / 90) % 17];
   if (TEST.has("talk")) return [0, 1, 2, 3, 2, 1, 0, 0, 2, 3, 3, 1, 1, 2, 0, 0, 0][Math.floor(now / 90) % 17];
@@ -610,7 +641,7 @@ function frame(now) {
     lastPose = poseName;
     const gn = poseName === "tablet_buy" ? "tablet" : poseName;     // BUY / SELL screens come only as bot gestures
     const must = /^(wave|thumbs|surprised|concerned|cheer)$/.test(poseName);
-    if (HOLD[gn] && (must || now - lastGest > 11000)) { gest = {name: gn, until: now + HOLD[gn] * 1000}; lastGest = now; }
+    if (HOLD[gn] && (must || now - lastGest > 11000)) { gest = {name: gn, until: now + HOLD[gn] * 1000}; lastGest = now; gestFx(gn); }
   }
   if (talking) { if (!speakFrom) speakFrom = now;
     if (now - speakFrom > 400 && now > speech.until) speech = {name: pick(SPEECH, speech.name), until: now + 2300 + Math.random() * 2200}; }
@@ -619,11 +650,17 @@ function frame(now) {
               : talking ? (speakFrom && now - speakFrom > 400 ? speech.name : "talk") : "rest");
   if (now < react.until) gname = react.name;
   walking = gname === "walk";
+  goldLvl = -5;
+  if (walking || now < goldUntil) goldOrn = Math.min(1, goldOrn + dt * .9); else goldOrn = Math.max(0, goldOrn - dt * 1.4);
+  if (goldOrn > .3 && !SNAP && Math.random() < .5) { const hp = A3.tipL || A3.head; if (hp) spawn(V.add(hp, [rnd(-.05, .05), rnd(-.05, .05), rnd(0, .08)]), [rnd(-.2, .2), rnd(.2, .6), 0], rnd(.4, .8), rnd(.009, .016), [1, rnd(.75, .95), rnd(.3, .5)], "glow"); }      // glitter on the jewellery      // up the body while walking, back down after
+  if (goldLvl > -.1 && !SNAP && A3.chest && Math.random() < .7) { const y = Math.min(goldLvl, 2.0);                                               // sparkles shed from the golden body
+    spawn([rnd(-.28, .28), rnd(.1, y), rnd(-.1, .2)], [rnd(-.15, .15), rnd(.1, .5), 0], rnd(.4, .9), rnd(.008, .02), [1, rnd(.75, .95), rnd(.3, .55)], "glow"); }
   // two-stage smoothing: the target eases in, then each part follows on its own critically damped spring
-  const goal = flat(target(gname), []);
+  if (gname !== prevG) { if (prevG !== "" && /^(thumbs|point|chart|wave|idea|surprised|cheer|show_buy|show_sell|power|tablet|stop|determined|scan|drawpt)$/.test(gname)) windupUntil = now + 150; prevG = gname; }      // ANTICIPATION: the arms drop for a beat before a big gesture
+  const goal = flat(target(now < windupUntil ? "rest" : gname), []);
   for (let i = 0; i < X.length; i++) {
     GE[i] += (goal[i] - GE[i]) * Math.min(1, dt * 5);
-    const k = STIFF[i] * STIFF[i] * .25 + 4, d = 2 * Math.sqrt(k);
+    const k = STIFF[i] * STIFF[i] * .25 + 4, d = 2 * Math.sqrt(k) * (STIFF[i] === 11 ? .6 : STIFF[i] === 16 ? .78 : 1);      // ZETA_MARK: arms and head slightly under-damped = a little follow-through, snappier
     Vv[i] += ((GE[i] - X[i]) * k - Vv[i] * d) * dt; X[i] += Vv[i] * dt;
   }
   const P = unflat(TEMPLATE, X, {i: 0});
@@ -654,6 +691,7 @@ function frame(now) {
   if (now > swayAt) { swayT = (Math.random() - .5) * 2; swayAt = now + 5000 + Math.random() * 5000; }
   swayS += (swayT - swayS) * Math.min(1, dt * .8);
   P.breath = Math.sin(t * 1.4);
+  P.lean += bodyKick * .07 * Math.cos(now / 38); P.hx -= bodyKick * .05; P.hz += bodyKick * .03 * Math.sin(now / 55);
   if (window.__yaw !== undefined) { yawS += (window.__yaw - yawS) * Math.min(1, dt * 4); P.yaw = yawS; }
   if (TEST.has("yaw")) P.yaw = +TEST.get("yaw");                    // test: turn the robot to look at it from the side
   P.hx += headS[0] + beatS * .04; P.hy += headS[1]; P.hz += headS[2] + swayS * .012;
@@ -666,6 +704,29 @@ function frame(now) {
     P.hy += (yaw - P.hy) * w; P.hx += (pitch - P.hx) * w; P.hz *= 1 - w; P.twist += yaw * .22 * w;
     if (A3.eye && Math.random() < .5) spawn(A3.eye, [0, 0, 0], .12, .09, [1, .2, .15], "glow");
   }
+  if (now < goldUntil && anchors.handL && now - (react.goldAt || 0) > 60 && !SNAP && innerWidth === 1200 && innerHeight === 1600) {         // the throwing hand's position (the gold leaves from here)
+    react.goldAt = now; fetch(`/anchor?tx=${anchors.handL[0].toFixed(1)}&ty=${anchors.handL[1].toFixed(1)}`, {method: "POST"}).catch(() => {}); }
+  const drawing = react.name === "drawpt" && now < react.until && anchors.tipL;
+  if (drawing) {                                          // the arm lifts, the index finger aims at the point on the chart, the head follows it
+    const d = react.data, k = (now - react.t0) / (d.dur * 1000), w = Math.min(1, k * 5, (1 - k) * 4);
+    let tgx = d.tx, tgy = d.ty;
+    if (d.tx2 !== undefined) { const u = Math.max(0, Math.min(1, ((now - react.t0) / 1000 - d.s0) / Math.max(.2, d.s1 - d.s0))), e = u * u * (3 - 2 * u);   // follow the beam head
+      tgx = d.tx + (d.tx2 - d.tx) * e; tgy = d.ty + (d.ty2 - d.ty) * e; }
+    const dx = tgx - anchors.handL[0], dy = tgy - anchors.handL[1], len = Math.max(60, Math.hypot(dx, dy));
+    const f = V.norm([dx / len, -dy / len * .9, .22]), up = Math.max(-1, Math.min(1, -dy / len));
+    P.L.p = V.mix(P.L.p, [.3, .06 + up * .12, .25 + .03 * Math.abs(up)], w);
+    P.L.f = V.norm(V.mix(P.L.f, f, w)); P.L.n = V.mix(P.L.n, [0, -.6, .8], w);
+    P.L.c = P.L.c.map((c, i) => c + ([0, 1, 1, 1][i] - c) * w); P.L.t += (.85 - P.L.t) * w;
+    const yaw = Math.max(-1.0, Math.min(1.0, Math.atan2(dx, 650))), pitch = Math.max(-.4, Math.min(.45, Math.atan2(dy, Math.hypot(dx, 650))));
+    P.hy += (yaw * .8 - P.hy) * w * .7; P.hx += (pitch * .8 - P.hx) * w * .7; P.twist += yaw * .18 * w;
+    if (Math.random() < .8) spawn(A3.tipL, [rnd(-.1, .1), rnd(-.1, .1), rnd(0, .1)], .22, rnd(.012, .02), [.35, .85, 1], "glow");
+    if (now - (react.tipAt || 0) > 45 && !SNAP && innerWidth === 1200 && innerHeight === 1600) {        // tell the bot where the fingertip is (for the beam)
+      react.tipAt = now; fetch(`/anchor?tx=${anchors.tipL[0].toFixed(1)}&ty=${anchors.tipL[1].toFixed(1)}`, {method: "POST"}).catch(() => {}); }
+  }
+  if (react.name === "fly" && now < react.until && anchors.footL && anchors.footR && now - (react.footAt || 0) > 40 && !SNAP && innerWidth === 1200 && innerHeight === 1600) {   // the feet position (for the screen effects that must follow him)
+    react.footAt = now; fetch(`/anchor?fx=${((anchors.footL[0] + anchors.footR[0]) / 2).toFixed(1)}&fy=${((anchors.footL[1] + anchors.footR[1]) / 2).toFixed(1)}`, {method: "POST"}).catch(() => {}); }
+  if (react.holo && now < react.until && anchors.handL && now - (react.tipAt || 0) > 45 && !SNAP && innerWidth === 1200 && innerHeight === 1600) {   // palm position for the hologram
+    react.tipAt = now; fetch(`/anchor?tx=${anchors.handL[0].toFixed(1)}&ty=${(anchors.handL[1] - 10).toFixed(1)}`, {method: "POST"}).catch(() => {}); }
   P.L.p = V.add(P.L.p, [swayS * .008, P.breath * .003, 0]); P.R.p = V.add(P.R.p, [swayS * .008, P.breath * .003, 0]);
   if (talking && /^(talk|s_|explain|friendly|confident)/.test(gname)) {     // the gesturing hand moves with the words
     const main = /R$/.test(gname) ? P.R : P.L, other = main === P.L ? P.R : P.L;
@@ -677,17 +738,21 @@ function frame(now) {
     P.L.p = V.add(P.L.p, [o, 0, 0]); P.R.p = V.add(P.R.p, [-o, 0, 0]); }
   if (gname === "laugh") { P.hx -= .1 + .035 * Math.sin(t * 16); P.bob = .005 * Math.sin(t * 16); Fs.open = .35 + .3 * Math.abs(Math.sin(t * 8)); }
   if (walking) {                                          // a real walk cycle; OBS moves the robot across the screen
-    walkPh += dt * 7;
-    const sw = Math.sin(walkPh);
-    P.yaw = walkDir * 1.25; P.bob = .02 * Math.abs(Math.cos(walkPh)) - .01;
-    P.legL = {hip: .4 * sw, out: .03, knee: .7 * Math.max(0, -Math.sin(walkPh - .9)) + .08, ankle: -.22 * sw};
-    P.legR = {hip: -.4 * sw, out: .03, knee: .7 * Math.max(0, Math.sin(walkPh - .9)) + .08, ankle: .22 * sw};
-    P.L.p = V.add(RESTH.p, [0, .02, -.13 * sw]); P.R.p = V.add(mir(RESTH.p), [0, .02, .13 * sw]);
-    P.lean += .05; P.sway = .02 * Math.sin(walkPh);
+    walkPh += dt * 6.2;                                   // ~ one stride cycle per second: a calm, natural cadence
+    const sw = Math.sin(walkPh), cs = Math.cos(walkPh);
+    P.yaw = walkDir * 1.32; P.bob = .018 * Math.abs(cs) - .009;                          // (the body rises a little in the middle of each step)
+    P.legL = {hip: .34 * sw, out: .03, knee: .62 * Math.max(0, -Math.sin(walkPh - .9)) + .07, ankle: -.2 * sw};
+    P.legR = {hip: -.34 * sw, out: .03, knee: .62 * Math.max(0, Math.sin(walkPh - .9)) + .07, ankle: .2 * sw};
+    // arms swing opposite to the legs, forearms bent a little more as they come forward
+    P.L.p = V.add(RESTH.p, [0, .03 + .025 * Math.max(0, -sw), -.2 * sw]); P.R.p = V.add(mir(RESTH.p), [0, .03 + .025 * Math.max(0, sw), .2 * sw]);
+    P.twist += -walkDir * .09 * sw; P.lean += .07; P.sway = .012 * Math.sin(walkPh);       // shoulders turn against the hips, a slight forward lean
+    P.hy = -walkDir * .98 + P.hy * .1; P.hx = .02 + .01 * Math.sin(walkPh * 2); P.hz = 0;  // the head faces the way he walks and stays level
     ["footL", "footR"].forEach(k => { const f = A3[k]; if (f && Math.random() < .6)            // gold sparkles at every step
       spawn(V.add(f, [rnd(-.04, .04), .01, rnd(-.04, .04)]), [rnd(-.6, .6), rnd(.6, 1.6), rnd(-.3, .3)], rnd(.5, 1), rnd(.012, .022), Math.random() < .3 ? [1, .97, .8] : [1, .78, .2], "spark", -3, true); });
   }
-  if (gname === "fly") P.bob = .01 * Math.sin(t * 3);
+  if (gname === "fly") { P.R.p = [-.01, -.6, .03]; P.R.f = [0, -1, .03]; P.R.n = [1, 0, .1]; P.R.pole = [-.05, -1, -.2]; P.R.c = [.1, .12, .16, .2];      // the free arm hangs perfectly straight, hand in line with the forearm
+    P.bob = .01 * Math.sin(t * 3); P.tilt += .07 * Math.sin(t * 1.3); P.twist += .05 * Math.sin(t * .9); P.L.p = V.add(P.L.p, [0, .012 * Math.sin(t * 2.1), 0]); P.R.p = V.add(P.R.p, [0, .012 * Math.sin(t * 2.1 + 1), 0]);
+    P.legL.knee += .06 * Math.sin(t * 2.4); P.legR.knee += .06 * Math.sin(t * 2.4 + 1.2); }      // a slow roll and a little flutter, so the flight is alive, not frozen
   // ---- camera: waist-up presenter view, or the full body for walking, standing and flying ----
   const full = TEST.has("full") ? 1 : (/^(walk|fly|stand)$/.test(gname) || poseName === "stand" ? 1 : 0);
   frameAmt += (full - frameAmt) * Math.min(1, dt * 3);
@@ -696,11 +761,13 @@ function frame(now) {
   let Ht = (yb - ya) / frac, yc = ya + Ht / 2, xc = .15 * Ht;
   if (TEST.has("full")) yc -= .32 * Ht * frameAmt;      // room under the feet for the jet flames
   if (TEST.has("face")) { Ht = .5; yc = 1.82; xc = 0; }
+  camPunch *= Math.exp(-dt * 3.2); camShake *= Math.exp(-dt * 6); bodyKick *= Math.exp(-dt * 4.5);
+  Ht *= 1 - .055 * camPunch; xc += (Math.random() - .5) * .014 * camShake; yc += (Math.random() - .5) * .014 * camShake;      // a little push-in and shake on the big moments
   const fov = .36, dist = Ht / 2 / Math.tan(fov / 2);
   CAM = [xc, yc, dist];
   PV = M.mul(M.persp(fov, glc.width / glc.height, .5, dist + 5), M.T(-xc, -yc, -dist));
   // ---- draw ----
-  const gc = scanning ? TINTS.red : TINTS[TEST.has("tint") && !SNAP ? TEST.get("tint") : tint] || TINTS[""]; glowCol = SNAP ? gc.slice() : V.mix(glowCol, gc, Math.min(1, dt * 3));
+  const gc = goldLvl > 1.5 ? [1, .74, .22] : scanning ? TINTS.red : TINTS[TEST.has("tint") && !SNAP ? TEST.get("tint") : tint] || TINTS[""]; glowCol = SNAP ? gc.slice() : V.mix(glowCol, gc, Math.min(1, dt * 3));
   const gcss = `rgb(${glowCol.map(v => Math.round(Math.min(1, v) * 255)).join(",")})`;
   const label = gname === "show_buy" ? "BUY" : gname === "show_sell" ? "SELL" : "";
   if (label !== drawTablet.label) { drawTablet.label = label; drawTablet(label); }
@@ -709,11 +776,12 @@ function frame(now) {
   else if (scanning) fmode = "scan"; else if (gname === "cheer") fmode = "money";
   else if (gname === "wave") fmode = "love"; else if (gname === "idea") fmode = "star"; else if (gname === "surprised") fmode = "wow";
   if (TEST.has("face_mode")) fmode = TEST.get("face_mode");
-  drawFace(Fs, gcss, now, fmode); MAT.glow.emit = 1.25 + .45 * Fs.open;
+  drawFace(Fs, gcss, now, fmode); MAT.glow.emit = 1.25 + .45 * Fs.open + .14 * Math.sin(t * 3.1);
   gl.viewport(0, 0, glc.width, glc.height); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   glowPts.length = 0;
   P.tabletL = P.tabletL > .5; P.tabletR = false; A3.tabOn = false;
   robot(P, Fs); flush();
+  if (!SNAP && A3.chest && Math.random() < .14) spawn(V.add(A3.chest, [rnd(-.07, .07), rnd(-.06, .06), .15]), [rnd(-.04, .04), rnd(.15, .35), 0], .95, .008, glowCol.slice(), "glow");     // a living core: tiny energy motes rise from the chest
   fx3d(now, dt);
   if (!SNAP && !TEST.toString() && innerWidth === 1200 && innerHeight === 1600 && /^(rest|talk|s_)/.test(gname) && now - anchorAt > 3000 && anchors.eyeL) {
     anchorAt = now;                                       // tell the bot where the eyes are (for the laser beam)
@@ -766,9 +834,62 @@ function bolt3(c, rad) {                                  // a jagged electric a
   for (let i = 0; i < n; i++) { x = V.add(x, [rnd(-.06, .06), rnd(-.06, .06), rnd(-.04, .04)]); pts.push(x.slice()); }
   BOLTS.push({pts, life: rnd(.07, .15), age: 0});
 }
+function glowAura(ms, color, px) {                         // soft bloom around the whole robot while a super power runs
+  const cv = document.getElementById("gl"); if (!cv) return;
+  cv.style.transition = "filter .35s"; cv.style.filter = `drop-shadow(0 0 ${px}px ${color}) brightness(1.12) saturate(1.15)`;
+  clearTimeout(glowAura.t); glowAura.t = setTimeout(() => { cv.style.filter = "none"; }, ms);
+}
+// ===== Hollywood-style effects for every gesture and power: bursts of light, shockwave rings, flares, bloom =====
+function burst3(p, n, col, sp, size, life) {                 // a sphere of glowing sparks thrown out of a point
+  for (let i = 0; i < n; i++) { const a = rnd(0, 6.283), b = rnd(-1, 1), s = rnd(.35, 1) * sp, q = Math.sqrt(1 - b * b);
+    spawn(p, [Math.cos(a) * q * s, b * s, Math.sin(a) * q * s * .6], life || rnd(.5, 1.1), size || rnd(.011, .02), col, "spark", -1.3, true); }
+}
+function ring3(p, col, n, sp, size) {                        // a shockwave ring expanding from a point
+  for (let i = 0; i < (n || 56); i++) { const a = i / (n || 56) * 6.283; spawn(p, [Math.cos(a) * (sp || 1.7), rnd(-.04, .04), Math.sin(a) * (sp || 1.7) * .55], .62, size || .024, col, "glow"); }
+}
+function emo3(e, p, life) { if (ATL_I[e] !== undefined) EMO3.push({i: ATL_I[e], p, age: 0, life: life || 1.6}); }
+function gestFx(name) {
+  if (SNAP) return;                                         // (the still pictures for the Shorts carry no particles)
+  const H = A3.head || [0, 1.82, 0], T = A3.tipL || [.3, 1.3, .2], C = A3.chest || [0, 1.4, .1], at = (fn, ms) => setTimeout(() => { try { fn(); } catch (e) {} }, ms);
+  if (name === "wave") { [0, 260, 520, 780].forEach(d => at(() => burst3(A3.tipL || T, 16, [1, .62, .9], 1, .014), d)); glowAura(2800, "rgba(255,120,190,.65)", 20); emo3("✨", V.add(H, [.2, .2, .1])); }
+  else if (name === "thumbs") { kick(0.6, 0.3); burst3(T, 70, [1, .84, .3], 2.2, .016); ring3(T, [1, .86, .45]); at(() => ring3(T, [1, .95, .7], 40, 2.4), 220); glowAura(2600, "rgba(255,205,80,.8)", 26); emo3("⭐", V.add(T, [.05, .25, 0])); emo3("✨", V.add(T, [.2, .15, 0])); }
+  else if (name === "point" || name === "chart") { [0, 200, 400].forEach(d => at(() => burst3(A3.tipL || T, 18, [.4, .85, 1], 1.1, .013), d)); glowAura(3000, "rgba(90,210,255,.6)", 16); }
+  else if (name === "tablet" || name === "tablet_buy") { ring3(A3.tab || T, [.25, .7, 1], 44, 1.4); glowAura(3200, "rgba(70,170,255,.7)", 20); }
+  else if (name === "show_buy") { ring3(A3.tab || T, [.2, 1, .55], 60, 2); burst3(A3.tab || T, 60, [.3, 1, .6], 2, .016); at(() => ring3(A3.tab || T, [.7, 1, .8], 44, 2.4), 250); glowAura(5000, "rgba(50,240,140,.8)", 30); }
+  else if (name === "show_sell") { ring3(A3.tab || T, [1, .3, .4], 60, 2); burst3(A3.tab || T, 60, [1, .4, .45], 2, .016); at(() => ring3(A3.tab || T, [1, .7, .7], 44, 2.4), 250); glowAura(5000, "rgba(255,80,100,.8)", 30); }
+  else if (name === "think") { EMIT.push({until: performance.now() + 3800, ph: 0, tick() { this.ph += .12; for (let i = 0; i < 3; i++) { const a = this.ph + i * 2.094; spawn(V.add(H, [Math.cos(a) * .22, .3 + .04 * Math.sin(a * 2), Math.sin(a) * .1]), [0, .05, 0], .5, .012, [.5, .85, 1], "glow"); } }}); glowAura(3800, "rgba(120,170,255,.55)", 16); emo3("✨", V.add(H, [.25, .32, 0]), 2.2); }
+  else if (name === "idea") { kick(0.7, 0.2); burst3(V.add(H, [0, .36, 0]), 90, [1, .9, .4], 2.6, .018); ring3(V.add(H, [0, .3, 0]), [1, .93, .55], 60, 2.2); at(() => ring3(V.add(H, [0, .3, 0]), [1, 1, .85], 44, 2.8), 240); glowAura(2600, "rgba(255,225,90,.9)", 34); emo3("⭐", V.add(H, [0, .5, .1])); emo3("✨", V.add(H, [.2, .42, 0])); }
+  else if (name === "surprised") { kick(1, 0.9); ring3(H, [1, 1, 1], 64, 2.6); at(() => ring3(H, [.7, .9, 1], 48, 3.2), 180); burst3(H, 50, [.85, .95, 1], 2.4, .016); glowAura(2200, "rgba(255,255,255,.9)", 36); }
+  else if (name === "cheer") { kick(0.8, 0.5); ring3(C, [1, .8, .3], 60, 2.2); glowAura(2800, "rgba(255,190,70,.8)", 28); }
+  else if (name === "concerned") { glowAura(3000, "rgba(255,160,70,.45)", 14); }
+  else if (name === "determined" || name === "stop") { ring3(C, [.4, .75, 1], 44, 1.6); glowAura(2400, "rgba(80,170,255,.6)", 20); }
+}
+function converge3(c, rad, n, col, life, size) {          // particles rushing inward to a point (charging up)
+  for (let i = 0; i < n; i++) { const a = rnd(0, 6.283), b = rnd(-1, 1), q = Math.sqrt(1 - b * b), dx = Math.cos(a) * q, dy = b, dz = Math.sin(a) * q * .6;
+    const L = life || rnd(.6, 1.1); spawn(V.add(c, [dx * rad, dy * rad, dz * rad]), [-dx * rad / L, -dy * rad / L, -dz * rad / L], L, size || rnd(.01, .018), col, "spark", 0, true); }
+}
+function flash(ms, amt) {                                  // a white-hot flash of the whole robot
+  const cv = document.getElementById("gl"); if (!cv) return; cv.style.transition = "filter 60ms"; cv.style.filter = `brightness(${amt || 2.2}) saturate(.7) drop-shadow(0 0 40px rgba(180,225,255,.95))`;
+  setTimeout(() => { cv.style.transition = "filter .5s"; cv.style.filter = "none"; }, ms || 110);
+}
+function cinePower() {
+  if (SNAP) return;                                      // a 6.5 s sequence: charge-up -> release -> storm -> embers
+  const at = (fn, ms) => setTimeout(() => { try { fn(); } catch (e) {} }, ms), C = () => A3.chest || [0, 1.4, 0], F = () => A3.footL || [0, .05, 0];
+  glowAura(6400, "rgba(70,170,255,.75)", 30);
+  [0, 300, 600, 900].forEach(d => at(() => { converge3(C(), .9, 36, [.4, .8, 1], .9); kick(.25 + d / 3000, .25 + d / 1500); }, d));        // 1. charge: light is drawn into the chest, the camera creeps in
+  at(() => { flash(120, 2.6); kick(1, 1); [0, 1, 2].forEach(i => at(() => ring3(V.add(F(), [0, .02 + i * .5, 0]), [.5, .85, 1], 72, 2.8 + i * .6, .03), i * 120)); burst3(C(), 160, [.6, .9, 1], 3.6, .018, 1.4); }, 1300);   // 2. release
+  [1500, 1800, 2100, 2500, 3000, 3500].forEach(d => at(() => { kick(.55, .6); bolt3(C(), .4); bolt3(A3.head || C(), .28); burst3(C(), 40, [.5, .85, 1], 2.4, .014, 1); }, d));   // 3. storm
+  [3600, 4200, 4800, 5400].forEach(d => at(() => burst3(V.add(C(), [rnd(-.2, .2), -.2, 0]), 24, [1, .75, .35], .9, .01, 1.6), d));      // 4. embers
+}
+let goldUntil = 0;
 function doReact(name, data) {
   const now = performance.now();
-  const MAP = {laugh: ["laugh", 2600], clap: ["clap", 2600], cheer: ["cheer", 2800], power: ["power", 4000], fly: ["fly", 5600], teleport: ["rest", 2200]};
+  const MAP = {laugh: ["laugh", 2600], clap: ["clap", 2600], cheer: ["cheer", 2800], power: ["power", 6500], fly: ["fly", 5600], teleport: ["rest", 3400]};
+  if (name === "gold") { goldUntil = performance.now() + ((data && data.dur) || 9) * 1000; return; }
+  if (name === "holo") glowAura((data && data.dur || 5) * 1000, "rgba(70,200,255,.75)", 22);
+  if (name === "draw") glowAura(((data && data.dur) || 2.4) * 1000, "rgba(90,210,255,.6)", 16);
+  if (name === "holo") { react = {name: "tablet", until: now + (data && data.dur || 5) * 1000, t0: now, holo: true}; return; }      // palm up: the hand projects a hologram (the motion page draws the panel)
+  if (name === "draw" && data && data.tx !== undefined) { react = {name: "drawpt", until: now + (data.dur || 2.4) * 1000, t0: now, data}; return; }
   if (name === "laser" && data && data.eye) { react = {name: "scan", until: now + (data.dur || 4.5) * 1000, t0: now, data}; return; }
   if (!MAP[name]) return;
   react = {name: MAP[name][0], until: now + MAP[name][1], t0: now};
@@ -777,11 +898,21 @@ function doReact(name, data) {
     ["footL", "footR"].forEach(k => { const f = A3[k]; if (!f) return;
       for (let i = 0; i < 7; i++) spawn(V.add(f, [rnd(-.025, .025), 0, rnd(-.025, .025)]), [rnd(-.18, .18), -rnd(1.8, 3), rnd(-.18, .18)], rnd(.18, .3), rnd(.05, .08), null, "flame");
       spawn(V.add(f, [0, -.04, 0]), [0, 0, 0], .06, .14, [1, .5, .1], "glow"); }); }});
-  if (name === "power") EMIT.push({until: now + 4000, tick() { if (A3.chest) { if (Math.random() < .6) bolt3(A3.chest, .32); if (Math.random() < .3) bolt3(A3.head || A3.chest, .2); } }});
+  if (name === "power") [0, 600, 1200, 1800].forEach(dl => setTimeout(() => { const f = A3.footL || [0, 0, 0];                // shockwave rings burst out of the ground
+    for (let i = 0; i < 48; i++) { const a = i / 48 * 6.283; spawn([Math.cos(a) * .12, .04, Math.sin(a) * .08], [Math.cos(a) * 2.2, .25, Math.sin(a) * 1.6], .7, .028, [.4, .75, 1], "glow"); } }, dl));
+  if (name === "power") { cinePower(); }
+  if (name === "power" && false) glowAura(4000, "rgba(70,170,255,.85)", 34); [0, 600, 1200, 1800].forEach(dl => setTimeout(() => kick(.9, 1), dl));
+  if (name === "fly") { for (let i = 0; i < 60; i++) { const a = i / 60 * 6.283; spawn([Math.cos(a) * .1, .05, Math.sin(a) * .06], [Math.cos(a) * 3.2, .2, Math.sin(a) * 2.2], .55, .03, [1, .85, .6], "glow"); } glowAura(5600, "rgba(255,170,70,.7)", 28); }     // sonic ring at lift-off
+  if (name === "laser") glowAura((data && data.dur || 4.5) * 1000, "rgba(255,70,60,.8)", 30);
+  if (name === "power") EMIT.push({until: now + 6500, tick() { if (A3.chest) { if (Math.random() < .6) bolt3(A3.chest, .32); if (Math.random() < .3) bolt3(A3.head || A3.chest, .2); } }});
   if (name === "cheer") [0, 380].forEach(dl => setTimeout(() => { if (!A3.head) return; const c = V.add(A3.head, [rnd(-.2, .2), rnd(.25, .4), 0]);
     for (let i = 0; i < 80; i++) { const a = rnd(0, 6.283), b = rnd(-1, 1), sp = rnd(1, 2.6), r = Math.sqrt(1 - b * b);
       spawn(c, [Math.cos(a) * r * sp, b * sp, Math.sin(a) * r * sp], rnd(.8, 1.4), rnd(.012, .02), Math.random() < .3 ? [1, .97, .9] : [1, .78, .3], "spark", -2.2, true); } }, dl));
-  if (name === "teleport") TELE = {t0: now, dur: 2200};
+  if (name === "teleport") { [1500, 2000, 2500].forEach(dl => setTimeout(() => { ring3(V.add(A3.chest || [0, 1.4, 0], [0, -.3, 0]), [.5, .9, 1], 56, 2.2 + (dl - 1500) / 600); converge3(A3.chest || [0, 1.4, 0], .8, 24, [.5, .9, 1], .7); }, dl)); kick(.7, .6); setTimeout(() => kick(1, 1), 1000);  glowAura(2200, "rgba(120,225,255,.95)", 44); [0, 990, 1330].forEach((dl, i) => setTimeout(() => { const b = V.add(A3.chest || [0, 1.4, 0], [0, -.2, 0]); ring3(b, [.3, .85, 1], 64, 2.6); burst3(b, 80, [.5, .9, 1], 2.4, .015); if (i) ring3(V.add(b, [0, .5, 0]), [.8, 1, 1], 48, 3); }, dl)); }
+  if (name === "laugh") { kick(.4, .3); [0, 400, 800].forEach(dl => setTimeout(() => burst3(V.add(A3.head || [0, 1.8, 0], [0, .15, .1]), 36, [1, .85, .4], 1.6, .015), dl)); glowAura(2600, "rgba(255,200,90,.6)", 18); }
+  if (name === "clap") [0, 300, 600, 900, 1200, 1500].forEach(dl => setTimeout(() => { const c0 = V.add(A3.chest || [0, 1.4, 0], [0, .05, .22]); ring3(c0, [1, .9, .6], 30, 1.3, .02); burst3(c0, 22, [1, .85, .45], 1.4, .013); }, dl));
+  if (name === "cheer") { glowAura(2800, "rgba(255,190,70,.85)", 30); [0, 450, 900].forEach(dl => setTimeout(() => { const c0 = V.add(A3.head || [0, 1.8, 0], [0, .3, 0]); ring3(c0, [1, .8, .35], 56, 2.4); burst3(c0, 120, [1, .85, .4], 3, .015, 1.5); }, dl)); }
+  if (name === "teleport") TELE = {t0: now, dur: 3400};
 }
 function fx3d(now, dt) {
   EMIT = EMIT.filter(e => now < e.until); EMIT.forEach(e => { e.acc = (e.acc || 0) + dt * 60; while (e.acc >= 1) { e.acc -= 1; e.tick(); } });
@@ -805,8 +936,10 @@ function fx3d(now, dt) {
     const p1 = V.add(a0, sd), p2 = V.sub(a0, sd), p3 = V.add(b0, sd), p4 = V.sub(b0, sd);
     vtx(arr, p1, 0, 1, c, al); vtx(arr, p2, 0, 0, c, al); vtx(arr, p4, 1, 0, c, al); vtx(arr, p1, 0, 1, c, al); vtx(arr, p4, 1, 0, c, al); vtx(arr, p3, 1, 1, c, al); };
   P3.forEach(q => { const k = q.age / q.life;
-    if (q.kind === "flame") { const c = k < .15 ? [1, .9, .55] : k < .4 ? [1, .55, .08] : k < .7 ? [.95, .25, .05] : [.3, .27, .27];
-      quad(glow, q.p, q.size * (1 + k * 1.5), c, (1 - k) * (k > .7 ? .35 : 1)); }
+    if (q.kind === "flame") { const c = k < .15 ? [.95, .99, 1] : k < .4 ? [.4, .85, 1] : k < .7 ? [.14, .45, 1] : [.22, .3, .45];                    // blue plasma thrusters
+      const sy = proj(q.p)[1], edge = Math.max(0, Math.min(1, (glc.clientHeight - 8 - sy) / 190)), sm = edge * edge * (3 - 2 * edge);       // the flame fades out smoothly before the picture's lower edge (never a hard cut)
+      quad(glow, q.p, q.size * (1 + k * 1.5), c, (1 - k) * (1 - k) * (k > .7 ? .5 : 1) * sm);
+      if (k < .5) quad(glow, q.p, q.size * (.9 - k), [1, 1, 1], (1 - k * 2) * .9 * sm); }          // a white-hot core inside the flame
     else if (q.trail && q.prev) ribbon(rib, q.prev, V.add(q.p, V.mul(q.v, .02)), q.size * .6, q.col, 1 - k);
     else quad(glow, q.p, q.size, q.col, 1 - k); });
   BOLTS.forEach(b => { const al = 1 - b.age / b.life;
@@ -862,7 +995,7 @@ async function poll() {
     if (fxId === -1) fxId = s.fx_id; else if (s.fx_id !== fxId) { fxId = s.fx_id; doReact(s.fx, s.fx_data); }
     const gs = s.gesture || [0, ""];
     if (gestId === -1) gestId = gs[0]; else if (gs[0] !== gestId) { gestId = gs[0];      // from the dock or a real trade: now
-      if (G[gs[1]]) { gest = {name: gs[1], until: performance.now() + 5000}; lastGest = performance.now(); } }
+      if (G[gs[1]]) { gest = {name: gs[1], until: performance.now() + 5000}; lastGest = performance.now(); gestFx(gs[1]); } }
   } catch (e) {}
   setTimeout(poll, 80);
 }
@@ -893,7 +1026,7 @@ if (TEST.has("react")) setTimeout(() => doReact(TEST.get("react"), {x1: 1450, x2
 if (TEST.get("pose") === "side2") walkDir = -1;
 next();   /* embedded on the website: there is no stream bot to poll */
 </script><script>
-/* demo: the page can steer the host (pose, mood, where the head looks) */
+/* website: the page can steer the host (pose, mood, where the head looks) */
 addEventListener('message',function(e){var d=e.data||{};
   if(d.pose){poseName=d.pose;lastPose='';lastGest=0;walkDir=d.pose==='side2'?-1:1;}
   if(d.scene){scene=d.scene;}
