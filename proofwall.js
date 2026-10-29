@@ -2,15 +2,18 @@
 (async () => {
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
   const full = !!document.getElementById('pwgrid');
+  const PV = full && new URLSearchParams(location.search).get('preview') === '1';      // owner preview: only works for a signed-in, verified admin (the database decides)
   const load = src => new Promise(r => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = r; document.head.appendChild(s); });
-  if (!window.gte) await load('app.js?v=20261030pw4');
+  if (!window.gte) await load('app.js?v=20261030pw5');
   if (!window.gte || !gte.client) return;
   let cards = [], tot = null;
   try {
     const c = await gte.client();
-    const [a, b] = await Promise.all([c.rpc('proof_wall'), c.rpc('proof_totals')]);
+    const [a, b] = await Promise.all([c.rpc('proof_wall', PV ? {p_preview: true} : {}), c.rpc('proof_totals')]);
     cards = Array.isArray(a.data) ? a.data : []; tot = b.data || null;
+    if (PV && !cards.length) tot = Object.assign({}, tot, {on: true});
   } catch (e) {}
+  cards.forEach(x => { if (x.gain_pct == null) x.gain_pct = 0; if (x.max_dd_pct == null) x.max_dd_pct = 0; });
   const cn = c => { if (!c) return ''; if (/^[A-Za-z]{2}$/.test(c)) { try { return new Intl.DisplayNames(['en'], {type: 'region'}).of(c.toUpperCase()) || c; } catch (e) {} } return c; };
   const reduced = matchMedia('(prefers-reduced-motion:reduce)').matches;
   const coarse = matchMedia('(pointer:coarse)').matches;
@@ -68,7 +71,7 @@
     const ddw = Math.min(100, Math.round((x.max_dd_pct || 0) * 5));
     return '<article class="card pw-card ' + (up ? 'pw-up' : 'pw-dn') + ' rv" data-b="' + esc(x.broker || '') + '" data-g="' + x.gain_pct + '" data-d="' + x.days + '" data-n="' + i + '">' +
       '<i class="pw-shine"></i>' +
-      '<header>' + av + '<div><b>' + esc(x.name) + '</b><span>' + esc([cn(x.country), 'since ' + x.joined].filter(Boolean).join(' · ')) + '</span></div><span class="pw-ver"><i></i>Verified</span></header>' +
+      '<header>' + av + '<div><b>' + esc(x.name) + '</b><span>' + esc([cn(x.country), 'since ' + x.joined].filter(Boolean).join(' · ')) + '</span></div>' + (x.pv ? '<span class="pw-ver pw-pvb" title="' + esc(x.pv) + '">Preview only</span>' : '<span class="pw-ver"><i></i>Verified</span>') + '</header>' +
       '<div class="pw-big"><b>' + cu(x.gain_pct, 1, {sign: 1, suf: '%'}) + '</b><span>gain since start · ' + esc(x.days) + ' days</span></div>' +
       chart(x) +
       '<dl class="pw-st">' +
@@ -77,6 +80,7 @@
         '<div><dt>Win rate</dt><dd>' + (x.win_rate == null ? '–' : cu(x.win_rate, 1, {suf: '%'})) + '</dd>' + (x.win_rate == null ? '' : ring(x.win_rate)) + '</div>' +
       '</dl>' +
       (x.quote ? '<blockquote>“' + esc(x.quote) + '”</blockquote>' : '') +
+      (x.pv ? '<p class="pw-why">Visitors cannot see this account: ' + esc(x.pv) + '.</p>' : '') +
       '<footer>' + (x.plan ? '<span class="pw-plan">' + esc(x.plan) + ' plan</span>' : '') + '<small>' + esc([x.broker, x.size].filter(Boolean).join(' · ')) + '</small><small>Calculated by GTE servers from this account\'s own EA trades</small></footer></article>';
   };
 
@@ -163,7 +167,7 @@
              : '<span class="kicker">Growing</span><h3>Be among the first <em class="s">to be featured.</em></h3><p>Customers appear here automatically once their real account has enough closed trades or days of history. Until then, watch our own live account on <a href="index.html#account">the home page</a> or on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>.</p>') + '</div>';
       reveal(document.body); return;
     }
-    if (hero) hero.innerHTML = composite();
+    if (hero) hero.innerHTML = (PV ? '<div class="pw-prev"><b>Owner preview.</b> You are seeing every account that has a license, including demo and not-agreed accounts, even while the wall is off. Visitors never see this. Accounts marked "Preview only" would not appear to visitors.</div>' : '') + composite();
     const brokers = [...new Set(cards.map(x => x.broker).filter(Boolean))];
     const bar = document.getElementById('pwbar');
     let fb = 'all', so = 'gain';
