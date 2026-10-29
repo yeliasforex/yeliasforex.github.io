@@ -3,7 +3,7 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
   const full = !!document.getElementById('pwgrid');
   const load = src => new Promise(r => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = r; document.head.appendChild(s); });
-  if (!window.gte) await load('app.js?v=20261030pw3');
+  if (!window.gte) await load('app.js?v=20261030pw4');
   if (!window.gte || !gte.client) return;
   let cards = [], tot = null;
   try {
@@ -157,7 +157,10 @@
     const t = document.getElementById('pwtot'); t.innerHTML = totals(); t.hidden = !t.innerHTML; t.classList.add('rv');
     const g = document.getElementById('pwgrid'), hero = document.getElementById('pwhero');
     if (!cards.length) {
-      g.innerHTML = '<div class="pw-empty"><svg class="pw-eg" viewBox="0 0 200 70" aria-hidden="true"><path d="M4 58 C30 56 40 44 62 46 S100 30 124 26 S170 10 196 6" pathLength="1"/></svg><span class="kicker">Growing</span><h3>Be among the first <em class="s">to be featured.</em></h3><p>Customers appear here automatically once their real account has 20 closed trades or 30 days of history. Until then, watch our own live account on <a href="index.html#account">the home page</a> or on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>.</p></div>';
+      const off = tot && tot.on === false;
+      g.innerHTML = '<div class="pw-empty"><svg class="pw-eg" viewBox="0 0 200 70" aria-hidden="true"><path d="M4 58 C30 56 40 44 62 46 S100 30 124 26 S170 10 196 6" pathLength="1"/></svg>' +
+        (off ? '<span class="kicker">Opening soon</span><h3>The Proof Wall <em class="s">opens soon.</em></h3><p>We are collecting the first customer results. It opens here once enough real accounts can be shown fairly. Until then, watch our own live account on <a href="index.html#account">the home page</a> or on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>.</p>'
+             : '<span class="kicker">Growing</span><h3>Be among the first <em class="s">to be featured.</em></h3><p>Customers appear here automatically once their real account has enough closed trades or days of history. Until then, watch our own live account on <a href="index.html#account">the home page</a> or on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>.</p>') + '</div>';
       reveal(document.body); return;
     }
     if (hero) hero.innerHTML = composite();
@@ -181,7 +184,7 @@
     paint(); reveal(document.body); wire(document.body);
     return;
   }
-  if (!cards.length) return;                                    // home page: show nothing until real customers exist
+  if (!cards.length || (tot && (tot.on === false || tot.home === false))) return;   // home page: nothing until real customers exist, or when the owner switched it off
   const anchor = document.getElementById('account') || document.getElementById('gx') || document.querySelector('main');
   if (!anchor) return;
   const sec = document.createElement('section'); sec.className = 'sec pw-home'; sec.id = 'proof';

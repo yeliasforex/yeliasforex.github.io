@@ -251,12 +251,12 @@ async function accountView(id) {
 $('#acvx').onclick = () => { $('#acv').classList.add('hide'); $('#acvf').src = 'about:blank'; };
 
 // ---------- views ----------
-const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['settings', 'Plans & settings'], ['backtest', 'Backtest'], ['videos', 'Videos'], ['audit', 'Audit log']];
+const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['proof', 'Proof Wall'], ['settings', 'Plans & settings'], ['backtest', 'Backtest'], ['videos', 'Videos'], ['audit', 'Audit log']];
 function render() {
   const waiting = data.orders.filter(o => o.status === 'paid_claimed').length;
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
-  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, settings: vSettings, backtest: vBacktest, videos: vVideos, audit: vAudit})[tab]();
+  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, proof: vProof, settings: vSettings, backtest: vBacktest, videos: vVideos, audit: vAudit})[tab]();
   const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw); markTiles();
 }
 const kx = (label, val, sub, color, hot, pre) => `<div class="kpi kx ${hot ? 'hot' : ''}">${label}<b ${color ? `style="color:${color}"` : ''} ${pre ? `data-pre="${pre}"` : ''} data-n="${val}">${val}</b>${sub ? `<span class="mute">${sub}</span>` : ''}</div>`;
@@ -817,6 +817,32 @@ async function vBacktest() {
     } catch (err) { $('#btp').innerHTML = `<div class="msg err" style="margin-top:12px">${esc(err.message || 'Could not read that file.')}</div>`; }
   };
   drawList();
+}
+// ---------- Proof Wall: switches and the list of who is shown ----------
+async function vProof() {
+  const c = data.config || {}, v = (k, d) => c[k] === undefined ? d : c[k], on = v('proof_wall_on', 'false') === 'true';
+  const sel = (k, d, yes, no) => `<select id="c_${k}" style="width:100%"><option value="true" ${v(k, d) === 'true' ? 'selected' : ''}>${yes}</option><option value="false" ${v(k, d) === 'false' ? 'selected' : ''}>${no}</option></select>`;
+  const num = (k, d, label, hint) => `<label>${label}</label><input id="c_${k}" type="number" min="0" max="9999" value="${esc(v(k, d))}" style="width:140px"> <span class="mute">${hint}</span>`;
+  $('#view').innerHTML = `<div class="card"><b>Proof Wall</b> <span class="mute">the public page <a href="../customers.html" target="_blank" rel="noopener">customers.html</a> and the section on the home page</span>
+    <div class="msg" style="margin:12px 0;padding:12px;border-radius:10px;border:1px solid ${on ? '#3fb27f' : '#e5534b'}">${on ? '<b style="color:#3fb27f">ON.</b> Visitors can see customers who qualify (see the list below).' : '<b style="color:#e5534b">OFF.</b> The page shows "opens soon" and the home page section is hidden. Customers are still collecting their agreements and results in the background.'}</div>
+    <label>Proof Wall</label>${sel('proof_wall_on', 'false', 'On: show it to visitors', 'Off: hidden from visitors (recommended until you have enough customers)')}
+    <div class="row" style="margin-top:10px"><button class="b pri" data-k="proof_wall_on">Save</button></div></div>
+  <div class="card"><b>Customize</b>
+    <label>Section on the home page</label>${sel('proof_home_on', 'true', 'Show it on the home page', 'Hide it on the home page (the Proof Wall page stays)')}
+    ${num('proof_min_shown', '0', 'Show the wall only when at least this many customers qualify', '0 = no minimum. For example 20 keeps it hidden until 20 real customers qualify, then it switches on by itself (the master switch above must be On).')}
+    ${num('proof_min_trades', '20', 'A customer qualifies after this many closed trades', '')}
+    ${num('proof_min_days', '30', '...or after this many days of history', 'either one is enough')}
+    <label>Profile photo</label>${sel('proof_show_photo', 'true', 'Show photos', 'Hide all photos')}
+    <label>Country</label>${sel('proof_show_country', 'true', 'Show the country', 'Hide the country')}
+    <label>Package (plan) the customer bought</label>${sel('proof_show_plan', 'true', 'Show the plan chip', 'Hide the plan chip')}
+    <div class="row" style="margin-top:10px"><button class="b pri" data-k="proof_home_on,proof_min_shown,proof_min_trades,proof_min_days,proof_show_photo,proof_show_country,proof_show_plan">Save</button></div></div>
+  <div class="card"><b>Who is shown, and why not</b> <span class="mute" id="pwc"></span><div id="pwl" class="mute" style="margin-top:8px">Loading...</div></div>`;
+  $('#view').querySelectorAll('[data-k]').forEach(b => b.onclick = async () => { for (const k of b.dataset.k.split(',')) await call('admin_set_config', {p_key: k, p_value: String($('#c_' + k).value)}); toast('Saved'); await load(); vProof(); });
+  let rows = []; try { rows = await call('admin_wall_overview'); } catch (e) { $('#pwl').innerHTML = `<div class="msg err">${esc(e.message || e)}. Run the latest database update first.</div>`; return; }
+  const shown = rows.filter(r => r.shown).length, mn = +v('proof_min_shown', '0');
+  $('#pwc').textContent = shown + ' qualify now' + (mn ? ' · the wall needs ' + mn + ' to appear' : '') + ' · ' + rows.length + ' account(s) with a license';
+  $('#pwl').innerHTML = rows.length ? `<div class="tblw"><table class="tbl"><tr><th>Account</th><th>Plan</th><th>Trades</th><th>Days</th><th>On the wall?</th><th></th></tr>${rows.map(r => `<tr><td>${esc(r.name || '')}<div class="mono mute" style="font-size:12px">${esc(r.email || '')}</div></td><td>${esc(r.plan || '-')}</td><td>${r.trades}</td><td>${r.days}</td><td><span style="color:${r.shown ? '#3fb27f' : '#8b95a3'}">${r.shown ? (on ? 'Shown' : 'Qualifies (wall is off)') : esc(r.reason)}</span></td><td>${r.reason.startsWith('Admin') || r.demo ? '' : `<button class="b ${r.hidden ? '' : 'dng'}" data-h="${r.user_id}" data-s="${r.hidden ? 0 : 1}">${r.hidden ? 'Unhide' : 'Hide'}</button>`}</td></tr>`).join('')}</table></div>` : '<div class="mute">No account owns a license yet.</div>';
+  $('#pwl').querySelectorAll('[data-h]').forEach(b => b.onclick = async () => { await call('admin_wall_hide', {p_user: b.dataset.h, p_hidden: b.dataset.s === '1'}); toast(b.dataset.s === '1' ? 'Hidden' : 'Visible again'); vProof(); });
 }
 function vVideos() {
   $('#view').innerHTML = `<div class="card"><b>Videos</b> <span class="mute">paste YouTube links; nothing is hosted here</span>
