@@ -680,7 +680,7 @@ html.st-lock{overflow:hidden}
 .pw-num{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.pw-num b{font:600 1.05rem/1.1 var(--mono,monospace)}
 .pw-card .up{color:#1c8a5a}.pw-card .dn{color:#c0392b}.pw-sp{width:100%;height:44px;display:block}
 .pw-card blockquote{margin:0;font-size:.9rem;line-height:1.45;color:var(--muted,#555)}
-.pw-card footer{font-size:.76rem;color:var(--muted,#667);margin-top:auto}
+.pw-card footer{font-size:.76rem;color:var(--muted,#667);margin-top:auto;display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
 .pw-empty{grid-column:1/-1;border:1px dashed var(--line,#ccc);border-radius:16px;padding:28px;text-align:center}
 .pw-strip{padding:40px 0}.pw-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px}.pw-hd h2{margin:0}
 @media(max-width:560px){.pw-num{grid-template-columns:repeat(2,1fr)}.pw-row{display:flex;overflow-x:auto;scroll-snap-type:x mandatory}.pw-row .pw-card{flex:0 0 82%;scroll-snap-align:start}}

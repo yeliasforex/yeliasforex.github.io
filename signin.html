@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
 <link rel="stylesheet" href="style.css?v=20261021app5">
 <link rel="stylesheet" href="app.css?v=20261021app5">
-<link rel="stylesheet" href="wow.css?v=20261030pw1">
+<link rel="stylesheet" href="wow.css?v=20261030pw2">
 <link rel="stylesheet" href="theme.css?v=20261021app5">
 <script src="theme.js?v=20261021app5"></script>
 <link rel="manifest" href="manifest.webmanifest">
@@ -40,7 +40,7 @@
     <button class="btn primary" id="send" type="button">Email me a sign-in link</button>
     <div id="out"></div>
   </div>
-  <label class="hint" style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;cursor:pointer"><input type="checkbox" id="agree" style="margin-top:3px"> <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, including that my EA results may be shown on the public Proof Wall under my chosen display name (a first name or nickname by default). I can turn this off any time in My account.</span></label>
+  <label class="hint" style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;cursor:pointer"><input type="checkbox" id="agree" style="margin-top:3px"> <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, including that my EA results, country and profile photo may be shown on the public Proof Wall under my chosen display name (a first name or nickname by default). I can turn this off or hide any part of it any time in My account.</span></label>
 </div></section>
 </main>
 <footer>
@@ -70,7 +70,7 @@
   const back = location.origin + '/' + safe + fs;
   const GOOGLE_ON = true;    // Google sign-in is enabled in Supabase
   if (GOOGLE_ON) { document.getElementById('google').classList.remove('hide'); document.getElementById('or').classList.remove('hide'); }
-  const need = () => { const a = document.getElementById('agree'); if (a.checked) { try { localStorage.setItem('gte_agree', '2026-10-30'); } catch (e) {} return true; } return false; };
+  const need = () => { const a = document.getElementById('agree'); if (a.checked) { try { localStorage.setItem('gte_agree', '2026-10-30b'); } catch (e) {} return true; } return false; };
   document.getElementById('google').onclick = () => { if (!need()) return say('Please tick the box to agree to the Terms and Privacy Policy.', true); try { gteEvent('signin_google'); } catch (e) {} c.auth.signInWithOAuth({provider: 'google', options: {redirectTo: back}}); };
   const out = document.getElementById('out'), say = (t, e) => out.innerHTML = '<div class="msg ' + (e ? 'err' : 'ok') + '">' + gte.esc(t) + '</div>';
   document.getElementById('send').onclick = async () => {

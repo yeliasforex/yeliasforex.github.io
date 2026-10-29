@@ -35,7 +35,7 @@
       q(c.from('licenses').select('id,key,plan_id,owner_user_id,status,activated_at,expires_at,bound_account,bound_broker,bound_is_demo,extra_allowance_usd,created_at').order('created_at')),
       q(c.from('license_status').select('*')), q(c.from('plans').select('*').order('sort')), q(c.from('message_catalog').select('*')),
       q(c.from('orders').select('*').order('created_at', {ascending: false})), gte.settings()]);
-    if (!AS && profile) { try { const w = await c.from('profiles').select('terms_version,wall_on,wall_name,wall_quote,wall_country,wall_photo,wall_slug').maybeSingle(); if (!w.error && w.data) Object.assign(profile, w.data); } catch (e) {} }   // absent until the Proof Wall migration is applied
+    if (!AS && profile) { try { const w = await c.from('profiles').select('terms_version,wall_on,wall_name,wall_quote,wall_country,auto_country,wall_photo,wall_slug').maybeSingle(); if (!w.error && w.data) Object.assign(profile, w.data); } catch (e) {} }   // absent until the Proof Wall migration is applied
     if (!AS) return {profile, licenses, statuses, plans, catalog, orders, settings, notices};
     // Admin view: the database lets an admin (signed in and verified with the Telegram code) read everything; show just this one customer's license
     const lic = licenses.filter(l => l.id === AS), owner = lic[0] && lic[0].owner_user_id;
@@ -453,9 +453,9 @@
       ${prof.terms_version === undefined ? '' : `<section class="st-s"><h3>${sic('user')}Proof Wall</h3>
         <div class="st-r"><div class="st-t"><b>Show my results publicly</b><span class="hint">${prof.wall_on ? 'Your results are on the public Proof Wall.' : 'You are not shown on the Proof Wall.'} Never your email, key or account number.</span></div><label class="sw"><input type="checkbox" id="pwon" ${prof.wall_on ? 'checked' : ''}><span></span></label></div>
         <div class="st-pf" style="margin-top:8px"><label for="pwname">Display name</label><input id="pwname" type="text" maxlength="30" placeholder="First name or nickname" value="${esc(prof.wall_name || '')}">
-          <label for="pwcountry" style="margin-top:8px">Country (optional)</label><input id="pwcountry" type="text" maxlength="40" value="${esc(prof.wall_country || '')}">
+          <label for="pwcountry" style="margin-top:8px">Country (found automatically; type another, or - to hide)</label><input id="pwcountry" type="text" maxlength="40" placeholder="${esc(prof.auto_country ? (() => { try { return new Intl.DisplayNames(['en'], {type: 'region'}).of(prof.auto_country); } catch (e) { return prof.auto_country; } })() : 'Not detected')}" value="${esc(prof.wall_country || '')}">
           <label for="pwquote" style="margin-top:8px">One line about your experience (optional)</label><input id="pwquote" type="text" maxlength="240" value="${esc(prof.wall_quote || '')}">
-          <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="pwphoto" ${prof.wall_photo ? 'checked' : ''}> Show my profile photo</label>
+          <label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="pwphoto" ${prof.wall_photo === false ? '' : 'checked'}> Show my profile photo (if I have one)</label>
           <button class="btn sm mint" id="pwsave" type="button" style="margin-top:10px">Save</button></div>
         <p class="hint">${prof.terms_version ? 'You accepted the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a> on ' + esc(new Date(prof.terms_at || Date.now()).toLocaleDateString()) + '.' : 'Please accept the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a> to appear.'}</p>
       </section>`}
@@ -535,11 +535,11 @@
   initAvatar(); initBell(); paintBell(); initSettings();
   (async () => {                                              // Terms + Proof Wall agreement: the sign-in tick is saved here after sign-in; people who never ticked it (older accounts) see a notice
     const P = S.profile; if (DEMO || AS || !P || P.terms_version === undefined) return;
-    const V = '2026-10-30'; let ticked = false; try { ticked = localStorage.getItem('gte_agree') === V; } catch (e) {}
+    const V = '2026-10-30b'; let ticked = false; try { ticked = localStorage.getItem('gte_agree') === V; } catch (e) {}
     if (P.terms_version) { try { localStorage.removeItem('gte_agree'); } catch (e) {} return; }
     if (ticked) { try { await c.rpc('accept_terms', {p_version: V, p_wall: true}); localStorage.removeItem('gte_agree'); await refresh(); } catch (e) {} return; }
     const d = document.createElement('div'); d.className = 'pw-gate';
-    d.innerHTML = '<div class="pw-box" role="dialog" aria-modal="true" aria-labelledby="pwt"><h3 id="pwt">Terms and Privacy updated</h3><p>We added clear rules for software use, risk, liability and a public Proof Wall that shows customers\' real EA results under a first name or nickname. You can turn the Proof Wall off at any time in Settings.</p><label class="pw-tick"><input type="checkbox" id="pwag"> <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, including that my EA results may be shown on the Proof Wall under my chosen display name.</span></label><button class="btn primary" id="pwgo" type="button" disabled>Agree and continue</button></div>';
+    d.innerHTML = '<div class="pw-box" role="dialog" aria-modal="true" aria-labelledby="pwt"><h3 id="pwt">Terms and Privacy updated</h3><p>We added clear rules for software use, risk, liability and a public Proof Wall that shows customers\' real EA results under a first name or nickname, with your country and profile photo. You can turn the Proof Wall off at any time in Settings.</p><label class="pw-tick"><input type="checkbox" id="pwag"> <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, including that my EA results, country and profile photo may be shown on the Proof Wall under my chosen display name.</span></label><button class="btn primary" id="pwgo" type="button" disabled>Agree and continue</button></div>';
     document.body.appendChild(d);
     const ag = d.querySelector('#pwag'), go = d.querySelector('#pwgo'); ag.onchange = () => go.disabled = !ag.checked;
     go.onclick = async () => { go.disabled = true; try { await c.rpc('accept_terms', {p_version: V, p_wall: true}); d.remove(); await refresh(); toast('Thank you. Saved.'); } catch (e) { go.disabled = false; toast('Could not save: ' + (e.message || e)); } };
