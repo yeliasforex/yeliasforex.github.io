@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://goldtriengine.com/sitemap.xml
+Sitemap: https://goldtriengine.com/blog/sitemap.xml

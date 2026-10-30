@@ -251,12 +251,12 @@ async function accountView(id) {
 $('#acvx').onclick = () => { $('#acv').classList.add('hide'); $('#acvf').src = 'about:blank'; };
 
 // ---------- views ----------
-const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['proof', 'Proof Wall'], ['settings', 'Plans & settings'], ['backtest', 'Backtest'], ['videos', 'Videos'], ['audit', 'Audit log']];
+const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['proof', 'Proof Wall'], ['blog', 'Blog'], ['settings', 'Plans & settings'], ['backtest', 'Backtest'], ['videos', 'Videos'], ['audit', 'Audit log']];
 function render() {
   const waiting = data.orders.filter(o => o.status === 'paid_claimed').length;
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
-  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, proof: vProof, settings: vSettings, backtest: vBacktest, videos: vVideos, audit: vAudit})[tab]();
+  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, proof: vProof, blog: vBlog, settings: vSettings, backtest: vBacktest, videos: vVideos, audit: vAudit})[tab]();
   const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw); markTiles();
 }
 const kx = (label, val, sub, color, hot, pre) => `<div class="kpi kx ${hot ? 'hot' : ''}">${label}<b ${color ? `style="color:${color}"` : ''} ${pre ? `data-pre="${pre}"` : ''} data-n="${val}">${val}</b>${sub ? `<span class="mute">${sub}</span>` : ''}</div>`;
@@ -818,6 +818,54 @@ async function vBacktest() {
   };
   drawList();
 }
+// ---------- Blog: control panel for the automatic blog (the job runs on the PC; this panel talks to it through the database) ----------
+async function vBlog() {
+  $('#view').innerHTML = '<div class="card"><span class="mute">Loading the blog panel...</span></div>';
+  let st;
+  try { st = await call('admin_blog_state'); } catch (e) { $('#view').innerHTML = `<div class="card"><div class="msg err">${esc(e.message || e)}. Run the latest database update (blog control) first.</div></div>`; return; }
+  const S = st.settings || {}, on = k => S[k] === 'true', sc = (() => { try { return JSON.parse(st.scorecard || '{}'); } catch (e) { return {}; } })();
+  const mins = st.last_seen ? Math.max(0, Math.round((Date.now() - new Date(st.last_seen).getTime()) / 60000)) : null;
+  const alive = mins !== null && mins <= 40, paused = on('paused');
+  const today = new Date().toISOString().slice(0, 10), posts = st.posts || [], runs = st.runs || [], cmds = st.commands || [];
+  const pubToday = posts.filter(p => p.post_date === today && p.status === 'published' && p.kind !== 'page').length, held = posts.filter(p => p.status === 'held').length;
+  const state = !alive ? ['PC OFFLINE', '#e5534b', mins === null ? 'The blog job on the PC has not checked in yet.' : `The PC last checked in ${mins >= 120 ? Math.round(mins / 60) + ' hours' : mins + ' minutes'} ago. Is it on, and is MetaTrader open?`]
+    : paused ? ['PAUSED', '#d9822b', 'Nothing new is generated or published while paused. Existing pages stay online.'] : ['RUNNING', '#3fb27f', `The PC checked in ${mins} minute(s) ago.`];
+  const chk = (k, label, hint) => `<label style="display:flex;gap:10px;align-items:flex-start;margin:12px 0;cursor:pointer"><input type="checkbox" data-s="${k}" ${on(k) ? 'checked' : ''} style="margin-top:3px"><span><b>${label}</b><br><span class="mute">${hint}</span></span></label>`;
+  const chip = s => `<span style="padding:3px 9px;border-radius:99px;font-size:12px;border:1px solid ${s === 'published' ? '#3fb27f' : s === 'held' ? '#d9822b' : '#8b95a3'};color:${s === 'published' ? '#3fb27f' : s === 'held' ? '#d9822b' : '#8b95a3'}">${esc(s)}</span>`;
+  const KIND = {brief: 'Forecast', recap: 'Day recap', weekly: 'Weekly review', story: 'On this day', lesson: 'Lesson', page: 'Page'};
+  $('#view').innerHTML = `
+  <div class="card"><b>Blog automation</b> <span class="mute">the public pages are at <a href="../blog/" target="_blank" rel="noopener">/blog/</a></span>
+    <div class="msg" style="margin:12px 0;padding:12px;border-radius:10px;border:1px solid ${state[1]}"><b style="color:${state[1]}">${state[0]}.</b> ${esc(state[2])}</div>
+    <div class="grid" style="margin:10px 0">${kx('Published today', pubToday, 'limit ' + (S.max_per_day || 3) + ' a day')}${kx('Waiting for approval', held, held ? 'approve them below' : 'nothing waiting')}${kx('Forecasts scored', sc.scored ?? 0, 'of ' + (sc.logged ?? 0) + ' logged')}${kx('80% range held', sc.in80 !== undefined ? Math.round(sc.in80 * 100) + '%' : '-', 'live record, should be near 80%')}</div>
+    <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:6px">
+      <button class="b ${paused ? 'pri' : 'dng'}" id="bpause">${paused ? 'Resume the blog' : 'Pause the blog'}</button>
+      <button class="b" data-c="run_open">Generate forecast and recap now</button><button class="b" data-c="run_morning">Generate today's story now</button><button class="b" data-c="publish">Rebuild and publish now</button></div>
+    <div class="mute" style="margin-top:8px">Buttons queue a command; the PC picks it up within about 15 minutes. ${cmds.length ? 'Latest: ' + cmds.slice(0, 3).map(c => esc(c.cmd) + ' (' + esc(c.status) + (c.result ? ': ' + esc(c.result) : '') + ')').join(' · ') : ''}</div></div>
+  <div class="card"><b>What the blog writes</b>
+    ${chk('brief_on', 'Daily forecast post', 'Probabilities, likely range and key levels for the next trading day, Monday to Friday.')}
+    ${chk('recap_on', 'Day recap', 'What the day that just closed did, and how our forecast for it did.')}
+    ${chk('weekly_on', 'Weekly review', 'Saturday: how the week went and how the forecasts scored.')}
+    ${chk('story_on', 'Daily "on this day" story', 'Fills the third daily slot when no lesson is due: gold on this calendar date, with the honest test.')}
+    ${chk('lessons_on', 'Academy lessons', 'The hand-written lessons that go out one a day on their dates. Off = new ones are held back.')}
+    <hr style="border:0;border-top:1px solid #8b95a340;margin:14px 0">
+    ${chk('llm_on', 'Use the local AI for the short desk note', 'Off = every note is the plain written version. The AI never writes numbers; its note is dropped if it fails any check.')}
+    ${chk('approval_required', 'Require my approval before publishing', 'On = new posts wait in the list below until you press Approve. Recommended for the first weeks if you want to read them.')}
+    <label>Most posts per day</label><select id="bmax" style="width:140px">${[1, 2, 3, 4, 5, 6].map(n => `<option ${String(n) === (S.max_per_day || '3') ? 'selected' : ''}>${n}</option>`).join('')}</select>
+    <label>Notes to yourself</label><input id="bnotes" value="${esc(S.notes || '')}" style="width:100%" maxlength="300"> <button class="b" id="bnsave" style="margin-top:8px">Save note</button></div>
+  <div class="card"><b>Posts</b> <span class="mute">${posts.length} most recent. Hide takes a post off the site; Show brings it back.</span>
+    <div class="tblw"><table class="tbl"><tr><th>Date</th><th>Post</th><th>Type</th><th>Status</th><th>Note by</th><th></th></tr>${posts.map(p => `<tr><td class="mono">${esc(p.post_date)}</td><td><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>${p.note ? `<div class="mute" style="font-size:12px">${esc(p.note)}</div>` : ''}</td><td>${esc(KIND[p.kind] || p.kind)}</td><td>${chip(p.status)}</td><td class="mute">${p.source === 'llm' ? 'local AI' : p.source === 'fallback' ? 'written text' : '-'}</td><td style="white-space:nowrap">${p.status === 'held' ? `<button class="b pri" data-p="approve" data-slug="${esc(p.slug)}">Approve</button> ` : ''}${p.status === 'hidden' ? `<button class="b" data-p="show" data-slug="${esc(p.slug)}">Show</button>` : `<button class="b dng" data-p="hide" data-slug="${esc(p.slug)}">Hide</button>`}</td></tr>`).join('') || '<tr><td class="mute">No posts reported yet.</td></tr>'}</table></div></div>
+  <div class="card"><b>What the job did</b> <span class="mute">newest first</span>
+    <div class="tblw"><table class="tbl"><tr><th>When (UTC)</th><th>Job</th><th></th><th>What happened</th></tr>${runs.map(r => `<tr><td class="mono">${esc(fmt(r.at))}</td><td>${esc(r.job)}</td><td>${r.ok ? '<span style="color:#3fb27f">ok</span>' : '<span style="color:#e5534b">problem</span>'}</td><td>${esc(r.summary)}${r.detail ? `<div class="mono mute" style="font-size:11px;word-break:break-all">${esc(String(r.detail).slice(0, 240))}</div>` : ''}</td></tr>`).join('') || '<tr><td class="mute">Nothing yet.</td></tr>'}</table></div></div>`;
+  const v = $('#view'), save = async (k, val) => { try { await call('admin_blog_set', {p_key: k, p_value: String(val)}); toast('Saved'); } catch (e) { toast(e.message || e, true); } vBlog(); };
+  v.querySelectorAll('input[data-s]').forEach(i => i.onchange = () => save(i.dataset.s, i.checked));
+  $('#bpause').onclick = () => save('paused', !paused);
+  $('#bmax').onchange = e => save('max_per_day', e.target.value);
+  $('#bnsave').onclick = () => save('notes', $('#bnotes').value);
+  const queue = async (cmd, arg) => { try { await call('admin_blog_command', {p_cmd: cmd, p_arg: arg || null}); toast('Queued. The PC runs it within about 15 minutes.'); } catch (e) { toast(e.message || e, true); } vBlog(); };
+  v.querySelectorAll('button[data-c]').forEach(b => b.onclick = () => queue(b.dataset.c));
+  v.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { if (b.dataset.p !== 'hide' || confirm('Take this post off the website?')) queue(b.dataset.p, b.dataset.slug); });
+}
+
 // ---------- Proof Wall: switches and the list of who is shown ----------
 async function vProof() {
   const c = data.config || {}, v = (k, d) => c[k] === undefined ? d : c[k], on = v('proof_wall_on', 'false') === 'true';

@@ -38,3 +38,8 @@ Key facts:
 ## Optional
 - [Privacy policy](https://goldtriengine.com/privacy.html)
 - [Terms of service](https://goldtriengine.com/terms.html)
+
+## Blog and Academy
+- https://goldtriengine.com/blog/ : daily gold outlooks (probabilities, ranges, key levels), day recaps, weekly reviews and lessons on news data, risk, psychology and AI trading. Every number is computed from our own price data and trading account.
+- https://goldtriengine.com/blog/outlook-scorecard/ : every forecast we make, scored in public.
+- https://goldtriengine.com/blog/how-our-gold-outlook-works/ : the method and its limits.
