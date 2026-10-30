@@ -4,7 +4,7 @@
   const full = !!document.getElementById('pwgrid');
   const PV = full && new URLSearchParams(location.search).get('preview') === '1';      // owner preview: only works for a signed-in, verified admin (the database decides)
   const load = src => new Promise(r => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = r; document.head.appendChild(s); });
-  if (!window.gte) await load('app.js?v=20261030pw5');
+  if (!window.gte) await load('app.js?v=20261030pw7');
   if (!window.gte || !gte.client) return;
   let cards = [], tot = null;
   try {
@@ -88,7 +88,7 @@
 
   /* ---------- all accounts on one timeline + ranking bars (full page only) ---------- */
   const composite = () => {
-    const cs = cards.filter(x => x.curve && x.curve.length > 1); if (cs.length < 2) return '';
+    const cs = cards.filter(x => x.curve && x.curve.length > 1); if (cs.length < (PV ? 1 : 2)) return '';     // visitors need 2+ accounts; the owner preview shows it with one so the layout can be checked
     const N = 48, rs = cs.map(x => { const p = [0].concat(x.curve), o = []; for (let k = 0; k < N; k++) { const t = k / (N - 1) * (p.length - 1), a = Math.floor(t), b = Math.min(p.length - 1, a + 1); o.push(p[a] + (p[b] - p[a]) * (t - a)); } return o; });
     const avg = Array.from({length: N}, (_, k) => rs.reduce((s, r) => s + r[k], 0) / rs.length);
     const all = rs.flat().concat(avg), mn = Math.min(0, ...all), mx = Math.max(0.01, ...all), rg = mx - mn || 1, lo = mn - rg * .1, hi = mx + rg * .12;
@@ -106,7 +106,7 @@
       grid + lines + '<path class="pw-aavg" d="' + path(avg) + 'L' + X(N - 1).toFixed(1) + ' ' + Y(0).toFixed(1) + 'L' + L + ' ' + Y(0).toFixed(1) + 'Z" fill="url(#pwavg)"/><path class="pw-lavg" pathLength="1" d="' + path(avg) + '"/>' +
       '<g class="pw-end gold"><circle class="pw-ring2" cx="' + X(N - 1).toFixed(1) + '" cy="' + Y(a).toFixed(1) + '" r="6"/><circle cx="' + X(N - 1).toFixed(1) + '" cy="' + Y(a).toFixed(1) + '" r="4"/></g>' +
       '<text class="pw-xt" x="' + L + '" y="' + (H - 6) + '">Day one</text><text class="pw-xt" x="' + (W - R) + '" y="' + (H - 6) + '" text-anchor="end">Today</text></svg>' +
-      '<p class="pw-leg"><i class="u"></i>each line is one account <i class="a"></i>gold is the average of all</p></div>' +
+      '<p class="pw-leg"><i class="u"></i>each line is one account <i class="a"></i>gold is the average of all</p>' + (cs.length < 2 ? '<p class="pw-leg" style="color:#d9822b">Preview: only one account so far, so the average is the same line. Visitors see this chart once 2 or more accounts qualify.</p>' : '') + '</div>' +
       '<aside class="pw-rank"><span class="kicker">Gain per account</span><ol>' + rank + '</ol><p>' + sc + ' of ' + cs.length + ' accounts are in profit. We show all of them.</p></aside></div>';
   };
 
