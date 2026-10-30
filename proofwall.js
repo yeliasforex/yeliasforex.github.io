@@ -2,16 +2,14 @@
 (async () => {
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
   const full = !!document.getElementById('pwgrid');
-  const PV = full && new URLSearchParams(location.search).get('preview') === '1';      // owner preview: only works for a signed-in, verified admin (the database decides)
   const load = src => new Promise(r => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = r; document.head.appendChild(s); });
-  if (!window.gte) await load('app.js?v=20261030pw10');
+  if (!window.gte) await load('app.js?v=20261030pw11');
   if (!window.gte || !gte.client) return;
   let cards = [], tot = null;
   try {
     const c = await gte.client();
-    const [a, b] = await Promise.all([c.rpc('proof_wall', PV ? {p_preview: true} : {}), c.rpc('proof_totals')]);
+    const [a, b] = await Promise.all([c.rpc('proof_wall'), c.rpc('proof_totals')]);
     cards = Array.isArray(a.data) ? a.data : []; tot = b.data || null;
-    if (PV && !cards.length) tot = Object.assign({}, tot, {on: true});
   } catch (e) {}
   cards.forEach(x => { if (x.gain_pct == null) x.gain_pct = 0; if (x.max_dd_pct == null) x.max_dd_pct = 0; });
   const cn = c => { if (!c) return ''; if (/^[A-Za-z]{2}$/.test(c)) { try { return new Intl.DisplayNames(['en'], {type: 'region'}).of(c.toUpperCase()) || c; } catch (e) {} } return c; };
@@ -71,7 +69,7 @@
     const ddw = Math.min(100, Math.round((x.max_dd_pct || 0) * 5));
     return '<article class="card pw-card ' + (up ? 'pw-up' : 'pw-dn') + ' rv" data-b="' + esc(x.broker || '') + '" data-g="' + x.gain_pct + '" data-d="' + x.days + '" data-n="' + i + '">' +
       '<i class="pw-shine"></i>' +
-      '<header>' + av + '<div><b>' + esc(x.name) + '</b><span>' + esc([cn(x.country), 'since ' + x.joined].filter(Boolean).join(' · ')) + '</span></div>' + (x.pv ? '<span class="pw-ver pw-pvb" title="' + esc(x.pv) + '">Preview only</span>' : '<span class="pw-ver"><i></i>Verified</span>') + '</header>' +
+      '<header>' + av + '<div><b>' + esc(x.name) + '</b><span>' + esc([cn(x.country), 'since ' + x.joined].filter(Boolean).join(' · ')) + '</span></div>' + '<span class="pw-ver"><i></i>Verified</span></header>' +
       '<div class="pw-big"><b>' + cu(x.gain_pct, 1, {sign: 1, suf: '%'}) + '</b><span>gain since start · ' + esc(x.days) + ' days</span></div>' +
       chart(x) +
       '<dl class="pw-st">' +
@@ -80,7 +78,6 @@
         '<div><dt>Win rate</dt><dd>' + (x.win_rate == null ? '–' : cu(x.win_rate, 1, {suf: '%'})) + '</dd>' + (x.win_rate == null ? '' : ring(x.win_rate)) + '</div>' +
       '</dl>' +
       (x.quote ? '<blockquote>“' + esc(x.quote) + '”</blockquote>' : '') +
-      (x.pv ? '<p class="pw-why">Visitors cannot see this account: ' + esc(x.pv) + '.</p>' : '') +
       '<footer>' + (x.plan ? '<span class="pw-plan">' + esc(x.plan) + ' plan</span>' : '') + '<small>' + esc([x.broker, x.size].filter(Boolean).join(' · ')) + '</small><small>Calculated by GTE servers from this account\'s own EA trades</small></footer></article>';
   };
 
@@ -88,7 +85,7 @@
 
   /* ---------- all accounts on one timeline + ranking bars (full page only) ---------- */
   const composite = () => {
-    const cs = cards.filter(x => x.curve && x.curve.length > 1); if (cs.length < (PV ? 1 : 2)) return '';     // visitors need 2+ accounts; the owner preview shows it with one so the layout can be checked
+    const cs = cards.filter(x => x.curve && x.curve.length > 1); if (cs.length < 2) return '';     // the all-accounts chart needs at least 2 accounts
     const N = 48, rs = cs.map(x => { const p = [0].concat(x.curve), o = []; for (let k = 0; k < N; k++) { const t = k / (N - 1) * (p.length - 1), a = Math.floor(t), b = Math.min(p.length - 1, a + 1); o.push(p[a] + (p[b] - p[a]) * (t - a)); } return o; });
     const avg = Array.from({length: N}, (_, k) => rs.reduce((s, r) => s + r[k], 0) / rs.length);
     const all = rs.flat().concat(avg), mn = Math.min(0, ...all), mx = Math.max(0.01, ...all), rg = mx - mn || 1, lo = mn - rg * .1, hi = mx + rg * .12;
@@ -106,7 +103,7 @@
       grid + lines + '<path class="pw-aavg" d="' + path(avg) + 'L' + X(N - 1).toFixed(1) + ' ' + Y(0).toFixed(1) + 'L' + L + ' ' + Y(0).toFixed(1) + 'Z" fill="url(#pwavg)"/><path class="pw-lavg" pathLength="1" d="' + path(avg) + '"/>' +
       '<g class="pw-end gold"><circle class="pw-ring2" cx="' + X(N - 1).toFixed(1) + '" cy="' + Y(a).toFixed(1) + '" r="6"/><circle cx="' + X(N - 1).toFixed(1) + '" cy="' + Y(a).toFixed(1) + '" r="4"/></g>' +
       '<text class="pw-xt" x="' + L + '" y="' + (H - 6) + '">Day one</text><text class="pw-xt" x="' + (W - R) + '" y="' + (H - 6) + '" text-anchor="end">Today</text></svg>' +
-      '<p class="pw-leg"><i class="u"></i>each line is one account <i class="a"></i>gold is the average of all</p>' + (cs.length < 2 ? '<p class="pw-leg" style="color:#d9822b">Preview: only one account so far, so the average is the same line. Visitors see this chart once 2 or more accounts qualify.</p>' : '') + '</div>' +
+      '<p class="pw-leg"><i class="u"></i>each line is one account <i class="a"></i>gold is the average of all</p>' + '</div>' +
       '<aside class="pw-rank"><span class="kicker">Gain per account</span><ol>' + rank + '</ol><p>' + sc + ' of ' + cs.length + ' accounts are in profit. We show all of them.</p></aside></div>';
   };
 
@@ -167,7 +164,7 @@
              : '<span class="kicker">Growing</span><h3>Be among the first <em class="s">to be featured.</em></h3><p>Customers appear here automatically once their real account has enough closed trades or days of history. Until then, watch our own live account on <a href="index.html#account">the home page</a> or on <a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a>.</p>') + '</div>';
       reveal(document.body); return;
     }
-    if (hero) hero.innerHTML = (PV ? '<div class="pw-prev"><b>Owner preview.</b> You are seeing every account that has a license, including demo and not-agreed accounts, even while the wall is off. Visitors never see this. Accounts marked "Preview only" would not appear to visitors.</div>' : '') + composite();
+    if (hero) hero.innerHTML = composite();
     const brokers = [...new Set(cards.map(x => x.broker).filter(Boolean))];
     const bar = document.getElementById('pwbar');
     let fb = 'all', so = 'gain';
