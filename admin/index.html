@@ -140,7 +140,7 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
 const SB_URL = 'https://ekljeyquxvlfbeadgszx.supabase.co';
 const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVrbGpleXF1eHZsZmJlYWRnc3p4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyOTI5MzYsImV4cCI6MjEwNzg2ODkzNn0.SlM13aMEy-mTO_iuPTvZz5l4BO0xZnvPBJKAVnZKVx8'; // public anon key
 const DEMO = new URLSearchParams(location.search).has('demo');
-const SITE = /github\.io$/.test(location.hostname) ? '../' : 'https://yeliasforex.github.io/';   // the customer page lives on the live site; sign in to the live admin (/admin/) to use the account view
+const SITE = /(github\.io|goldtriengine\.com)$/.test(location.hostname) ? '../' : 'https://goldtriengine.com/';   // the customer page lives on the live site; sign in to the live admin (/admin/) to use the account view
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt = d => d ? new Date(d).toISOString().slice(0, 16).replace('T', ' ') : '-';
@@ -226,7 +226,7 @@ async function enter() {
 
 
 // ---------- full customer account view: the live customer page is shown in a frame and fed this customer's data, read with the admin's own login ----------
-const SITE_LIVE = 'https://yeliasforex.github.io/';
+const SITE_LIVE = 'https://goldtriengine.com/';
 async function accountView(id) {
   const l = data.licenses.find(x => x.id === id); if (!l) return;
   $('#acv').classList.remove('hide'); $('#acvt').textContent = 'Account view: ' + (l.owner_email || 'no owner') + ' · ' + l.key + ' (read-only, as the customer sees it)';
@@ -429,7 +429,7 @@ async function vVisitors() {
   $('#vzd').querySelectorAll('button').forEach(b => b.onclick = () => { vz.days = +b.dataset.d; vVisitors(); });
   $('#vz_rep').onclick = async () => { await call('admin_send_weekly_report'); toast('Weekly report sent to your Telegram'); };
   $('#vz_nt').onclick = () => { try { noTrack ? localStorage.removeItem('gte_notrack') : localStorage.setItem('gte_notrack', '1'); } catch (e) {} vVisitors(); };
-  const ub = () => { const q = new URLSearchParams(); const s = $('#ub_s').value.trim(), m = $('#ub_m').value.trim(), c = $('#ub_c').value.trim(); if (s) q.set('utm_source', s); if (m) q.set('utm_medium', m); if (c) q.set('utm_campaign', c); const u = 'https://yeliasforex.github.io/' + ($('#ub_p').value === 'index.html' ? '' : $('#ub_p').value) + (q.toString() ? '?' + q.toString() : ''); $('#ub_o').textContent = u; return u; };
+  const ub = () => { const q = new URLSearchParams(); const s = $('#ub_s').value.trim(), m = $('#ub_m').value.trim(), c = $('#ub_c').value.trim(); if (s) q.set('utm_source', s); if (m) q.set('utm_medium', m); if (c) q.set('utm_campaign', c); const u = 'https://goldtriengine.com/' + ($('#ub_p').value === 'index.html' ? '' : $('#ub_p').value) + (q.toString() ? '?' + q.toString() : ''); $('#ub_o').textContent = u; return u; };
   ['ub_p', 'ub_s', 'ub_m', 'ub_c'].forEach(id => $('#' + id).oninput = ub); ub();
   $('#view').querySelectorAll('[data-ps]').forEach(b => b.onclick = () => { const [s, m] = b.dataset.ps.split('|'); $('#ub_s').value = s; $('#ub_m').value = m; ub(); });
   $('#ub_cp').onclick = async () => { try { await navigator.clipboard.writeText(ub()); toast('Link copied'); } catch (e) { toast('Select and copy the link', true); } };

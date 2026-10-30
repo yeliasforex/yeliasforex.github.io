@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://yeliasforex.github.io/sitemap.xml
+Sitemap: https://goldtriengine.com/sitemap.xml
