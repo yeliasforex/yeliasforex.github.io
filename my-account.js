@@ -533,6 +533,14 @@
   try { S = await load(); } catch (e) { A.innerHTML = '<div class="msg err">Could not load your account: ' + esc(e.message || e) + '</div>'; return; }
   await render();
   initAvatar(); initBell(); paintBell(); initSettings();
+  (async () => {                                              // Proof Wall country: filled in automatically (no Save needed). Server header first, then Cloudflare's public trace as a backup.
+    const P = S.profile; if (DEMO || AS || !P || P.auto_country !== null) return;
+    try {
+      let r = (await c.rpc('sync_wall_country')).data;
+      if (r && !r.country) { const t = await fetch('https://www.cloudflare.com/cdn-cgi/trace').then(x => x.text()), m = t.match(/^loc=([A-Z]{2})$/m); if (m) r = (await c.rpc('sync_wall_country', {p_fallback: m[1]})).data; }
+      if (r && r.country) P.auto_country = r.country;
+    } catch (e) {}
+  })();
   (async () => {                                              // Terms + Proof Wall agreement: the sign-in tick is saved here after sign-in; people who never ticked it (older accounts) see a notice
     const P = S.profile; if (DEMO || AS || !P || P.terms_version === undefined) return;
     const V = '2026-10-30b'; let ticked = false; try { ticked = localStorage.getItem('gte_agree') === V; } catch (e) {}
