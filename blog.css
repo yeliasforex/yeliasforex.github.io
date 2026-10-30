@@ -132,3 +132,14 @@ a.bl-chip:hover{border-color:var(--mint)}
 @media(max-width:940px){.bl-grid{grid-template-columns:minmax(0,1fr)}.bl-aside{position:static;order:-1}.bl-toc{display:none}.bl-feature{grid-template-columns:1fr}}
 @media(max-width:560px){.bl-wrap{padding:0 16px}.bl-kn>div{padding:14px 14px}.bl-fig{padding:16px 12px 12px;margin-left:-4px;margin-right:-4px}.bl-body p,.bl-body li{font-size:1.02rem}.bl-yt,.bl-xt,.bl-lt,.bl-cl{font-size:12px}.bl-bv{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.bl-kn::after,.bl-ping{animation:none}.bl-js .bl-line,.bl-js .bl-path{stroke-dashoffset:0;stroke-dasharray:none}.bl-js .bl-area,.bl-js .bl-cone,.bl-js .bl-med,.bl-js .bl-bv,.bl-js .bl-end,.bl-js .bl-dot{opacity:1}.bl-js .bl-bar{transform:none}.bl-card,.bl-fig::before{transition:none}}
+
+/* featured-card graphics (real data curve, or abstract rings for lessons) */
+.bl-sp{max-width:420px}
+.bl-spl{fill:none;stroke:var(--gold);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:bl-draw 2.2s cubic-bezier(.2,.7,.2,1) .2s forwards}
+.bl-sp.pos .bl-spl{stroke:var(--mint)}.bl-sp.neg .bl-spl{stroke:var(--red)}
+.bl-spa{fill:color-mix(in srgb,var(--gold) 18%,transparent);opacity:0;animation:bl-fade 1.2s ease 1.2s forwards}
+.bl-sp.pos .bl-spa{fill:color-mix(in srgb,var(--mint) 18%,transparent)}.bl-sp.neg .bl-spa{fill:color-mix(in srgb,var(--red) 18%,transparent)}
+.bl-spd{fill:var(--gold)}.bl-sp.pos .bl-spd{fill:var(--mint)}.bl-sp.neg .bl-spd{fill:var(--red)}
+.bl-ring{fill:none;stroke:var(--gold);stroke-width:1.6;opacity:0;animation:bl-fade .9s ease calc(var(--i)*.18s) forwards}
+@keyframes bl-draw{to{stroke-dashoffset:0}}@keyframes bl-fade{to{opacity:.8}}
+@media(prefers-reduced-motion:reduce){.bl-spl{animation:none;stroke-dashoffset:0}.bl-spa,.bl-ring{animation:none;opacity:.8}}

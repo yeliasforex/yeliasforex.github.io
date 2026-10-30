@@ -848,7 +848,7 @@ async function vBlog() {
     ${chk('story_on', 'Daily "on this day" story', 'Fills the third daily slot when no lesson is due: gold on this calendar date, with the honest test.')}
     ${chk('lessons_on', 'Academy lessons', 'The hand-written lessons that go out one a day on their dates. Off = new ones are held back.')}
     <hr style="border:0;border-top:1px solid #8b95a340;margin:14px 0">
-    ${chk('llm_on', 'Use the local AI for the short desk note', 'Off = every note is the plain written version. The AI never writes numbers; its note is dropped if it fails any check.')}
+    ${chk('llm_on', 'Use the local AI for the short desk note (experimental)', 'OFF is recommended. In our test on 30 Oct 2026 the small local model passed every automatic check but still wrote a sentence with the wrong numbers attached, which no check can fully catch. Off = every note is a carefully written, accurate version that rotates its wording. Turn this on only together with "Require my approval".')}
     ${chk('approval_required', 'Require my approval before publishing', 'On = new posts wait in the list below until you press Approve. Recommended for the first weeks if you want to read them.')}
     <label>Most posts per day</label><select id="bmax" style="width:140px">${[1, 2, 3, 4, 5, 6].map(n => `<option ${String(n) === (S.max_per_day || '3') ? 'selected' : ''}>${n}</option>`).join('')}</select>
     <label>Notes to yourself</label><input id="bnotes" value="${esc(S.notes || '')}" style="width:100%" maxlength="300"> <button class="b" id="bnsave" style="margin-top:8px">Save note</button></div>
