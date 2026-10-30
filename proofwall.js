@@ -4,7 +4,7 @@
   const full = !!document.getElementById('pwgrid');
   const PV = full && new URLSearchParams(location.search).get('preview') === '1';      // owner preview: only works for a signed-in, verified admin (the database decides)
   const load = src => new Promise(r => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = r; document.head.appendChild(s); });
-  if (!window.gte) await load('app.js?v=20261030pw7');
+  if (!window.gte) await load('app.js?v=20261030pw10');
   if (!window.gte || !gte.client) return;
   let cards = [], tot = null;
   try {
@@ -101,7 +101,7 @@
     const maxAbs = Math.max(...gains.map(Math.abs), 1), rank = cs.slice().sort((p, q) => q.gain_pct - p.gain_pct).map((x, i) => '<li style="--i:' + i + '"><span>' + esc(x.name) + '</span><div class="pw-rk ' + (x.gain_pct >= 0 ? 'u' : 'd') + '"><i style="--w:' + (Math.abs(x.gain_pct) / maxAbs * 50).toFixed(1) + '%"></i></div><b>' + pct(x.gain_pct) + '</b></li>').join('');
     const sc = gains.filter(g => g > 0).length;
     return '<div class="pw-hero rv"><div class="pw-hc"><div class="pw-ht"><div><span class="kicker">All accounts, same start line</span><h2>How every account has moved <em class="s">since day one</em></h2></div>' +
-      '<div class="pw-sum"><div><b class="' + (a >= 0 ? 'u' : 'd') + '">' + cu(a, 1, {sign: 1, suf: '%'}) + '</b><span>average</span></div><div><b class="u">' + cu(best, 1, {sign: 1, suf: '%'}) + '</b><span>best</span></div><div><b class="' + (worst >= 0 ? 'u' : 'd') + '">' + cu(worst, 1, {sign: 1, suf: '%'}) + '</b><span>weakest</span></div></div></div>' +
+      '<div class="pw-sum"><div><b class="' + (a >= 0 ? 'u' : 'd') + '">' + cu(a, 1, {sign: 1, suf: '%'}) + '</b><span>average</span></div><div><b class="' + (best >= 0 ? 'u' : 'd') + '">' + cu(best, 1, {sign: 1, suf: '%'}) + '</b><span>best</span></div><div><b class="' + (worst >= 0 ? 'u' : 'd') + '">' + cu(worst, 1, {sign: 1, suf: '%'}) + '</b><span>weakest</span></div></div></div>' +
       '<svg viewBox="0 0 ' + W + ' ' + H + '" class="pw-sp pw-bigsp" role="img" aria-label="All customer equity curves with their average"><defs><linearGradient id="pwavg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--gold)" stop-opacity=".32"/><stop offset="1" stop-color="var(--gold)" stop-opacity="0"/></linearGradient></defs>' +
       grid + lines + '<path class="pw-aavg" d="' + path(avg) + 'L' + X(N - 1).toFixed(1) + ' ' + Y(0).toFixed(1) + 'L' + L + ' ' + Y(0).toFixed(1) + 'Z" fill="url(#pwavg)"/><path class="pw-lavg" pathLength="1" d="' + path(avg) + '"/>' +
       '<g class="pw-end gold"><circle class="pw-ring2" cx="' + X(N - 1).toFixed(1) + '" cy="' + Y(a).toFixed(1) + '" r="6"/><circle cx="' + X(N - 1).toFixed(1) + '" cy="' + Y(a).toFixed(1) + '" r="4"/></g>' +
