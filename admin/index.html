@@ -124,6 +124,9 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
 .sp-msgs{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto;padding:2px}.sp-m{max-width:88%;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);white-space:pre-wrap;animation:vin .35s both}
 .sp-m.me{align-self:flex-end;background:color-mix(in srgb,var(--info) 14%,var(--panel2));border-color:color-mix(in srgb,var(--info) 40%,var(--line))}
 .em-prev{border:1px dashed var(--line);border-radius:10px;padding:12px 14px;background:var(--panel2)}
+.em-tpl{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:10px}
+.em-t{text-align:left;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:linear-gradient(135deg,var(--panel2),var(--panel));color:var(--text);cursor:pointer;font:inherit;transition:transform .18s,border-color .2s,box-shadow .2s}
+.em-t:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 8px 22px rgba(224,178,74,.14)}.em-t b{display:block;color:var(--gold2);margin-bottom:4px}.em-t span{display:block;color:var(--mute);font-size:12px;line-height:1.45}
 </style>
 </head>
 <body>
@@ -1114,8 +1117,23 @@ async function vEmail() {
   $('#view').innerHTML = '<div class="card mute">Loading...</div>';
   let B; try { B = await call('admin_broadcasts'); } catch (e) { $('#view').innerHTML = `<div class="card">${needsUpdate(e)}</div>`; return; }
   B = B || {subscribers: 0, cap: 300, sent_24h: 0, history: []};
+  let posts = [], coupons = []; try { posts = ((await call('admin_blog_state')) || {}).posts || []; } catch (e) {} try { coupons = ((await call('admin_coupons')) || []).filter(c => c.active); } catch (e) {}
   const room = Math.max(0, B.cap - B.sent_24h), preview = txt => esc(txt || '').split(/\n{2,}/).map(p => '<p style="margin:0 0 10px">' + p.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<u>$1</u>').replace(/\n/g, '<br>') + '</p>').join('');
   $('#view').innerHTML = `<div class="grid" style="margin-bottom:14px">${kx('Subscribers', B.subscribers, 'will receive your email', 'var(--ok)')}${kx('Sent, last 24 hours', B.sent_24h, 'daily limit ' + B.cap, B.sent_24h > B.cap * .8 ? 'var(--warn)' : 'var(--info)')}${kx('Room left today', room, B.subscribers > room ? 'not enough for everyone: wait' : 'enough for the whole list', room < B.subscribers ? 'var(--warn)' : '')}</div>
+  <div class="card"><b>Start from a ready-made email</b> <span class="mute">pick one, check the text, change what you like, then send yourself a test</span>
+    <div class="em-tpl">
+      <button class="em-t" data-tpl="digest"><b>This week's digest</b><span>Built automatically from the posts published in the last 7 days. Send about once a week.</span></button>
+      <button class="em-t" data-tpl="spotlight"><b>Spotlight one post</b><span>Pick a lesson or forecast and send a short note about it.</span></button>
+      <button class="em-t" data-tpl="release"><b>New EA version</b><span>Announces version ${esc((data.config || {}).latest_version || '')} with its release notes and the changelog link.</span></button>
+      <button class="em-t" data-tpl="code"><b>Discount code</b><span>Announces one of your active codes, with a link that fills it in.</span></button>
+      <button class="em-t" data-tpl="news"><b>Big news day reminder</b><span>Heads-up before a major release or rate decision. You fill in the event and time.</span></button>
+      <button class="em-t" data-tpl="feedback"><b>What should we cover next?</b><span>Asks readers what they want to learn. Replies come to your sending inbox.</span></button>
+    </div>
+    <div id="em_pick" style="display:none;margin-top:10px"></div>
+    <details style="margin-top:12px"><summary class="mute" style="cursor:pointer">Why send emails at all, and how often?</summary>
+      <div class="mute" style="margin-top:8px;font-size:13px;line-height:1.6">
+        <b>The digest</b> brings readers back to the blog, which keeps them close to the product and sends the search engines a steady stream of real visits. <b>A spotlight</b> pushes one useful lesson to people who missed it. <b>A new version note</b> tells owners and future buyers that the EA is maintained. <b>A discount code</b> is for launches only; sent too often it teaches people to wait. <b>A news reminder</b> is the most useful one for gold traders: it tells them when to be careful. <b>The feedback email</b> gives you topics straight from readers.<br>
+        A good rhythm is <b>one email a week</b>, never more than two. Every email says what it is, links to something useful and carries a one-click unsubscribe link automatically. None of these contains a trade signal or a promise of profit.</div></details></div>
   <div class="card"><b>Write an email</b> <span class="mute">to everyone subscribed to the blog emails. Each email carries a one-click unsubscribe link automatically.</span>
     <label>Subject</label><input id="em_s" maxlength="150" style="width:100%" placeholder="This week in gold">
     <label>Message</label><textarea id="em_b" rows="10" maxlength="20000" style="width:100%" placeholder="Hello,&#10;&#10;Write in short paragraphs. A blank line starts a new paragraph.&#10;&#10;Add a link like this: [Read the post](https://goldtriengine.com/blog/)"></textarea>
@@ -1126,13 +1144,56 @@ async function vEmail() {
   <div class="card"><b>Sent emails</b> ${B.history.length ? `<div class="tblw"><table class="tbl"><tr><th>Date</th><th>Subject</th><th>Delivered</th><th>Failed</th><th>Waiting</th></tr>${B.history.map(h => `<tr><td class="mono">${esc(fmt(h.created_at))}</td><td>${esc(h.subject)}</td><td><b>${h.sent}</b> of ${h.total}</td><td>${Number(h.failed) ? '<span style="color:var(--bad)">' + h.failed + '</span>' : '-'}</td><td>${Number(h.waiting) ? h.waiting : '-'}</td></tr>`).join('')}</table></div>` : '<p class="mute">Nothing sent yet.</p>'}
     <p class="mute" style="font-size:12px;margin:8px 0 0">Gmail allows roughly 500 emails a day, so the limit is ${B.cap} a day. Large lists are sent in small batches; keep this page open until it finishes.</p></div>`;
   const upd = () => { $('#em_p').innerHTML = preview($('#em_b').value); }; $('#em_b').oninput = upd; upd();
+  const todayUtc = new Date().toISOString().slice(0, 10), weekAgo = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10), SITE = 'https://goldtriengine.com';
+  const live = posts.filter(p => p.status === 'published' && p.post_date <= todayUtc && p.kind !== 'page').sort((a, b) => (a.post_date < b.post_date ? 1 : -1));
+  const LBL = {lesson: 'Lesson', weekly: 'Weekly review', story: 'On this day', brief: 'Outlook', recap: 'Day recap', researched: 'Lesson'};
+  const closing = '\n\nTrading involves risk and nothing here is financial advice.\n\nYelias\nGoldTriEngine';
+  const fill = (subject, body) => { $('#em_s').value = subject; $('#em_b').value = body; upd(); $('#em_s').scrollIntoView({behavior: 'smooth', block: 'center'}); toast('Template loaded. Check the text, then send yourself a test.'); };
+  const tpl = {
+    digest() {
+      const items = live.filter(p => p.post_date >= weekAgo && ['lesson', 'weekly', 'story', 'researched'].includes(p.kind)).slice(0, 5), brief = live.find(p => p.kind === 'brief');
+      if (!items.length && !brief) return toast('No post was published in the last 7 days to put in a digest', true);
+      const lines = items.map(p => `[${p.title}](${p.url})\n${LBL[p.kind] || 'Post'}, ${p.post_date}`).join('\n\n');
+      fill(items[0] ? `This week in gold: ${items[0].title}`.slice(0, 150) : 'This week in gold',
+        `Hello,\n\nHere is what we published this week.\n\n${lines}${brief ? `\n\nAnd the latest outlook with the likely range and key levels: [${brief.title}](${brief.url})` : ''}\n\nEverything on the blog is built from our own price data, and our forecasts are scored in public, wrong ones included.${closing}`);
+    },
+    spotlight() {
+      const sel = $('#em_pick'); sel.style.display = '';
+      sel.innerHTML = `<label>Which post?</label><select id="em_sp" style="width:100%">${live.slice(0, 40).map(p => `<option value="${esc(p.slug)}">${esc(p.post_date)} - ${esc(p.title)}</option>`).join('')}</select><div class="row" style="margin-top:8px"><button class="b pri" id="em_spgo">Use this post</button></div>`;
+      $('#em_spgo').onclick = () => { const p = live.find(x => x.slug === $('#em_sp').value); if (!p) return; sel.style.display = 'none';
+        fill(p.title.slice(0, 150), `Hello,\n\nIn case you missed it, this is one of our most useful reads right now:\n\n[${p.title}](${p.url})\n\nIt takes a few minutes and everything in it is explained from the ground up. If it helps, forward it to someone who trades gold.${closing}`); };
+    },
+    release() {
+      const v = (data.config || {}).latest_version || '', notes = String((data.config || {}).release_notes || '').split(/\n+/).filter(Boolean).map(l => '- ' + l.replace(/^[-*•]\s*/, '')).join('\n');
+      if (!v) return toast('No EA version is published yet', true);
+      fill(`GoldTriEngine EA version ${v} is out`, `Hello,\n\nVersion ${v} of the GoldTriEngine Expert Advisor is now available.\n\n${notes || 'See the changelog for the details.'}\n\nThe full list of changes is here: [EA changelog](${SITE}/changelog.html)\n\nCustomers with an active license can download it from their account.${closing}`);
+    },
+    code() {
+      if (!coupons.length) return toast('You have no active discount code. Create one in the Marketing tab first', true);
+      const sel = $('#em_pick'); sel.style.display = '';
+      sel.innerHTML = `<label>Which code?</label><select id="em_cd" style="width:100%">${coupons.map(c => `<option value="${esc(c.code)}">${esc(c.code)} - ${c.percent_off ? c.percent_off + '% off' : usd(c.amount_off) + ' off'}${c.expires_at ? ', until ' + esc(String(c.expires_at).slice(0, 10)) : ''}</option>`).join('')}</select><div class="row" style="margin-top:8px"><button class="b pri" id="em_cdgo">Use this code</button></div>`;
+      $('#em_cdgo').onclick = () => { const c = coupons.find(x => x.code === $('#em_cd').value); sel.style.display = 'none';
+        fill(`A discount on GoldTriEngine: ${c.percent_off ? c.percent_off + '% off' : usd(c.amount_off) + ' off'}`, `Hello,\n\nFor a limited time you can use the code ${c.code} on the pricing page${c.percent_off ? ' for ' + c.percent_off + '% off' : ' for ' + usd(c.amount_off) + ' off'}${c.expires_at ? ', valid until ' + String(c.expires_at).slice(0, 10) : ''}.\n\nThis link fills it in for you: [Open pricing with the code](${SITE}/pricing.html?code=${encodeURIComponent(c.code)})\n\nIf you are still unsure, watch the live stream first and test the free backtest EA on your own PC: [free backtest EA](${SITE}/free-backtest.html)${closing}`); };
+    },
+    news() {
+      fill('Heads-up: {{EVENT}} on {{DAY}}', `Hello,\n\nA reminder for gold traders: {{EVENT}} is due on {{DAY}} at {{TIME}} (broker server time may differ, check yours).\n\nGold can move sharply and spreads can widen in the minutes around a release like this. Many traders reduce size or stay out until the first reaction has settled. Whatever you decide, know where your stops are before the release.\n\nHow to read it: [how to read NFP, CPI and other news data](${SITE}/blog/how-to-read-nfp-cpi-news-for-gold/)${closing}`);
+      toast('Replace the three {{ }} parts first. The email cannot be sent while they are still there.', true);
+    },
+    feedback() {
+      fill('What should we write about next?', `Hello,\n\nWe write a new gold lesson most weekdays and we would like to cover what you actually want to know.\n\nJust reply to this email with one topic: a question about risk, a news release, how robots work, anything.\n\nThe latest posts are here: [the GoldTriEngine blog](${SITE}/blog/)${closing}`);
+    },
+  };
+  $('#view').querySelectorAll('[data-tpl]').forEach(b => b.onclick = () => { $('#em_pick').style.display = 'none'; tpl[b.dataset.tpl](); });
   const post = async body => { const {data: sess} = await sb.auth.getSession(); const r = await fetch(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.session.access_token, apikey: SB_KEY}, body: JSON.stringify(body)}); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.status); return j; };
+  const blanks = () => /\{\{[^}]*\}\}/.test($('#em_s').value + $('#em_b').value);
   $('#em_test').onclick = async () => {
     if ($('#em_s').value.trim().length < 3 || $('#em_b').value.trim().length < 10) return toast('Write a subject and a message first', true);
+    if (blanks()) return toast('Fill in the {{ }} parts first', true);
     try { const j = await post({kind: 'broadcast_test', subject: $('#em_s').value, body: $('#em_b').value}); toast('Test sent to ' + j.to); } catch (e) { toast(e.message || String(e), true); }
   };
   $('#em_go').onclick = async () => {
     if ($('#em_s').value.trim().length < 3 || $('#em_b').value.trim().length < 10) return toast('Write a subject and a message first', true);
+    if (blanks()) return toast('Fill in the {{ }} parts first', true);
     if (!confirm(`Send "${$('#em_s').value}" to ${B.subscribers} subscriber(s) now?\n\nThis cannot be taken back. Did you send yourself a test first?`)) return;
     $('#em_go').disabled = $('#em_test').disabled = true; $('#em_prog').style.display = '';
     try {
