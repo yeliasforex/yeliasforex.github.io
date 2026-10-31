@@ -865,6 +865,8 @@ async function vBlog() {
   $('#view').innerHTML = '<div class="card"><span class="mute">Loading the blog panel...</span></div>';
   let st;
   try { st = await call('admin_blog_state'); } catch (e) { $('#view').innerHTML = `<div class="card"><div class="msg err">${esc(e.message || e)}. Run the latest database update (blog control) first.</div></div>`; return; }
+  let E = null, C = [];
+  try { [E, C] = await Promise.all([call('admin_blog_engagement'), call('admin_comments', {p_status: 'all'})]); C = C || []; } catch (e) { E = null; }
   const S = st.settings || {}, on = k => S[k] === 'true', sc = (() => { try { return JSON.parse(st.scorecard || '{}'); } catch (e) { return {}; } })();
   const mins = st.last_seen ? Math.max(0, Math.round((Date.now() - new Date(st.last_seen).getTime()) / 60000)) : null;
   const alive = mins !== null && mins <= 40, paused = on('paused');
@@ -895,8 +897,7 @@ async function vBlog() {
     ${chk('approval_required', 'Require my approval before publishing', 'On = new posts wait in the list below until you press Approve. Recommended for the first weeks if you want to read them.')}
     <label>Most posts per day</label><select id="bmax" style="width:140px">${[1, 2, 3, 4, 5, 6].map(n => `<option ${String(n) === (S.max_per_day || '3') ? 'selected' : ''}>${n}</option>`).join('')}</select>
     <label>Notes to yourself</label><input id="bnotes" value="${esc(S.notes || '')}" style="width:100%" maxlength="300"> <button class="b" id="bnsave" style="margin-top:8px">Save note</button></div>
-  <div class="card"><b>Posts</b> <span class="mute">${posts.length} most recent. Hide takes a post off the site; Show brings it back.</span>
-    <div class="tblw"><table class="tbl"><tr><th>Date</th><th>Post</th><th>Type</th><th>Status</th><th>Note by</th><th></th></tr>${posts.map(p => `<tr><td class="mono">${esc(p.post_date)}</td><td><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>${p.note ? `<div class="mute" style="font-size:12px">${esc(p.note)}</div>` : ''}</td><td>${esc(KIND[p.kind] || p.kind)}</td><td>${chip(p.status)}</td><td class="mute">${p.source === 'research-llm' ? 'local AI + sources' : p.source === 'llm' ? 'local AI' : p.source === 'fallback' ? 'written text' : '-'}</td><td style="white-space:nowrap">${p.status === 'held' ? `<button class="b pri" data-p="approve" data-slug="${esc(p.slug)}">Approve</button> ` : ''}${p.status === 'hidden' ? `<button class="b" data-p="show" data-slug="${esc(p.slug)}">Show</button>` : `<button class="b dng" data-p="hide" data-slug="${esc(p.slug)}">Hide</button>`}</td></tr>`).join('') || '<tr><td class="mute">No posts reported yet.</td></tr>'}</table></div></div>
+  ${blogPostsCard(posts, E, C, KIND, chip)}
   <div class="card"><b>What the job did</b> <span class="mute">newest first</span>
     <div class="tblw"><table class="tbl"><tr><th>When (UTC)</th><th>Job</th><th></th><th>What happened</th></tr>${runs.map(r => `<tr><td class="mono">${esc(fmt(r.at))}</td><td>${esc(r.job)}</td><td>${r.ok ? '<span style="color:#3fb27f">ok</span>' : '<span style="color:#e5534b">problem</span>'}</td><td>${esc(r.summary)}${r.detail ? `<div class="mono mute" style="font-size:11px;word-break:break-all">${esc(String(r.detail).slice(0, 240))}</div>` : ''}</td></tr>`).join('') || '<tr><td class="mute">Nothing yet.</td></tr>'}</table></div></div>`;
   const v = $('#view'), save = async (k, val) => { try { await call('admin_blog_set', {p_key: k, p_value: String(val)}); toast('Saved'); } catch (e) { toast(e.message || e, true); } vBlog(); };
@@ -907,7 +908,10 @@ async function vBlog() {
   const queue = async (cmd, arg) => { try { await call('admin_blog_command', {p_cmd: cmd, p_arg: arg || null}); toast('Queued. The PC runs it within about 15 minutes.'); } catch (e) { toast(e.message || e, true); } vBlog(); };
   v.querySelectorAll('button[data-c]').forEach(b => b.onclick = () => queue(b.dataset.c));
   v.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { if (b.dataset.p !== 'hide' || confirm('Take this post off the website?')) queue(b.dataset.p, b.dataset.slug); });
-  vBlogReaders(v);
+  v.querySelectorAll('[data-cm]').forEach(b => b.onclick = async () => {
+    if (b.dataset.cm === 'deleted' && !confirm('Delete this comment for good?')) return;
+    try { await call('admin_comment_set', {p_id: +b.dataset.id, p_status: b.dataset.cm}); toast('Saved'); vBlog(); } catch (e) { toast(e.message || String(e), true); }
+  });
 }
 
 // ---------- Proof Wall: switches and the list of who is shown ----------
@@ -1050,26 +1054,26 @@ async function sendInvoice(orderId) {
   } catch (e) { return 'Invoice email NOT sent: ' + (e.message || e); }
 }
 
-async function vBlogReaders(v) {
-  const box = document.createElement('div'); box.className = 'card'; box.innerHTML = '<b>Readers</b> <span class="mute">loading...</span>'; v.insertBefore(box, v.firstChild);
-  let E, C;
-  try { [E, C] = await Promise.all([call('admin_blog_engagement'), call('admin_comments', {p_status: 'all'})]); E = E || {posts: [], totals: {}, daily: []}; C = C || []; }
-  catch (e) { box.innerHTML = `<b>Readers</b><div class="msg err" style="margin-top:8px">${esc(e.message || e)}. Run the latest database update (invoices and reader activity) first.</div>`; return; }
-  const T = E.totals || {}, P = E.posts || [], D = (E.daily || []).slice(-30), dmax = Math.max(1, ...D.map(d => Number(d.visits))), pmax = Math.max(1, ...P.map(p => Number(p.visits_30)));
+function blogPostsCard(posts, E, C, KIND, chip) {
+  const by = {}; ((E && E.posts) || []).forEach(p => by[p.slug] = p);
+  const T = (E && E.totals) || {}, D = ((E && E.daily) || []).slice(-30), dmax = Math.max(1, ...D.map(d => Number(d.visits))), pmax = Math.max(1, ...Object.values(by).map(p => Number(p.visits_30)));
   const pend = C.filter(c => c.status === 'pending'), rest = C.filter(c => c.status !== 'pending').slice(0, 20);
   const cm = c => `<div class="rd-c ${c.status}"><div class="row"><b>${esc(c.name)}</b><span class="mute">on <span class="mono">${esc(c.slug)}</span> · ${esc(String(c.at).slice(0, 10))}</span><span class="sp" style="flex:1"></span>${c.status === 'approved' ? '<span class="pill p-ok">shown</span>' : c.status === 'hidden' ? '<span class="pill p-mute">hidden</span>' : '<span class="pill p-warn">waiting</span>'}</div>
     <div style="margin:6px 0 8px;white-space:pre-wrap">${esc(c.body)}</div><div class="row">${c.status !== 'approved' ? `<button class="b pri" data-cm="approved" data-id="${c.id}">Show</button>` : ''}${c.status !== 'hidden' ? `<button class="b" data-cm="hidden" data-id="${c.id}">Hide</button>` : ''}<button class="b" data-cm="deleted" data-id="${c.id}">Delete</button></div></div>`;
-  box.innerHTML = `<div class="row"><b>Readers</b><span class="mute">visits come from the site's anonymous visit counter; likes and comments come from the buttons under each post</span></div>
-    <div class="grid" style="margin:10px 0">${kx('Blog visits, 30 days', Number(T.visits_30 || 0), Number(T.visits_all || 0) + ' all time', 'var(--info)')}${kx('Likes', Number(T.likes || 0), 'hearts on posts', 'var(--gold2)')}${kx('Comments shown', Number(T.comments || 0), 'approved by you', 'var(--ok)')}${kx('Waiting for you', Number(T.pending || 0), Number(T.pending || 0) ? 'read and press Show or Hide below' : 'nothing to review', Number(T.pending || 0) ? 'var(--warn)' : '', Number(T.pending || 0) > 0)}</div>
-    ${D.length ? `<div class="mute" style="font-size:12px">Blog visits per day (last 30 days)</div><div class="mb" style="height:90px;margin-bottom:12px">${D.map((d, i) => `<div><i style="--h:${Math.max(6, Number(d.visits) / dmax * 100)}%;animation-delay:${i * 25}ms" title="${esc(d.day)}: ${d.visits}"></i></div>`).join('')}</div>` : ''}
-    ${P.length ? `<div class="tblw"><table class="tbl"><tr><th>Post</th><th>Visits 7d</th><th>Visits 30d</th><th></th><th>Readers</th><th>Avg time</th><th>Likes</th><th>Comments</th></tr>${P.map(p => `<tr><td>${esc(p.slug)}</td><td>${p.visits_7}</td><td><b>${p.visits_30}</b></td><td style="width:18%"><div class="rd-bar"><i style="--w:${Number(p.visits_30) / pmax * 100}%"></i></div></td><td>${p.readers}</td><td>${Number(p.avg_secs) ? Math.floor(p.avg_secs / 60) + 'm ' + (p.avg_secs % 60) + 's' : '-'}</td><td>${Number(p.likes) ? '&hearts; ' + p.likes : '-'}</td><td>${p.comments}${Number(p.pending) ? ` <span class="pill p-warn">${p.pending} new</span>` : ''}</td></tr>`).join('')}</table></div>` : '<p class="mute">No readers yet. Numbers appear after the first visits.</p>'}
-    <div style="margin-top:14px"><b>Comments</b> <span class="mute">a comment is shown on the post only after you press Show; links are refused automatically</span></div>
+  const stats = E ? `<div class="grid" style="margin:10px 0">${kx('Visits, 30 days', Number(T.visits_30 || 0), Number(T.visits_all || 0) + ' all time', 'var(--info)')}${kx('Likes', Number(T.likes || 0), 'hearts on posts', 'var(--gold2)')}${kx('Comments shown', Number(T.comments || 0), 'approved by you', 'var(--ok)')}${kx('Comments waiting', Number(T.pending || 0), Number(T.pending || 0) ? 'press Show or Hide below' : 'nothing to review', Number(T.pending || 0) ? 'var(--warn)' : '', Number(T.pending || 0) > 0)}</div>
+    ${D.length ? `<div class="mute" style="font-size:12px">Blog visits per day (last 30 days)</div><div class="mb" style="height:80px;margin-bottom:10px">${D.map((d, i) => `<div><i style="--h:${Math.max(6, Number(d.visits) / dmax * 100)}%;animation-delay:${i * 25}ms" title="${esc(d.day)}: ${d.visits}"></i></div>`).join('')}</div>` : ''}`
+    : `<div class="msg err" style="margin:10px 0">Reader numbers are not available yet. Run the latest database update (invoices and reader activity).</div>`;
+  const todayUtc = new Date().toISOString().slice(0, 10);
+  const row = p => { const e = by[p.slug] || {}, soon = p.status === 'published' && p.post_date > todayUtc; return `<tr><td class="mono">${esc(p.post_date)}</td><td>${soon ? esc(p.title) : `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>`}${soon ? `<div class="mute" style="font-size:12px">goes live on ${esc(p.post_date)} (UTC); the link works from then</div>` : ''}${p.note ? `<div class="mute" style="font-size:12px">${esc(p.note)}</div>` : ''}</td><td>${esc(KIND[p.kind] || p.kind)}</td><td>${soon ? chip('scheduled') : chip(p.status)}</td>
+    <td><b>${e.visits_30 ?? '-'}</b>${E ? `<div class="rd-bar" style="width:70px;margin-top:4px"><i style="--w:${Number(e.visits_30 || 0) / pmax * 100}%"></i></div>` : ''}</td><td>${e.visits_7 ?? '-'}</td><td>${Number(e.avg_secs) ? Math.floor(e.avg_secs / 60) + 'm ' + (e.avg_secs % 60) + 's' : '-'}</td>
+    <td>${Number(e.likes) ? '&hearts; ' + e.likes : '-'}</td><td>${e.comments ?? '-'}${Number(e.pending) ? ` <span class="pill p-warn">${e.pending} new</span>` : ''}</td>
+    <td style="white-space:nowrap">${p.status === 'held' ? `<button class="b pri" data-p="approve" data-slug="${esc(p.slug)}">Approve</button> ` : ''}${p.status === 'hidden' ? `<button class="b" data-p="show" data-slug="${esc(p.slug)}">Show</button>` : `<button class="b dng" data-p="hide" data-slug="${esc(p.slug)}">Hide</button>`}</td></tr>`; };
+  return `<div class="card"><b>Posts and readers</b> <span class="mute">${posts.length} most recent. Hide takes a post off the site; Show brings it back. Visits come from the site's anonymous visit counter.</span>
+    ${stats}
+    <div class="tblw"><table class="tbl"><tr><th>Date</th><th>Post</th><th>Type</th><th>Status</th><th>Visits 30d</th><th>7d</th><th>Avg time</th><th>Likes</th><th>Comments</th><th></th></tr>${posts.map(row).join('') || '<tr><td class="mute">No posts reported yet.</td></tr>'}</table></div>
+    <div style="margin-top:14px"><b>Comments</b> <span class="mute">a comment is shown under the post only after you press Show; links are refused automatically; you are not notified</span></div>
     ${pend.length ? pend.map(cm).join('') : '<p class="mute">No comment is waiting.</p>'}
-    ${rest.length ? `<details style="margin-top:8px"><summary class="mute" style="cursor:pointer">Earlier comments (${rest.length})</summary>${rest.map(cm).join('')}</details>` : ''}`;
-  box.querySelectorAll('[data-cm]').forEach(b => b.onclick = async () => {
-    if (b.dataset.cm === 'deleted' && !confirm('Delete this comment for good?')) return;
-    try { await call('admin_comment_set', {p_id: +b.dataset.id, p_status: b.dataset.cm}); toast('Saved'); box.remove(); vBlogReaders(v); } catch (e) { toast(e.message || String(e), true); }
-  });
+    ${rest.length ? `<details style="margin-top:8px"><summary class="mute" style="cursor:pointer">Earlier comments (${rest.length})</summary>${rest.map(cm).join('')}</details>` : ''}</div>`;
 }
 
 start();
