@@ -119,6 +119,11 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
 .rd-bar{height:8px;border-radius:5px;background:var(--panel2);overflow:hidden}.rd-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--info),var(--gold2));box-shadow:0 0 8px var(--info);animation:sgw 1s cubic-bezier(.2,.8,.2,1) forwards}
 .rd-c{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;padding:10px 12px;margin-top:8px;background:var(--panel2)}.rd-c.approved{border-left-color:var(--ok)}.rd-c.hidden{border-left-color:var(--mute);opacity:.7}
 @media (prefers-reduced-motion:reduce){.rd-bar i{animation:none;width:var(--w)}}
+.sp-wrap{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:14px;align-items:start}@media(max-width:760px){.sp-wrap{grid-template-columns:1fr}}
+.sp-item{padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-top:8px;cursor:pointer;transition:transform .15s,border-color .2s,background .2s}.sp-item:hover{transform:translateX(3px);border-color:var(--gold)}.sp-item.on{border-color:var(--gold);background:var(--panel2);box-shadow:0 0 0 2px color-mix(in srgb,var(--gold) 20%,transparent)}
+.sp-msgs{display:flex;flex-direction:column;gap:10px;max-height:46vh;overflow:auto;padding:2px}.sp-m{max-width:88%;padding:10px 12px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);white-space:pre-wrap;animation:vin .35s both}
+.sp-m.me{align-self:flex-end;background:color-mix(in srgb,var(--info) 14%,var(--panel2));border-color:color-mix(in srgb,var(--info) 40%,var(--line))}
+.em-prev{border:1px dashed var(--line);border-radius:10px;padding:12px 14px;background:var(--panel2)}
 </style>
 </head>
 <body>
@@ -176,7 +181,7 @@ function demoClient() {
     {id:'o2',ref:'GTE-5D20B7',kind:'unbind',plan_id:'investor',amount_usd:100,status:'pending',email:'omar@example.com',created_at:iso(-0.5)},
     {id:'o3',ref:'GTE-77F0A1',kind:'renewal',plan_id:'mogul',amount_usd:3600,status:'paid',email:'lee@example.com',created_at:iso(-20),license_key:'GTE-BB92-KT3C-PL7Y'}];
   const P = [{id:'investor',name:'Investor',limit_usd:5000,price_usd:1000,popular:false,active:true,sort:1},{id:'tycoon',name:'Tycoon',limit_usd:10000,price_usd:1900,popular:true,active:true,sort:2},{id:'mogul',name:'Mogul',limit_usd:20000,price_usd:3600,popular:false,active:true,sort:3},{id:'billionaire',name:'Billionaire',limit_usd:null,price_usd:5000,popular:false,active:true,sort:4}];
-  const rpc = async n => n === 'admin_backtest_list' ? ({data: window._demoBt || []}) : n.startsWith('admin_backtest') ? ({data: null}) : n === 'admin_events' ? ({data: demoEvents()}) : n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_revenue:{months:[{month:'2026-09',paid:3,revenue_usd:5800,purchases:3,renewals:0,upgrades:0,refunds:0,refunded_usd:0,discounts_usd:0},{month:'2026-10',paid:4,revenue_usd:8500,purchases:3,renewals:1,upgrades:0,refunds:1,refunded_usd:1000,discounts_usd:100}],totals:{revenue_usd:14300,paid_orders:7,free_keys:1,refunded_usd:1000,waiting:1},licenses:{active:6,expiring_30:1,expired_90:2,renewed_90:1,renewal_rate_pct:33}}, admin_coupons:[{code:'LAUNCH10',percent_off:10,amount_off:null,max_uses:20,expires_at:null,active:true,note:'launch week',created_at:iso(-5),used:3,given_usd:300}], admin_subscribers:{active:12,unsubscribed:1,rows:[{email:'reader@example.com',source:'/blog/',created_at:iso(-1),unsubscribed_at:null}]}, admin_aff_stats:{by_broker:[{broker:'fusion',total:48,d7:9,d30:31,signed_in:5},{broker:'ic',total:21,d7:4,d30:12,signed_in:2}],daily:[{day:'2026-10-28',clicks:3},{day:'2026-10-29',clicks:6},{day:'2026-10-30',clicks:4}]}, admin_blog_engagement:{posts:[{slug:'how-much-does-gold-move-in-a-day',visits_7:42,visits_30:118,visits_all:140,readers:96,avg_secs:154,likes:9,comments:2,pending:1},{slug:'position-sizing-risk-of-ruin',visits_7:18,visits_30:61,visits_all:61,readers:50,avg_secs:201,likes:4,comments:0,pending:0}],totals:{visits_30:179,visits_all:201,likes:13,comments:2,pending:1},daily:[{day:'2026-10-29',visits:22},{day:'2026-10-30',visits:35},{day:'2026-10-31',visits:41}]}, admin_comments:[{id:1,slug:'how-much-does-gold-move-in-a-day',name:'Sam',body:'Very clear explanation, thanks.',status:'pending',at:iso(-1)},{id:2,slug:'how-much-does-gold-move-in-a-day',name:'Lea',body:'The table is useful.',status:'approved',at:iso(-3)}], admin_export:{}}[n], error: null});
+  const rpc = async n => n === 'admin_backtest_list' ? ({data: window._demoBt || []}) : n.startsWith('admin_backtest') ? ({data: null}) : n === 'admin_events' ? ({data: demoEvents()}) : n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_revenue:{months:[{month:'2026-09',paid:3,revenue_usd:5800,purchases:3,renewals:0,upgrades:0,refunds:0,refunded_usd:0,discounts_usd:0},{month:'2026-10',paid:4,revenue_usd:8500,purchases:3,renewals:1,upgrades:0,refunds:1,refunded_usd:1000,discounts_usd:100}],totals:{revenue_usd:14300,paid_orders:7,free_keys:1,refunded_usd:1000,waiting:1},licenses:{active:6,expiring_30:1,expired_90:2,renewed_90:1,renewal_rate_pct:33}}, admin_coupons:[{code:'LAUNCH10',percent_off:10,amount_off:null,max_uses:20,expires_at:null,active:true,note:'launch week',created_at:iso(-5),used:3,given_usd:300}], admin_subscribers:{active:12,unsubscribed:1,rows:[{email:'reader@example.com',source:'/blog/',created_at:iso(-1),unsubscribed_at:null}]}, admin_aff_stats:{by_broker:[{broker:'fusion',total:48,d7:9,d30:31,signed_in:5},{broker:'ic',total:21,d7:4,d30:12,signed_in:2}],daily:[{day:'2026-10-28',clicks:3},{day:'2026-10-29',clicks:6},{day:'2026-10-30',clicks:4}]}, admin_blog_engagement:{posts:[{slug:'how-much-does-gold-move-in-a-day',visits_7:42,visits_30:118,visits_all:140,readers:96,avg_secs:154,likes:9,comments:2,pending:1},{slug:'position-sizing-risk-of-ruin',visits_7:18,visits_30:61,visits_all:61,readers:50,avg_secs:201,likes:4,comments:0,pending:0}],totals:{visits_30:179,visits_all:201,likes:13,comments:2,pending:1},daily:[{day:'2026-10-29',visits:22},{day:'2026-10-30',visits:35},{day:'2026-10-31',visits:41}]}, admin_comments:[{id:1,slug:'how-much-does-gold-move-in-a-day',name:'Sam',body:'Very clear explanation, thanks.',status:'pending',at:iso(-1)},{id:2,slug:'how-much-does-gold-move-in-a-day',name:'Lea',body:'The table is useful.',status:'approved',at:iso(-3)}], admin_support_list:[{id:1,subject:'My key says invalid',status:'open',created_at:iso(-1),updated_at:iso(-1),email:'lee@example.com',full_name:'Lee Park',active_licenses:1,messages:[{from_admin:false,body:'The EA says license invalid on my account 5123.',at:iso(-1)}]},{id:2,subject:'Renewal question',status:'answered',created_at:iso(-4),updated_at:iso(-3),email:'amina@example.com',full_name:'Amina Rahman',active_licenses:1,messages:[{from_admin:false,body:'How do I renew?',at:iso(-4)},{from_admin:true,body:'Open My account and press Renew.',at:iso(-3)}]}], admin_broadcasts:{subscribers:12,cap:300,sent_24h:0,history:[{id:'a',subject:'This week in gold',created_at:iso(-7),total:10,sent:10,failed:0,waiting:0}]}, admin_export:{}}[n], error: null});
   const q = t => ({select: () => ({order: async () => ({data: t === 'plans' ? P : []})})});
   return {rpc, from: q, auth: {getSession: async () => ({data: {session: {user: {email: 'demo@admin'}}}}), mfa: {}}};
 }
@@ -267,13 +272,13 @@ async function accountView(id) {
 $('#acvx').onclick = () => { $('#acv').classList.add('hide'); $('#acvf').src = 'about:blank'; };
 
 // ---------- views ----------
-const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['proof', 'Proof Wall'], ['blog', 'Blog'], ['revenue', 'Revenue'], ['marketing', 'Marketing'], ['settings', 'Plans & settings'], ['backtest', 'Backtest'], ['videos', 'Videos'], ['audit', 'Audit log']];
+const TABS = [['orders', 'Orders'], ['visitors', 'Visitors'], ['funnel', 'Sign-ups'], ['licenses', 'Licenses'], ['health', 'Health'], ['customers', 'Customers'], ['proof', 'Proof Wall'], ['blog', 'Blog'], ['support', 'Support'], ['email', 'Email'], ['revenue', 'Revenue'], ['marketing', 'Marketing'], ['settings', 'Plans & settings'], ['backtest', 'Backtest'], ['videos', 'Videos'], ['audit', 'Audit log']];
 function render() {
   const waiting = data.orders.filter(o => o.status === 'paid_claimed').length;
   $('#tabs').innerHTML = TABS.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-t="${k}">${n}${k === 'orders' && waiting ? `<span class="badge">${waiting}</span>` : ''}</button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b => b.onclick = () => { tab = b.dataset.t; render(); });
-  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, proof: vProof, blog: vBlog, revenue: vRevenue, marketing: vMarketing, settings: vSettings, backtest: vBacktest, videos: vVideos, audit: vAudit})[tab]();
-  const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw); markTiles();
+  ({orders: vOrders, visitors: vVisitors, funnel: vFunnel, licenses: vLicenses, health: vHealth, customers: vCustomers, proof: vProof, blog: vBlog, support: vSupport, email: vEmail, revenue: vRevenue, marketing: vMarketing, settings: vSettings, backtest: vBacktest, videos: vVideos, audit: vAudit})[tab]();
+  const vw = $('#view'); vw.classList.remove('enter'); void vw.offsetWidth; vw.classList.add('enter'); if (tab !== 'funnel') countUp(vw); markTiles(); supportBadge();
 }
 const kx = (label, val, sub, color, hot, pre) => `<div class="kpi kx ${hot ? 'hot' : ''}">${label}<b ${color ? `style="color:${color}"` : ''} ${pre ? `data-pre="${pre}"` : ''} data-n="${val}">${val}</b>${sub ? `<span class="mute">${sub}</span>` : ''}</div>`;
 
@@ -1074,6 +1079,68 @@ function blogPostsCard(posts, E, C, KIND, chip) {
     <div style="margin-top:14px"><b>Comments</b> <span class="mute">a comment is shown under the post only after you press Show; links are refused automatically; you are not notified</span></div>
     ${pend.length ? pend.map(cm).join('') : '<p class="mute">No comment is waiting.</p>'}
     ${rest.length ? `<details style="margin-top:8px"><summary class="mute" style="cursor:pointer">Earlier comments (${rest.length})</summary>${rest.map(cm).join('')}</details>` : ''}</div>`;
+}
+
+async function supportBadge() {
+  try {
+    const L = (await call('admin_support_list', {p_status: 'open'})) || [], n = L.filter(x => x.status === 'open').length, b = document.querySelector('#tabs button[data-t="support"]');
+    if (b && n) b.insertAdjacentHTML('beforeend', `<span class="badge">${n}</span>`);
+  } catch (e) {}
+}
+
+async function vSupport() {
+  const f = window._spf || 'open', sel = window._spt || null;
+  $('#view').innerHTML = '<div class="card mute">Loading...</div>';
+  let L; try { L = (await call('admin_support_list', {p_status: f})) || []; } catch (e) { $('#view').innerHTML = `<div class="card">${needsUpdate(e)}</div>`; return; }
+  const cur = L.find(x => x.id === sel) || L[0], waiting = L.filter(x => x.status === 'open').length;
+  const pill = s => s === 'open' ? '<span class="pill p-warn">needs answer</span>' : s === 'answered' ? '<span class="pill p-ok">answered</span>' : '<span class="pill p-mute">closed</span>';
+  $('#view').innerHTML = `<div class="grid" style="margin-bottom:14px">${kx('Need an answer', waiting, waiting ? 'customers are waiting' : 'all caught up', waiting ? 'var(--warn)' : 'var(--ok)', waiting > 0)}${kx('Shown', L.length, f === 'open' ? 'open and answered' : f)}</div>
+  <div class="sp-wrap"><div class="card sp-list"><div class="row"><b>Requests</b><span class="sp" style="flex:1"></span><select id="spf"><option value="open" ${f === 'open' ? 'selected' : ''}>Open</option><option value="closed" ${f === 'closed' ? 'selected' : ''}>Closed</option><option value="all" ${f === 'all' ? 'selected' : ''}>All</option></select></div>
+    ${L.length ? L.map(x => `<div class="sp-item ${cur && cur.id === x.id ? 'on' : ''}" data-t="${x.id}"><div class="row"><b>${esc(x.subject)}</b><span class="sp" style="flex:1"></span>${pill(x.status)}</div><div class="mute" style="font-size:12px">${esc(x.full_name || x.email || '')} · ${esc(fmt(x.updated_at))}</div></div>`).join('') : '<p class="mute">Nothing here.</p>'}</div>
+  <div class="card sp-thread">${cur ? `<div class="row"><b>${esc(cur.subject)}</b><span class="sp" style="flex:1"></span>${pill(cur.status)}</div>
+    <div class="mute" style="font-size:12px;margin-bottom:10px">${esc(cur.full_name || '')} ${esc(cur.email || '')} · ${cur.active_licenses} active license(s) · opened ${esc(fmt(cur.created_at))}</div>
+    <div class="sp-msgs">${cur.messages.map(m => `<div class="sp-m ${m.from_admin ? 'me' : ''}"><div class="mute" style="font-size:11px">${m.from_admin ? 'You' : 'Customer'} · ${esc(fmt(m.at))}</div><div>${esc(m.body)}</div></div>`).join('')}</div>
+    ${cur.status === 'closed' ? '<div class="row" style="margin-top:10px"><button class="b" id="sp_open">Reopen</button></div>' : `<textarea id="sp_body" rows="4" maxlength="4000" placeholder="Write your answer. The customer sees it in My account and on Telegram if linked." style="width:100%;margin-top:10px"></textarea>
+    <div class="row" style="margin-top:8px"><button class="b pri" id="sp_send">Send answer</button><button class="b" id="sp_close">Answer and close</button><button class="b" id="sp_shut">Close without answer</button></div>`}` : '<p class="mute">Select a request, or none is open right now.</p>'}</div></div>`;
+  $('#spf').onchange = e => { window._spf = e.target.value; window._spt = null; vSupport(); };
+  $('#view').querySelectorAll('[data-t]').forEach(d => { if (d.classList.contains('sp-item')) d.onclick = () => { window._spt = +d.dataset.t; vSupport(); }; });
+  const act = async fn => { try { await fn(); await load(); vSupport(); } catch (e) { toast(e.message || String(e), true); } };
+  const send = close => act(async () => { await call('admin_support_reply', {p_ticket: cur.id, p_body: $('#sp_body').value, p_close: close}); toast(close ? 'Answered and closed' : 'Answer sent'); });
+  if ($('#sp_send')) { $('#sp_send').onclick = () => send(false); $('#sp_close').onclick = () => send(true); $('#sp_shut').onclick = () => act(async () => { await call('admin_support_status', {p_ticket: cur.id, p_status: 'closed'}); toast('Closed'); }); }
+  if ($('#sp_open')) $('#sp_open').onclick = () => act(async () => { await call('admin_support_status', {p_ticket: cur.id, p_status: 'open'}); toast('Reopened'); });
+}
+
+async function vEmail() {
+  $('#view').innerHTML = '<div class="card mute">Loading...</div>';
+  let B; try { B = await call('admin_broadcasts'); } catch (e) { $('#view').innerHTML = `<div class="card">${needsUpdate(e)}</div>`; return; }
+  B = B || {subscribers: 0, cap: 300, sent_24h: 0, history: []};
+  const room = Math.max(0, B.cap - B.sent_24h), preview = txt => esc(txt || '').split(/\n{2,}/).map(p => '<p style="margin:0 0 10px">' + p.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<u>$1</u>').replace(/\n/g, '<br>') + '</p>').join('');
+  $('#view').innerHTML = `<div class="grid" style="margin-bottom:14px">${kx('Subscribers', B.subscribers, 'will receive your email', 'var(--ok)')}${kx('Sent, last 24 hours', B.sent_24h, 'daily limit ' + B.cap, B.sent_24h > B.cap * .8 ? 'var(--warn)' : 'var(--info)')}${kx('Room left today', room, B.subscribers > room ? 'not enough for everyone: wait' : 'enough for the whole list', room < B.subscribers ? 'var(--warn)' : '')}</div>
+  <div class="card"><b>Write an email</b> <span class="mute">to everyone subscribed to the blog emails. Each email carries a one-click unsubscribe link automatically.</span>
+    <label>Subject</label><input id="em_s" maxlength="150" style="width:100%" placeholder="This week in gold">
+    <label>Message</label><textarea id="em_b" rows="10" maxlength="20000" style="width:100%" placeholder="Hello,&#10;&#10;Write in short paragraphs. A blank line starts a new paragraph.&#10;&#10;Add a link like this: [Read the post](https://goldtriengine.com/blog/)"></textarea>
+    <div class="mute" style="font-size:12px;margin-top:4px">A blank line = new paragraph. Links: [words](https://...). Do not promise profits; trading involves risk.</div>
+    <div class="mute" style="margin:10px 0 4px;font-size:12px">Preview of the text</div><div id="em_p" class="em-prev mute">Your message appears here.</div>
+    <div class="row" style="margin-top:12px"><button class="b" id="em_test">Send a test to me</button><button class="b pri" id="em_go" ${B.subscribers ? '' : 'disabled'}>Send to ${B.subscribers} subscriber(s)</button></div>
+    <div id="em_prog" style="display:none;margin-top:12px"><div class="sg"><i id="em_bar" style="--c:var(--ok);--w:0%;animation:none;width:0"></i></div><div class="mute" id="em_txt" style="margin-top:6px"></div></div></div>
+  <div class="card"><b>Sent emails</b> ${B.history.length ? `<div class="tblw"><table class="tbl"><tr><th>Date</th><th>Subject</th><th>Delivered</th><th>Failed</th><th>Waiting</th></tr>${B.history.map(h => `<tr><td class="mono">${esc(fmt(h.created_at))}</td><td>${esc(h.subject)}</td><td><b>${h.sent}</b> of ${h.total}</td><td>${Number(h.failed) ? '<span style="color:var(--bad)">' + h.failed + '</span>' : '-'}</td><td>${Number(h.waiting) ? h.waiting : '-'}</td></tr>`).join('')}</table></div>` : '<p class="mute">Nothing sent yet.</p>'}
+    <p class="mute" style="font-size:12px;margin:8px 0 0">Gmail allows roughly 500 emails a day, so the limit is ${B.cap} a day. Large lists are sent in small batches; keep this page open until it finishes.</p></div>`;
+  const upd = () => { $('#em_p').innerHTML = preview($('#em_b').value); }; $('#em_b').oninput = upd; upd();
+  const post = async body => { const {data: sess} = await sb.auth.getSession(); const r = await fetch(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.session.access_token, apikey: SB_KEY}, body: JSON.stringify(body)}); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.status); return j; };
+  $('#em_test').onclick = async () => {
+    if ($('#em_s').value.trim().length < 3 || $('#em_b').value.trim().length < 10) return toast('Write a subject and a message first', true);
+    try { const j = await post({kind: 'broadcast_test', subject: $('#em_s').value, body: $('#em_b').value}); toast('Test sent to ' + j.to); } catch (e) { toast(e.message || String(e), true); }
+  };
+  $('#em_go').onclick = async () => {
+    if ($('#em_s').value.trim().length < 3 || $('#em_b').value.trim().length < 10) return toast('Write a subject and a message first', true);
+    if (!confirm(`Send "${$('#em_s').value}" to ${B.subscribers} subscriber(s) now?\n\nThis cannot be taken back. Did you send yourself a test first?`)) return;
+    $('#em_go').disabled = $('#em_test').disabled = true; $('#em_prog').style.display = '';
+    try {
+      const c = await call('admin_broadcast_create', {p_subject: $('#em_s').value, p_body: $('#em_b').value}); let sent = 0, failed = 0, rem = c.total;
+      while (rem > 0) { const j = await post({kind: 'broadcast_send', broadcast_id: c.id}); sent += j.sent; failed += j.failed; rem = j.remaining; const done = c.total - rem; $('#em_bar').style.width = (done / c.total * 100) + '%'; $('#em_txt').textContent = `${done} of ${c.total} done` + (failed ? `, ${failed} failed` : ''); if (!j.sent && !j.failed) break; }
+      toast(`Finished: ${sent} sent` + (failed ? `, ${failed} failed` : ''), failed > 0); await load(); vEmail();
+    } catch (e) { toast(e.message || String(e), true); $('#em_go').disabled = $('#em_test').disabled = false; }
+  };
 }
 
 start();

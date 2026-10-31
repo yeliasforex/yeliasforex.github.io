@@ -289,7 +289,8 @@
       ${claimPanel()}
       <div class="panel"><h2>Move this key to another account</h2><p class="sub">A key is bound to the first MT5 account it was used on, demo or real. Moving it is not self-service: it costs <b>${usd(S.settings.unbindFeeUsd ?? 100)}</b>. Start a request, pay the fee, then <b>contact support</b> on Telegram (<a href="${esc(S.settings.supportUrl || 'https://t.me/GoldTriEngine_Support')}" rel="noopener">@GoldTriEngine_Support</a>) and we unbind the key.</p>
         ${l.bound_account ? `<button class="btn sm danger" data-unbind="${l.id}">Start unbind request (${usd(S.settings.unbindFeeUsd ?? 100)})</button>` : '<span class="hint">This key is not bound yet, so there is nothing to move.</span>'}</div>
-      ${ordersPanel()}`;
+      ${ordersPanel()}
+      <div class="panel"><h2>Need help?</h2><p class="sub">Write to us about your license, the EA or an order. We answer here and on Telegram.</p><a class="btn sm" href="support.html">Open support</a></div>`;
   }
   function afterDraw(l, all) {
     const t = inRange(all, range), cv = R.curve(t), cvAll = R.curve(all);
