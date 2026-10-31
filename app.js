@@ -54,7 +54,9 @@
     const s = await gte.session();
     if (!s) { location.href = 'signin.html?next=' + encodeURIComponent('pricing.html#buy-' + planId); return; }
     const c = await gte.client();
-    const {data, error} = await c.rpc('create_order', {p_kind: 'purchase', p_plan_id: planId});
+    const box = document.getElementById('coupon'), code = ((box && box.value) || new URLSearchParams(location.search).get('code') || '').trim();
+    const args = {p_kind: 'purchase', p_plan_id: planId}; if (code) args.p_coupon = code;      // no code: the call is exactly what it always was
+    const {data, error} = await c.rpc('create_order', args);
     if (error) { alert(error.message.includes('not open') ? 'Sales are not open right now.' : error.message); return; }
     location.href = 'my-account.html#order=' + data.id;
   };
