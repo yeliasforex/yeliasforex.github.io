@@ -143,3 +143,19 @@ a.bl-chip:hover{border-color:var(--mint)}
 .bl-ring{fill:none;stroke:var(--gold);stroke-width:1.6;opacity:0;animation:bl-fade .9s ease calc(var(--i)*.18s) forwards}
 @keyframes bl-draw{to{stroke-dashoffset:0}}@keyframes bl-fade{to{opacity:.8}}
 @media(prefers-reduced-motion:reduce){.bl-spl{animation:none;stroke-dashoffset:0}.bl-spa,.bl-ring{animation:none;opacity:.8}}
+
+/* likes and comments */
+.bl-react{max-width:760px;margin:44px auto 10px;padding:22px;border:1px solid var(--line-2,rgba(170,190,230,.18));border-radius:18px;background:var(--panel,#0E1322);color:var(--fg-2,#C3CADA)}
+.bl-r-bar{display:flex;align-items:center;gap:14px}.bl-r-n{color:var(--muted,#8892A8);font-size:.9rem}
+.bl-like{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:999px;border:1px solid var(--line-2,rgba(170,190,230,.18));background:transparent;color:var(--fg,#ECEFF6);font:600 .95rem var(--sans,system-ui);cursor:pointer;transition:transform .15s,border-color .2s,box-shadow .2s}
+.bl-like:hover{transform:translateY(-2px);border-color:var(--gold,#E3B95F)}.bl-like .bl-heart{color:var(--muted,#8892A8);transition:color .2s,transform .2s}
+.bl-like.on{border-color:var(--gold,#E3B95F);box-shadow:0 0 18px rgba(227,185,95,.25)}.bl-like.on .bl-heart{color:var(--gold,#E3B95F);animation:blpop .45s}
+@keyframes blpop{40%{transform:scale(1.5)}}
+.bl-r-h{margin:22px 0 8px;font:500 1.2rem var(--sans,system-ui);color:var(--fg,#ECEFF6)}
+.bl-c{padding:12px 0;border-top:1px solid var(--line,rgba(170,190,230,.10))}.bl-c b{color:var(--fg,#ECEFF6);margin-right:10px}.bl-c span{color:var(--muted,#8892A8);font-size:.82rem}.bl-c p{margin:4px 0 0;white-space:pre-wrap}
+.bl-none{color:var(--muted,#8892A8)}
+.bl-cform{display:grid;gap:10px;margin-top:14px}.bl-cform input[type=text],.bl-cform textarea{width:100%;padding:11px 13px;border-radius:10px;border:1px solid var(--line-2,rgba(170,190,230,.18));background:var(--ink,#06080E);color:var(--fg,#ECEFF6);font:400 1rem var(--sans,system-ui)}
+.bl-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
+.bl-cbtn{justify-self:start;padding:10px 18px;border-radius:10px;border:0;background:var(--blue,#1747C8);color:#fff;font:600 .95rem var(--sans,system-ui);cursor:pointer}.bl-cbtn:disabled{opacity:.6}
+.bl-cform small{color:var(--muted,#8892A8);font-size:.8rem}.bl-cmsg{font-size:.9rem;min-height:1em}.bl-cmsg.err{color:var(--red,#FF6B78)}
+@media (prefers-reduced-motion:reduce){.bl-like.on .bl-heart{animation:none}}

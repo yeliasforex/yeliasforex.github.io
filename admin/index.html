@@ -116,6 +116,9 @@ label{display:block;color:var(--mute);font-size:12px;margin:8px 0 3px}
 .bk u i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--info),var(--gold2));box-shadow:0 0 10px var(--info);animation:sgw 1.1s cubic-bezier(.2,.8,.2,1) forwards}
 .free-pill{color:var(--gold2);border-color:var(--gold2)}
 @media (prefers-reduced-motion:reduce){.rv-svg path.line{animation:none;stroke-dashoffset:0}.rv-svg .area,.rv-svg circle{animation:none;opacity:1}.mk-prev::after{animation:none}.tk .bar i,.bk u i{animation:none;width:var(--w)}}
+.rd-bar{height:8px;border-radius:5px;background:var(--panel2);overflow:hidden}.rd-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--info),var(--gold2));box-shadow:0 0 8px var(--info);animation:sgw 1s cubic-bezier(.2,.8,.2,1) forwards}
+.rd-c{border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;padding:10px 12px;margin-top:8px;background:var(--panel2)}.rd-c.approved{border-left-color:var(--ok)}.rd-c.hidden{border-left-color:var(--mute);opacity:.7}
+@media (prefers-reduced-motion:reduce){.rd-bar i{animation:none;width:var(--w)}}
 </style>
 </head>
 <body>
@@ -173,7 +176,7 @@ function demoClient() {
     {id:'o2',ref:'GTE-5D20B7',kind:'unbind',plan_id:'investor',amount_usd:100,status:'pending',email:'omar@example.com',created_at:iso(-0.5)},
     {id:'o3',ref:'GTE-77F0A1',kind:'renewal',plan_id:'mogul',amount_usd:3600,status:'paid',email:'lee@example.com',created_at:iso(-20),license_key:'GTE-BB92-KT3C-PL7Y'}];
   const P = [{id:'investor',name:'Investor',limit_usd:5000,price_usd:1000,popular:false,active:true,sort:1},{id:'tycoon',name:'Tycoon',limit_usd:10000,price_usd:1900,popular:true,active:true,sort:2},{id:'mogul',name:'Mogul',limit_usd:20000,price_usd:3600,popular:false,active:true,sort:3},{id:'billionaire',name:'Billionaire',limit_usd:null,price_usd:5000,popular:false,active:true,sort:4}];
-  const rpc = async n => n === 'admin_backtest_list' ? ({data: window._demoBt || []}) : n.startsWith('admin_backtest') ? ({data: null}) : n === 'admin_events' ? ({data: demoEvents()}) : n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_revenue:{months:[{month:'2026-09',paid:3,revenue_usd:5800,purchases:3,renewals:0,upgrades:0,refunds:0,refunded_usd:0,discounts_usd:0},{month:'2026-10',paid:4,revenue_usd:8500,purchases:3,renewals:1,upgrades:0,refunds:1,refunded_usd:1000,discounts_usd:100}],totals:{revenue_usd:14300,paid_orders:7,free_keys:1,refunded_usd:1000,waiting:1},licenses:{active:6,expiring_30:1,expired_90:2,renewed_90:1,renewal_rate_pct:33}}, admin_coupons:[{code:'LAUNCH10',percent_off:10,amount_off:null,max_uses:20,expires_at:null,active:true,note:'launch week',created_at:iso(-5),used:3,given_usd:300}], admin_subscribers:{active:12,unsubscribed:1,rows:[{email:'reader@example.com',source:'/blog/',created_at:iso(-1),unsubscribed_at:null}]}, admin_aff_stats:{by_broker:[{broker:'fusion',total:48,d7:9,d30:31,signed_in:5},{broker:'ic',total:21,d7:4,d30:12,signed_in:2}],daily:[{day:'2026-10-28',clicks:3},{day:'2026-10-29',clicks:6},{day:'2026-10-30',clicks:4}]}, admin_export:{}}[n], error: null});
+  const rpc = async n => n === 'admin_backtest_list' ? ({data: window._demoBt || []}) : n.startsWith('admin_backtest') ? ({data: null}) : n === 'admin_events' ? ({data: demoEvents()}) : n === 'admin_visitors' ? ({data: demoVisitors()}) : ({data: {admin_licenses:L, admin_orders:O, admin_customers:[{user_id:'u',email:'amina@example.com',full_name:'Amina Rahman',created_at:iso(-40),telegram:true,licenses:1}], admin_config:{payment_instructions:'Send USDT (TRC20) to the address in the payment link and paste the transaction ID.',payment_link:'https://example.com/pay',support_url:'https://t.me/GoldTriEngine_Support',latest_version:'1.08',unbind_fee_usd:'100',limit_tolerance_pct:'5',offline_minutes:'15'}, admin_audit:[{id:1,at:iso(-1),actor:'owner',action:'confirm_payment',detail:{order:'GTE-77F0A1'}}], admin_revenue:{months:[{month:'2026-09',paid:3,revenue_usd:5800,purchases:3,renewals:0,upgrades:0,refunds:0,refunded_usd:0,discounts_usd:0},{month:'2026-10',paid:4,revenue_usd:8500,purchases:3,renewals:1,upgrades:0,refunds:1,refunded_usd:1000,discounts_usd:100}],totals:{revenue_usd:14300,paid_orders:7,free_keys:1,refunded_usd:1000,waiting:1},licenses:{active:6,expiring_30:1,expired_90:2,renewed_90:1,renewal_rate_pct:33}}, admin_coupons:[{code:'LAUNCH10',percent_off:10,amount_off:null,max_uses:20,expires_at:null,active:true,note:'launch week',created_at:iso(-5),used:3,given_usd:300}], admin_subscribers:{active:12,unsubscribed:1,rows:[{email:'reader@example.com',source:'/blog/',created_at:iso(-1),unsubscribed_at:null}]}, admin_aff_stats:{by_broker:[{broker:'fusion',total:48,d7:9,d30:31,signed_in:5},{broker:'ic',total:21,d7:4,d30:12,signed_in:2}],daily:[{day:'2026-10-28',clicks:3},{day:'2026-10-29',clicks:6},{day:'2026-10-30',clicks:4}]}, admin_blog_engagement:{posts:[{slug:'how-much-does-gold-move-in-a-day',visits_7:42,visits_30:118,visits_all:140,readers:96,avg_secs:154,likes:9,comments:2,pending:1},{slug:'position-sizing-risk-of-ruin',visits_7:18,visits_30:61,visits_all:61,readers:50,avg_secs:201,likes:4,comments:0,pending:0}],totals:{visits_30:179,visits_all:201,likes:13,comments:2,pending:1},daily:[{day:'2026-10-29',visits:22},{day:'2026-10-30',visits:35},{day:'2026-10-31',visits:41}]}, admin_comments:[{id:1,slug:'how-much-does-gold-move-in-a-day',name:'Sam',body:'Very clear explanation, thanks.',status:'pending',at:iso(-1)},{id:2,slug:'how-much-does-gold-move-in-a-day',name:'Lea',body:'The table is useful.',status:'approved',at:iso(-3)}], admin_export:{}}[n], error: null});
   const q = t => ({select: () => ({order: async () => ({data: t === 'plans' ? P : []})})});
   return {rpc, from: q, auth: {getSession: async () => ({data: {session: {user: {email: 'demo@admin'}}}}), mfa: {}}};
 }
@@ -487,14 +490,27 @@ function vOrders() {
   $('#view').innerHTML = head + `<div class="card"><div class="row"><b>Orders</b><span class="sp" style="flex:1"></span><select id="of">${Object.keys(FL).map(x => `<option value="${x}" ${x === f ? 'selected' : ''}>${FL[x]}</option>`).join('')}</select></div>
   <div class="tblw"><table class="tbl"><tr><th>Ref</th><th>Customer</th><th>Type</th><th>Plan</th><th>Amount</th><th>Status</th><th>Their reference</th><th>Created</th><th></th></tr>
   ${rows.map(o => `<tr><td class="mono">${esc(o.ref)}</td><td>${esc(o.email)}</td><td>${esc(o.kind)}</td><td>${esc(planName(o.plan_id))}</td><td><b>${usd(o.amount_usd)}</b>${o.complimentary ? ` <span class="pill free-pill" title="${esc(o.comp_note || '')}">free key${o.original_amount_usd ? ' (was ' + usd(o.original_amount_usd) + ')' : ''}</span>` : ''}</td><td>${stPill(o.status)}</td><td>${esc(o.paid_ref || '')}</td><td class="mute">${fmt(o.created_at)}</td>
-  <td style="white-space:nowrap">${o.status === 'paid' ? (o.license_key ? `<span class="mono mute">${esc(o.license_key)}</span> ` : '') + `<button class="b" data-rf="${o.id}">Refund</button>` + (o.complimentary ? '' : ` <button class="b" data-fr="${o.id}">Make free</button>`) : o.status === 'refunded' ? `<span class="mute" title="${esc(o.refund_note || '')}">${esc(String(o.refunded_at || '').slice(0, 10))}</span>` : o.status === 'cancelled' ? (o.license_key ? `<span class="mono mute">${esc(o.license_key)}</span>` : '') : (o.status === 'paid_claimed' ? `<button class="b pri" data-c="${o.id}">Payment received</button> <button class="b dng" data-x="${o.id}">Cancel</button>` : `<span class="mute" style="margin-right:8px">not paid yet</span><button class="b" data-c="${o.id}" title="Only if the money arrived without the customer pressing I have paid">Mark paid</button> <button class="b dng" data-x="${o.id}">Cancel</button>`)}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">Nothing here.</td></tr>'}
+  <td style="white-space:nowrap">${o.status === 'paid' ? (o.license_key ? `<span class="mono mute">${esc(o.license_key)}</span> ` : '') + (o.complimentary ? '' : `<button class="b" data-iv="${o.id}" title="${esc(o.invoice_no || 'no invoice yet')}${o.invoice_sent_at ? ' - emailed ' + esc(String(o.invoice_sent_at).slice(0, 10)) : ''}">${o.invoice_sent_at ? 'Resend invoice' : 'Send invoice'}</button> `) + `<button class="b" data-rf="${o.id}">Refund</button>` + (o.complimentary ? '' : ` <button class="b" data-fr="${o.id}">Make free</button>`) : o.status === 'refunded' ? `<span class="mute" title="${esc(o.refund_note || '')}">${esc(String(o.refunded_at || '').slice(0, 10))}</span>` : o.status === 'cancelled' ? (o.license_key ? `<span class="mono mute">${esc(o.license_key)}</span> ` : '') + `<button class="b" data-del="${o.id}">Delete</button>` : (o.status === 'paid_claimed' ? `<button class="b pri" data-c="${o.id}">Payment received</button> <button class="b dng" data-x="${o.id}">Cancel</button>` : `<span class="mute" style="margin-right:8px">not paid yet</span><button class="b" data-c="${o.id}" title="Only if the money arrived without the customer pressing I have paid">Mark paid</button> <button class="b dng" data-x="${o.id}">Cancel</button>`)}</td></tr>`).join('') || '<tr><td colspan="9" class="mute">Nothing here.</td></tr>'}
   </table></div></div>`;
   $('#of').onchange = e => { window._of2 = e.target.value; vOrders(); };
   $('#view').querySelectorAll('[data-c]').forEach(b => b.onclick = async () => {
     const o = data.orders.find(x => x.id === b.dataset.c);
     if (!confirm(`Confirm you RECEIVED ${usd(o.amount_usd)} for order ${o.ref} (${o.kind})? This ${o.kind === 'purchase' ? 'creates the license key' : o.kind === 'unbind' ? 'unbinds the license' : 'applies the change'} now.`)) return;
-    await call('admin_confirm_payment', {p_order: o.id}); toast('Done'); await load(); render();
+    await call('admin_confirm_payment', {p_order: o.id});
+    const mail = Number(o.amount_usd) > 0 && !o.complimentary ? ' ' + await sendInvoice(o.id) : '';
+    toast('Done.' + mail, mail.includes('NOT')); await load(); render();
   });
+  if (f === 'cancelled' && rows.length) $('#of').parentNode.insertAdjacentHTML('beforeend', `<button class="b" id="delall">Delete all ${rows.length} cancelled</button>`);
+  const da = $('#delall'); if (da) da.onclick = async () => {
+    if (!confirm(`Delete all ${rows.length} cancelled orders for good?\n\nPaid and refunded orders are never deleted.`)) return;
+    try { const n = await call('admin_delete_orders', {p_status: 'cancelled'}); toast(n + ' order(s) deleted'); await load(); render(); } catch (e) { toast(e.message || String(e), true); }
+  };
+  $('#view').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
+    const o = data.orders.find(x => x.id === b.dataset.del);
+    if (!confirm(`Delete order ${o.ref} for good?`)) return;
+    try { await call('admin_delete_order', {p_order: o.id}); toast('Deleted'); await load(); render(); } catch (e) { toast(e.message || String(e), true); }
+  });
+  $('#view').querySelectorAll('[data-iv]').forEach(b => b.onclick = async () => { b.disabled = true; const msg = await sendInvoice(b.dataset.iv); toast(msg, msg.includes('NOT')); await load(); render(); });
   $('#view').querySelectorAll('[data-fr]').forEach(b => b.onclick = async () => {
     const o = data.orders.find(x => x.id === b.dataset.fr);
     if (!confirm(`Make order ${o.ref} a FREE key?\n\nThe amount (${usd(o.amount_usd)}) becomes $0 and the order never counts as money received. The license key keeps working. The original amount stays on record.`)) return;
@@ -891,6 +907,7 @@ async function vBlog() {
   const queue = async (cmd, arg) => { try { await call('admin_blog_command', {p_cmd: cmd, p_arg: arg || null}); toast('Queued. The PC runs it within about 15 minutes.'); } catch (e) { toast(e.message || e, true); } vBlog(); };
   v.querySelectorAll('button[data-c]').forEach(b => b.onclick = () => queue(b.dataset.c));
   v.querySelectorAll('button[data-p]').forEach(b => b.onclick = () => { if (b.dataset.p !== 'hide' || confirm('Take this post off the website?')) queue(b.dataset.p, b.dataset.slug); });
+  vBlogReaders(v);
 }
 
 // ---------- Proof Wall: switches and the list of who is shown ----------
@@ -1022,6 +1039,37 @@ async function vMarketing() {
   };
   $('#view').querySelectorAll('[data-cp]').forEach(b => b.onclick = async () => { const x = co.find(y => y.code === b.dataset.cp); try { await save(x, !x.active); toast('Saved'); vMarketing(); } catch (e) { toast(e.message || String(e), true); } });
   const sx = $('#sb_x'); if (sx) sx.onclick = () => downloadCsv('subscribers.csv', [['email', 'email'], ['source', 'source'], ['joined', s => String(s.created_at || '').slice(0, 10)]], sb.rows.filter(s => !s.unsubscribed_at));
+}
+
+async function sendInvoice(orderId) {
+  try {
+    const {data: sess} = await sb.auth.getSession();
+    const r = await fetch(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.session.access_token, apikey: SB_KEY}, body: JSON.stringify({kind: 'invoice', order_id: orderId})});
+    const j = await r.json().catch(() => ({}));
+    return r.ok ? 'Invoice emailed to ' + (j.to || 'the customer') + '.' : 'Invoice email NOT sent: ' + (j.error || r.status);
+  } catch (e) { return 'Invoice email NOT sent: ' + (e.message || e); }
+}
+
+async function vBlogReaders(v) {
+  const box = document.createElement('div'); box.className = 'card'; box.innerHTML = '<b>Readers</b> <span class="mute">loading...</span>'; v.insertBefore(box, v.firstChild);
+  let E, C;
+  try { [E, C] = await Promise.all([call('admin_blog_engagement'), call('admin_comments', {p_status: 'all'})]); E = E || {posts: [], totals: {}, daily: []}; C = C || []; }
+  catch (e) { box.innerHTML = `<b>Readers</b><div class="msg err" style="margin-top:8px">${esc(e.message || e)}. Run the latest database update (invoices and reader activity) first.</div>`; return; }
+  const T = E.totals || {}, P = E.posts || [], D = (E.daily || []).slice(-30), dmax = Math.max(1, ...D.map(d => Number(d.visits))), pmax = Math.max(1, ...P.map(p => Number(p.visits_30)));
+  const pend = C.filter(c => c.status === 'pending'), rest = C.filter(c => c.status !== 'pending').slice(0, 20);
+  const cm = c => `<div class="rd-c ${c.status}"><div class="row"><b>${esc(c.name)}</b><span class="mute">on <span class="mono">${esc(c.slug)}</span> · ${esc(String(c.at).slice(0, 10))}</span><span class="sp" style="flex:1"></span>${c.status === 'approved' ? '<span class="pill p-ok">shown</span>' : c.status === 'hidden' ? '<span class="pill p-mute">hidden</span>' : '<span class="pill p-warn">waiting</span>'}</div>
+    <div style="margin:6px 0 8px;white-space:pre-wrap">${esc(c.body)}</div><div class="row">${c.status !== 'approved' ? `<button class="b pri" data-cm="approved" data-id="${c.id}">Show</button>` : ''}${c.status !== 'hidden' ? `<button class="b" data-cm="hidden" data-id="${c.id}">Hide</button>` : ''}<button class="b" data-cm="deleted" data-id="${c.id}">Delete</button></div></div>`;
+  box.innerHTML = `<div class="row"><b>Readers</b><span class="mute">visits come from the site's anonymous visit counter; likes and comments come from the buttons under each post</span></div>
+    <div class="grid" style="margin:10px 0">${kx('Blog visits, 30 days', Number(T.visits_30 || 0), Number(T.visits_all || 0) + ' all time', 'var(--info)')}${kx('Likes', Number(T.likes || 0), 'hearts on posts', 'var(--gold2)')}${kx('Comments shown', Number(T.comments || 0), 'approved by you', 'var(--ok)')}${kx('Waiting for you', Number(T.pending || 0), Number(T.pending || 0) ? 'read and press Show or Hide below' : 'nothing to review', Number(T.pending || 0) ? 'var(--warn)' : '', Number(T.pending || 0) > 0)}</div>
+    ${D.length ? `<div class="mute" style="font-size:12px">Blog visits per day (last 30 days)</div><div class="mb" style="height:90px;margin-bottom:12px">${D.map((d, i) => `<div><i style="--h:${Math.max(6, Number(d.visits) / dmax * 100)}%;animation-delay:${i * 25}ms" title="${esc(d.day)}: ${d.visits}"></i></div>`).join('')}</div>` : ''}
+    ${P.length ? `<div class="tblw"><table class="tbl"><tr><th>Post</th><th>Visits 7d</th><th>Visits 30d</th><th></th><th>Readers</th><th>Avg time</th><th>Likes</th><th>Comments</th></tr>${P.map(p => `<tr><td>${esc(p.slug)}</td><td>${p.visits_7}</td><td><b>${p.visits_30}</b></td><td style="width:18%"><div class="rd-bar"><i style="--w:${Number(p.visits_30) / pmax * 100}%"></i></div></td><td>${p.readers}</td><td>${Number(p.avg_secs) ? Math.floor(p.avg_secs / 60) + 'm ' + (p.avg_secs % 60) + 's' : '-'}</td><td>${Number(p.likes) ? '&hearts; ' + p.likes : '-'}</td><td>${p.comments}${Number(p.pending) ? ` <span class="pill p-warn">${p.pending} new</span>` : ''}</td></tr>`).join('')}</table></div>` : '<p class="mute">No readers yet. Numbers appear after the first visits.</p>'}
+    <div style="margin-top:14px"><b>Comments</b> <span class="mute">a comment is shown on the post only after you press Show; links are refused automatically</span></div>
+    ${pend.length ? pend.map(cm).join('') : '<p class="mute">No comment is waiting.</p>'}
+    ${rest.length ? `<details style="margin-top:8px"><summary class="mute" style="cursor:pointer">Earlier comments (${rest.length})</summary>${rest.map(cm).join('')}</details>` : ''}`;
+  box.querySelectorAll('[data-cm]').forEach(b => b.onclick = async () => {
+    if (b.dataset.cm === 'deleted' && !confirm('Delete this comment for good?')) return;
+    try { await call('admin_comment_set', {p_id: +b.dataset.id, p_status: b.dataset.cm}); toast('Saved'); box.remove(); vBlogReaders(v); } catch (e) { toast(e.message || String(e), true); }
+  });
 }
 
 start();
