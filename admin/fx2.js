@@ -24,7 +24,7 @@
     function frame() {
       if (!run) return;
       g.clearRect(0, 0, W, H);
-      var k = light() ? .55 : 1, L = 120;
+      var k = light() ? .5 : .7, L = 120;
       for (var i = 0; i < P.length; i++) {
         var p = P[i]; p.x += p.vx; p.y += p.vy;
         if (p.x < -10) p.x = W + 10; else if (p.x > W + 10) p.x = -10;
@@ -91,7 +91,7 @@
   function confetti(ox, oy) {
     if (reduce) return;
     var c = document.createElement('canvas'); c.id = 'fxconf'; c.width = innerWidth; c.height = innerHeight; document.body.appendChild(c);
-    var g = c.getContext('2d'), cols = ['#a78bfa', '#22d3ee', '#f472b6', '#fbbf24', '#2de2a6', '#ffffff'], P = [];
+    var g = c.getContext('2d'), cols = ['#aeb8ee', '#7fc2d0', '#d6a4be', '#dcc088', '#6fd0a8', '#ffffff'], P = [];
     for (var i = 0; i < 110; i++) {
       var a = -Math.PI / 2 + (Math.random() - .5) * 1.9, v = 6 + Math.random() * 9;
       P.push({x: ox, y: oy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, w: 5 + Math.random() * 6, h: 3 + Math.random() * 4, r: Math.random() * 6, vr: (Math.random() - .5) * .4, c: cols[i % cols.length], l: 1});
@@ -141,11 +141,24 @@
     document.addEventListener('pointerout', function (e) { var b = e.target.closest && e.target.closest('button.pri'); if (b) b.style.transform = ''; }, {passive: true});
   }
 
+
+  /* H. sliding marker under the active tab, and a slight drift of the background with the pointer */
+  var lastL = null, lastW = 0;
+  function marker() {
+    var nav = $('#tabs'); if (!nav) return;
+    var on = nav.querySelector('button.on'); if (!on) return;
+    var m = $('#fxind', nav); if (!m) { m = document.createElement('i'); m.id = 'fxind'; nav.appendChild(m); if (lastL !== null) { m.style.transition = 'none'; m.style.left = lastL + 'px'; m.style.width = lastW + 'px'; void m.offsetWidth; m.style.transition = ''; } }
+    if (nav.scrollWidth > nav.clientWidth) nav.scrollTo({left: Math.max(0, on.offsetLeft - nav.clientWidth / 2 + on.offsetWidth / 2), behavior: reduce ? 'auto' : 'smooth'});
+    lastL = on.offsetLeft + 10; lastW = Math.max(10, on.offsetWidth - 20);
+    requestAnimationFrame(function () { m.style.left = lastL + 'px'; m.style.width = lastW + 'px'; });
+  }
+  if (fine && !reduce) addEventListener('pointermove', function (e) { document.body.style.setProperty('--px', ((e.clientX / innerWidth - .5) * -26).toFixed(1) + 'px'); document.body.style.setProperty('--py', ((e.clientY / innerHeight - .5) * -18).toFixed(1) + 'px'); }, {passive: true});
+
   function boot() {
     net(); glow(); wipe();
     var nav = $('#tabs'), view = $('#view');
     setTimeout(chips, 50);
-    if (nav) new MutationObserver(function () { setTimeout(chips, 0); }).observe(nav, {childList: true, subtree: true, characterData: true});
+    if (nav) { new MutationObserver(function () { setTimeout(chips, 0); setTimeout(marker, 0); }).observe(nav, {childList: true}); new MutationObserver(function () { setTimeout(chips, 0); }).observe(nav, {subtree: true, childList: true, characterData: true}); setTimeout(marker, 120); addEventListener('resize', marker); }
     if (view) {
       var tm;
       new MutationObserver(function () { clearTimeout(tm); tm = setTimeout(function () { reveal(view); }, 60); }).observe(view, {childList: true, subtree: true});

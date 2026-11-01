@@ -314,6 +314,58 @@ button.hc2:hover{transform:translateY(-2px)}
 ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
 ::view-transition-old(root){z-index:1}::view-transition-new(root){z-index:2}
 @media (prefers-reduced-motion:reduce){.fxr{opacity:1;transform:none}.hot:before,.rings i,#view:empty{animation:none}}
+
+/* ===== refine layer: calm, expensive colour. Graphite and porcelain, one soft slate-indigo accent, hairline light instead of neon ===== */
+:root{--bg:#090a0e;--panel:rgba(22,24,32,.74);--panel2:rgba(36,39,52,.52);--panel-s:#101219;--line:rgba(205,210,235,.12);--text:#ECEEF5;--mute:#9399AC;--gold:#AEB8EE;--gold2:#D9DEF7;--ok:#6FD0A8;--bad:#E8847F;--warn:#E2B462;--info:#8DB2EE;--brand:linear-gradient(120deg,#8892DD 0%,#7384CF 55%,#6C9BC3 100%);--glow:rgba(150,162,230,.32);--fxa:rgba(110,120,200,.16);--fxb:rgba(90,150,185,.11);--fxc:rgba(170,130,170,.08);--grid:rgba(205,210,235,.04);--shadow:0 24px 54px -26px rgba(0,0,0,.85);--k1:#9FAAE8;--k2:#7FC2D0;--k3:#D6A4BE;--k4:#DCC088;--edge1:rgba(220,226,255,.55);--edge2:rgba(140,190,215,.4)}
+@media (prefers-color-scheme:light){:root:not([data-theme]){--bg:#f4f4f8;--panel:rgba(255,255,255,.84);--panel2:rgba(240,241,248,.9);--panel-s:#fff;--line:rgba(60,66,110,.13);--text:#16171f;--mute:#656a7e;--gold:#5560B4;--gold2:#3C8BA0;--ok:#0b8a5e;--bad:#c9444a;--warn:#a8740f;--info:#3569c9;--brand:linear-gradient(120deg,#6670c4 0%,#5764b8 55%,#4a86a8 100%);--glow:rgba(85,96,180,.24);--fxa:rgba(120,130,210,.2);--fxb:rgba(110,175,205,.17);--fxc:rgba(205,160,190,.13);--grid:rgba(60,66,110,.055);--shadow:0 22px 46px -26px rgba(50,55,110,.3);--k1:#5560B4;--k2:#3F8FA3;--k3:#B0587F;--k4:#A67C2A;--edge1:rgba(85,96,180,.5);--edge2:rgba(63,143,163,.4)}}
+:root[data-theme="light"]{--bg:#f4f4f8;--panel:rgba(255,255,255,.84);--panel2:rgba(240,241,248,.9);--panel-s:#fff;--line:rgba(60,66,110,.13);--text:#16171f;--mute:#656a7e;--gold:#5560B4;--gold2:#3C8BA0;--ok:#0b8a5e;--bad:#c9444a;--warn:#a8740f;--info:#3569c9;--brand:linear-gradient(120deg,#6670c4 0%,#5764b8 55%,#4a86a8 100%);--glow:rgba(85,96,180,.24);--fxa:rgba(120,130,210,.2);--fxb:rgba(110,175,205,.17);--fxc:rgba(205,160,190,.13);--grid:rgba(60,66,110,.055);--shadow:0 22px 46px -26px rgba(50,55,110,.3);--k1:#5560B4;--k2:#3F8FA3;--k3:#B0587F;--k4:#A67C2A;--edge1:rgba(85,96,180,.5);--edge2:rgba(63,143,163,.4)}
+body:before{translate:var(--px,0px) var(--py,0px);transition:translate .9s cubic-bezier(.2,.8,.2,1)}
+header:after{background:linear-gradient(90deg,transparent,var(--edge1),var(--edge2),var(--edge1),transparent);background-size:240% 100%;opacity:.8;height:1px}
+header h1 b,.hr-t{background:linear-gradient(100deg,var(--text) 10%,var(--gold) 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+nav button.on{background:linear-gradient(180deg,color-mix(in srgb,var(--gold) 26%,var(--panel-s)),color-mix(in srgb,var(--gold) 12%,var(--panel-s)));color:var(--text);border-color:color-mix(in srgb,var(--gold) 55%,transparent);box-shadow:0 10px 26px -12px var(--glow),inset 0 1px 0 rgba(255,255,255,.12)}
+nav button.on .ti{filter:none;color:var(--gold)}
+nav .badge{background:color-mix(in srgb,var(--bad) 88%,#000);box-shadow:0 0 10px color-mix(in srgb,var(--bad) 45%,transparent)}
+.card:before{background:linear-gradient(135deg,var(--edge1),transparent 32%,transparent 68%,var(--edge2));opacity:.4}
+.card:hover:before{opacity:.85}
+.card:hover{border-color:color-mix(in srgb,var(--gold) 38%,var(--line))}
+.card,.kpi,.gt{background-image:radial-gradient(320px circle at var(--mx,-400px) var(--my,-400px),color-mix(in srgb,var(--gold) 10%,transparent),transparent 62%),linear-gradient(155deg,var(--panel),color-mix(in srgb,var(--panel2) 70%,transparent))}
+.kpi:after,.kx:after{opacity:.28;width:130px;height:130px}
+.kx:hover:after,.kpi:hover:after{opacity:.55}
+.kx{border-left-width:3px}
+.kx b,.kpi b{text-shadow:0 0 22px color-mix(in srgb,currentColor 18%,transparent);letter-spacing:-.025em}
+.kx:hover{box-shadow:0 26px 46px -22px color-mix(in srgb,var(--k) 38%,transparent),inset 0 1px 0 rgba(255,255,255,.08)}
+button.pri{background:var(--brand);color:#fff;box-shadow:0 10px 24px -10px var(--glow),inset 0 1px 0 rgba(255,255,255,.22)}
+button.pri:after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.38),transparent)}
+.mb i,.vz-hrs i,.spark i{background:linear-gradient(180deg,var(--k2),var(--k1));box-shadow:none;opacity:.9}
+.card>b:first-child{border-image:linear-gradient(var(--k1),var(--k2)) 1}
+h3{background:linear-gradient(90deg,var(--text),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hot:before{background:conic-gradient(from var(--fa,0deg),transparent 0deg,var(--edge1) 70deg,transparent 140deg,transparent 220deg,var(--edge2) 290deg,transparent 360deg)!important;animation-duration:7s}
+#fxbar{background:linear-gradient(90deg,var(--k1),var(--k2));box-shadow:0 0 10px var(--glow)}
+::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--gold) 38%,var(--panel2))}
+#fxglow{background:radial-gradient(circle,color-mix(in srgb,var(--gold) 15%,transparent),transparent 68%)}
+.hc2.ok{cursor:default}
+.fp-box{box-shadow:0 40px 90px -24px rgba(0,0,0,.75),0 0 0 1px rgba(255,255,255,.04) inset}
+.fp-it.on{background:color-mix(in srgb,var(--gold) 16%,transparent);border-color:color-mix(in srgb,var(--gold) 38%,transparent)}
+.rings i{border-color:color-mix(in srgb,var(--gold) 24%,transparent)!important}
+.login .card,#login .card{box-shadow:0 34px 80px -30px var(--glow),var(--shadow)}
+.msg.okk.fxtoast{box-shadow:0 20px 50px -18px rgba(0,0,0,.7),0 0 24px -10px var(--ok)}
+.hr-k{letter-spacing:.26em}
+.tbl th{letter-spacing:.1em;font-weight:600}
+.pill{font-weight:600}
+
+/* sheen that glides across a card on hover */
+.kpi,.kx{isolation:isolate}
+.card:not(.hc-sec):not(.kx):hover:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.07) 48%,transparent 60%) -150% 0/250% 100% no-repeat;animation:fxsheen 1.1s ease-out forwards}
+@keyframes fxsheen{to{background-position:150% 0}}
+
+/* sliding marker under the tabs */
+nav{position:relative}
+#fxind{position:absolute;bottom:6px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--k1),var(--k2));box-shadow:0 0 12px var(--glow);transition:left .45s cubic-bezier(.2,.8,.2,1),width .45s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+
+/* quiet entrance */
+header,#hero{animation:fxin .7s cubic-bezier(.2,.8,.2,1) both}#hero{animation-delay:.1s}
+@keyframes fxin{from{opacity:0;transform:translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){header,#hero,.card:hover:after{animation:none}#fxind{transition:none}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -1754,7 +1806,7 @@ start();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
 })();
 </script>
-<script src="fx.js?v=2" defer></script>
-<script src="fx2.js?v=1" defer></script>
+<script src="fx.js?v=3" defer></script>
+<script src="fx2.js?v=3" defer></script>
 </body>
 </html>
