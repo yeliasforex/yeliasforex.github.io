@@ -64,16 +64,20 @@
   function hero() {
     var app = $('#app'), nav = $('#tabs'); if (!app || !nav || $('#hero')) return;
     var h = document.createElement('div'); h.id = 'hero';
-    h.innerHTML = '<div class="hr-l"><div class="hr-k"><span class="hr-dot"></span>COMMAND CENTRE</div><div class="hr-t" id="hrt">Welcome back</div><div class="hr-s" id="hrs"></div></div>' +
+    h.innerHTML = '<div class="hr-l"><div class="hr-k"><span class="hr-dot"></span><span id="hrk">COMMAND CENTRE</span></div><div class="hr-t" id="hrt">Welcome back</div><div class="hr-s" id="hrs"></div></div>' +
       '<div class="hr-r"><button type="button" class="hr-q" id="hrq"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Jump to...</span><kbd>Ctrl K</kbd></button><div class="hr-c" id="hrc"></div></div>';
     nav.parentNode.insertBefore(h, nav.nextSibling);
     $('#hrq').onclick = openPalette;
+    var DESC = {orders: 'Payments to confirm and every order, newest first', visitors: 'Who is visiting, from where, and what they read', funnel: 'From first visit to account to paying customer', licenses: 'Every key: who has it, until when, on which account', health: 'Your PC, website, payments and alerts, checked for you', customers: 'Everyone who signed up and what they own', proof: 'The public wall of results and reviews', blog: 'Articles that bring visitors in from search', support: 'Questions and requests from customers', email: 'Messages to customers and their delivery', revenue: 'Money in, refunds, renewals and the trend', marketing: 'Channels, campaigns and what each one earns', affiliates: 'Partners, commissions and payouts', settings: 'Plans, prices and how the platform behaves', backtest: 'Run the engine on past gold data', videos: 'Videos shown on the site', audit: 'A permanent record of every admin action'};
     function clock() {
-      var d = new Date(), hr = d.getHours();
-      $('#hrt').textContent = (hr < 5 ? 'Working late' : hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening');
-      $('#hrs').textContent = d.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'});
+      var d = new Date(), hr = d.getHours(), on = $('#tabs button.on'), k = on && on.dataset.t;
+      var g = hr < 5 ? 'Working late' : hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
+      $('#hrk').textContent = (g + ' · ' + d.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'})).toUpperCase();
+      $('#hrt').textContent = on ? on.textContent.replace(/\d+$/, '').trim() : 'Overview';
+      $('#hrs').textContent = DESC[k] || '';
       $('#hrc').textContent = d.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'});
     }
+    window.__fxClock = clock;
     clock(); setInterval(clock, 15000);
   }
 

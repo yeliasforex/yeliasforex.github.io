@@ -143,15 +143,20 @@
 
 
   /* H. sliding marker under the active tab, and a slight drift of the background with the pointer */
-  var lastL = null, lastW = 0;
+  var last = null;
   function marker() {
     var nav = $('#tabs'); if (!nav) return;
     var on = nav.querySelector('button.on'); if (!on) return;
-    var m = $('#fxind', nav); if (!m) { m = document.createElement('i'); m.id = 'fxind'; nav.appendChild(m); if (lastL !== null) { m.style.transition = 'none'; m.style.left = lastL + 'px'; m.style.width = lastW + 'px'; void m.offsetWidth; m.style.transition = ''; } }
-    if (nav.scrollWidth > nav.clientWidth) nav.scrollTo({left: Math.max(0, on.offsetLeft - nav.clientWidth / 2 + on.offsetWidth / 2), behavior: reduce ? 'auto' : 'smooth'});
-    lastL = on.offsetLeft + 10; lastW = Math.max(10, on.offsetWidth - 20);
-    requestAnimationFrame(function () { m.style.left = lastL + 'px'; m.style.width = lastW + 'px'; });
+    var side = getComputedStyle(nav).flexDirection === 'column';
+    var m = $('#fxind', nav), pos;
+    if (side) pos = {left: '4px', width: '3px', top: (on.offsetTop + 9) + 'px', height: Math.max(10, on.offsetHeight - 18) + 'px', bottom: 'auto'};
+    else pos = {left: (on.offsetLeft + 10) + 'px', width: Math.max(10, on.offsetWidth - 20) + 'px', top: 'auto', height: '2px', bottom: '6px'};
+    function put(el) { for (var k in pos) el.style[k] = pos[k]; }
+    if (!m) { m = document.createElement('i'); m.id = 'fxind'; nav.appendChild(m); if (last) { m.style.transition = 'none'; put(m); for (var k in last) m.style[k] = last[k]; void m.offsetWidth; m.style.transition = ''; } }
+    if (!side && nav.scrollWidth > nav.clientWidth) nav.scrollTo({left: Math.max(0, on.offsetLeft - nav.clientWidth / 2 + on.offsetWidth / 2), behavior: reduce ? 'auto' : 'smooth'});
+    last = pos; requestAnimationFrame(function () { put(m); });
   }
+  window.__fxMark = marker;
   if (fine && !reduce) addEventListener('pointermove', function (e) { document.body.style.setProperty('--px', ((e.clientX / innerWidth - .5) * -26).toFixed(1) + 'px'); document.body.style.setProperty('--py', ((e.clientY / innerHeight - .5) * -18).toFixed(1) + 'px'); }, {passive: true});
 
   function boot() {
