@@ -22,6 +22,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="pwa.js?v=20261102app8" defer></script><script src="track.js?v=20261021app5" defer></script>
 
+<style>
+.f .agree-box,#form .agree-box{text-transform:none!important;letter-spacing:0!important;font:400 .8rem/1.5 var(--sans)!important;color:var(--fg-2)}
+.agree-box{display:flex;gap:12px;align-items:flex-start;padding:14px 14px;margin:0 0 16px;border-radius:16px;border:1px solid var(--line-2);background:color-mix(in srgb,var(--panel-2) 70%,transparent);cursor:pointer;font-size:.8rem;line-height:1.5;color:var(--fg-2);transition:border-color .2s,box-shadow .2s,background .2s}
+.agree-box input{flex:none;width:22px;height:22px;margin:1px 0 0;accent-color:var(--blue,#1747C8);cursor:pointer}
+.agree-box b{display:block;color:var(--fg);font:600 .9rem/1.3 var(--sans)!important;margin-bottom:4px;text-transform:none;letter-spacing:0}
+.agree-box a{color:var(--blue-hi);text-decoration:underline}
+#form:not(.ok) #google,#form:not(.ok) #send{opacity:.55}
+#form.ok .agree-box{border-color:color-mix(in srgb,var(--mint) 55%,transparent);background:color-mix(in srgb,var(--mint) 8%,transparent)}
+#form.ok .agree-box b:before{content:"✓  "}
+.agree-box.need{border-color:var(--red);box-shadow:0 0 0 4px color-mix(in srgb,var(--red) 22%,transparent);animation:agshake .45s}
+@keyframes agshake{20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.agree-box.need{animation:none}}
+</style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -34,13 +47,13 @@
   <p class="lead">We email you a one-time link. Open it on this device and you are in. New here? The same link creates your account.</p>
   <ul class="si-perks"><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>No password to remember</li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Free account: unlocks the free backtest EA</li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>See your license, orders and notifications in one place</li></ul>
   <div class="f" id="form" style="margin-top:22px">
+    <label class="agree-box" id="agreeBox" for="agree"><input type="checkbox" id="agree"> <span><b>Step 1: agree to continue.</b> I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, including that my EA results, country and profile photo may be shown on the public Proof Wall under my chosen display name (a first name or nickname by default). I can turn this off or hide any part of it any time in My account.</span></label>
     <button class="btn hide" id="google" type="button"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.6l3-3A10 10 0 0 0 2 12h4a6 6 0 0 1 6-7z" opacity=".9"/><path fill="#4285F4" d="M22 12c0-.7-.1-1.4-.2-2H12v4h5.6a5 5 0 0 1-2.2 3.3l3.4 2.6C20.800 18 22 15.300 22 12z"/><path fill="#34A853" d="M12 22c2.700 0 5-.9 6.800-2.400l-3.400-2.600A6 6 0 0 1 6 14H2v3a10 10 0 0 0 10 5z"/><path fill="#FBBC05" d="M6 14a6 6 0 0 1 0-4V7H2a10 10 0 0 0 0 10z"/></svg> Continue with Google</button>
     <div class="sep hide" id="or">or use your email</div>
     <label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com">
     <button class="btn primary" id="send" type="button">Email me a sign-in link</button>
     <div id="out"></div>
   </div>
-  <label class="hint" style="display:flex;gap:10px;align-items:flex-start;margin-top:18px;cursor:pointer"><input type="checkbox" id="agree" style="margin-top:3px"> <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, including that my EA results, country and profile photo may be shown on the public Proof Wall under my chosen display name (a first name or nickname by default). I can turn this off or hide any part of it any time in My account.</span></label>
 </div></section>
 </main>
 <footer>
@@ -70,13 +83,14 @@
   const back = location.origin + '/' + safe + fs;
   const GOOGLE_ON = true;    // Google sign-in is enabled in Supabase
   if (GOOGLE_ON) { document.getElementById('google').classList.remove('hide'); document.getElementById('or').classList.remove('hide'); }
-  const need = () => { const a = document.getElementById('agree'); if (a.checked) { try { localStorage.setItem('gte_agree', '2026-10-30b'); } catch (e) {} return true; } return false; };
-  document.getElementById('google').onclick = () => { if (!need()) return say('Please tick the box to agree to the Terms and Privacy Policy.', true); try { gteEvent('signin_google'); } catch (e) {} c.auth.signInWithOAuth({provider: 'google', options: {redirectTo: back}}); };
+  const need = () => { const a = document.getElementById('agree'); if (a.checked) { try { localStorage.setItem('gte_agree', '2026-10-30b'); } catch (e) {} return true; } const b = document.getElementById('agreeBox'); b.classList.remove('need'); void b.offsetWidth; b.classList.add('need'); b.scrollIntoView({behavior: 'smooth', block: 'center'}); setTimeout(() => b.classList.remove('need'), 1800); return false; };
+  document.getElementById('agree').onchange = e => document.getElementById('form').classList.toggle('ok', e.target.checked);
+  document.getElementById('google').onclick = () => { if (!need()) return say('Tick the box above first (Step 1), then continue.', true); try { gteEvent('signin_google'); } catch (e) {} c.auth.signInWithOAuth({provider: 'google', options: {redirectTo: back}}); };
   const out = document.getElementById('out'), say = (t, e) => out.innerHTML = '<div class="msg ' + (e ? 'err' : 'ok') + '">' + gte.esc(t) + '</div>';
   document.getElementById('send').onclick = async () => {
     const email = document.getElementById('email').value.trim();
     if (!/^\S+@\S+\.\S+$/.test(email)) return say('Enter a valid email address.', true);
-    if (!need()) return say('Please tick the box to agree to the Terms and Privacy Policy.', true);
+    if (!need()) return say('Tick the box above first (Step 1), then continue.', true);
     const {error} = await c.auth.signInWithOtp({email, options: {emailRedirectTo: back}});
     try { gteEvent(error ? 'signin_error' : 'signin_link', error ? String(error.message).slice(0, 80) : null); } catch (e) {}
     say(error ? error.message : 'Check your email and open the link on this device. It can take a minute.', !!error);
