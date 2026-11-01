@@ -341,3 +341,13 @@ span.pdx-hc{cursor:default}button.pdx-hc:hover{transform:translateY(-2px)}
 .pdk-cs:hover{transform:translateY(-3px);border-color:var(--cyan)}
 .pdk-cs i{display:block;height:34px;border-radius:9px;border:1px solid var(--line);margin-bottom:5px}
 .pdk-cs b{font-size:.82rem}.pdk-cs small{color:var(--mut);font-family:ui-monospace,Consolas,monospace;font-size:.72rem}
+
+/* collapse button at the bottom of the menu, like My account; the old header button is no longer needed */
+#pdx-nt{display:none!important}
+.pcol{display:none}
+@media (min-width:1000px){
+  #pd-bar .pcol{display:flex;align-items:center;gap:8px;margin-top:10px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:none;color:var(--mut);font:inherit;font-size:.8rem;cursor:pointer;width:100%;transition:color .2s,border-color .2s}
+  .pcol svg{width:15px;height:15px;transition:transform .3s}#pd-bar .pcol:hover{color:var(--text);border-color:var(--cyan);transform:none}
+  .pd.pdnc .pcol{justify-content:center;padding:11px 0;font-size:0}.pd.pdnc .pcol svg{transform:rotate(180deg);margin:0}.pd.pdnc .pcol span{display:none}
+}
+#pdx-tip{position:fixed;z-index:9999;transform:translateY(-50%);padding:6px 11px;border-radius:9px;background:var(--tipbg,#0d1420);border:1px solid var(--line);color:var(--text);font-size:.78rem;font-weight:600;white-space:nowrap;pointer-events:none;box-shadow:0 12px 26px -10px rgba(0,0,0,.5)}

@@ -25,9 +25,21 @@
     var bar = $('#pd-bar'); if (!bar || bar.querySelector('.png')) return;
     GROUPS.forEach(function (g, gi) {
       var base = (gi + 1) * 100, l = document.createElement('span'); l.className = 'png'; l.textContent = g[0]; l.style.order = base; bar.appendChild(l);
-      g[1].forEach(function (k, i) { var b = bar.querySelector('button[data-t="' + k + '"]'); if (b) b.style.order = base + 1 + i; });
+      g[1].forEach(function (k, i) { var b = bar.querySelector('button[data-t="' + k + '"]'); if (b) { b.style.order = base + 1 + i; b.dataset.tip = b.textContent.trim(); } });
     });
+    var cb = document.createElement('button'); cb.type = 'button'; cb.className = 'pcol'; cb.style.order = 999; cb.setAttribute('aria-label', 'Collapse or expand the menu');
+    cb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg><span>Collapse</span>';
+    cb.onclick = function () { var c = $('.pd').classList.toggle('pdnc'); try { localStorage.setItem('gte_pd_nav', c ? 'c' : 'o'); } catch (e) {} hideTip(); setTimeout(function () { if (window.__pdMark) window.__pdMark(); }, 420); };
+    bar.appendChild(cb);
   }
+  var tip;
+  function hideTip() { if (tip) { tip.remove(); tip = null; } }
+  document.addEventListener('mouseover', function (e) {
+    var b = e.target.closest && e.target.closest('#pd-bar button[data-tip]'), root = $('.pd');
+    if (!b || !root || !root.classList.contains('pdnc') || innerWidth < 1000) { hideTip(); return; }
+    hideTip(); var r = b.getBoundingClientRect(); tip = document.createElement('div'); tip.id = 'pdx-tip'; tip.textContent = b.dataset.tip; tip.style.left = (r.right + 10) + 'px'; tip.style.top = (r.top + r.height / 2) + 'px'; document.body.appendChild(tip);
+  });
+  document.addEventListener('mouseout', function (e) { if (!e.relatedTarget || !(e.relatedTarget.closest && e.relatedTarget.closest('#pd-bar button[data-tip]'))) hideTip(); });
   function toggle() {
     var top = $('.pd-top'); if (!top || $('#pdx-nt')) return;
     var b = document.createElement('button'); b.type = 'button'; b.id = 'pdx-nt'; b.setAttribute('aria-label', 'Collapse or expand the menu');

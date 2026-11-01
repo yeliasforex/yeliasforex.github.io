@@ -434,6 +434,16 @@ button.pri{background:var(--brand)}
 #hrchips{display:none}
 @media (max-width:999px){#pulse{display:none}}
 #hero[data-tab="orders"] #pulse,#hero[data-tab="revenue"] #pulse,#hero[data-tab="licenses"] #pulse,#hero[data-tab="customers"] #pulse{display:none}
+
+/* collapse button at the bottom of the menu, like My account; the old header button is no longer needed */
+#navtog{display:none!important}
+.ncol{display:none}
+@media (min-width:1000px){
+  .ncol{display:flex;align-items:center;gap:8px;margin-top:10px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:none;color:var(--mute);font:inherit;font-size:.8rem;cursor:pointer;transition:color .2s,border-color .2s}
+  .ncol svg{width:15px;height:15px;transition:transform .3s}.ncol:hover{color:var(--text);border-color:var(--gold)}
+  body.nc .ncol{justify-content:center;padding:11px 0;font-size:0}body.nc .ncol svg{transform:rotate(180deg);margin:0}body.nc .ncol span{display:none}
+}
+#fxtip{position:fixed;z-index:9999;transform:translateY(-50%);padding:6px 11px;border-radius:9px;background:var(--panel-s);border:1px solid var(--line);color:var(--text);font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none;box-shadow:0 12px 26px -10px rgba(0,0,0,.5)}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -1876,6 +1886,6 @@ start();
 </script>
 <script src="fx.js?v=4" defer></script>
 <script src="fx2.js?v=4" defer></script>
-<script src="fx3.js?v=4" defer></script>
+<script src="fx3.js?v=5" defer></script>
 </body>
 </html>

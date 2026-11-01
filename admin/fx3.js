@@ -13,8 +13,21 @@
       var base = (gi + 1) * 100, lab = document.createElement('span'); lab.className = 'ng'; lab.textContent = g[0]; lab.style.order = base; nav.appendChild(lab);
       g[1].forEach(function (k, i) { var b = nav.querySelector('button[data-t="' + k + '"]'); if (b) b.style.order = base + 1 + i; });
     });
-    nav.querySelectorAll('button[data-t]').forEach(function (b) { if (!b.style.order) b.style.order = 900; });
+    nav.querySelectorAll('button[data-t]').forEach(function (b) { if (!b.style.order) b.style.order = 900; b.dataset.tip = b.textContent.replace(/\d+$/, '').trim(); });
+    var cb = document.createElement('button'); cb.type = 'button'; cb.className = 'ncol'; cb.style.order = 999; cb.setAttribute('aria-label', 'Collapse or expand the menu');
+    cb.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg><span>Collapse</span>';
+    cb.onclick = function () { var c = document.body.classList.toggle('nc'); try { localStorage.setItem('gte_admin_nav', c ? 'c' : 'o'); } catch (e) {} hideTip(); setTimeout(function () { if (window.__fxMark) window.__fxMark(); }, 420); };
+    nav.appendChild(cb);
   }
+  /* label that floats beside an icon when the menu is collapsed */
+  var tip;
+  function hideTip() { if (tip) { tip.remove(); tip = null; } }
+  document.addEventListener('mouseover', function (e) {
+    var b = e.target.closest && e.target.closest('#tabs button[data-tip]');
+    if (!b || !document.body.classList.contains('nc') || innerWidth < 1000) { hideTip(); return; }
+    hideTip(); var r = b.getBoundingClientRect(); tip = document.createElement('div'); tip.id = 'fxtip'; tip.textContent = b.dataset.tip; tip.style.left = (r.right + 10) + 'px'; tip.style.top = (r.top + r.height / 2) + 'px'; document.body.appendChild(tip);
+  });
+  document.addEventListener('mouseout', function (e) { if (!e.relatedTarget || !(e.relatedTarget.closest && e.relatedTarget.closest('#tabs button[data-tip]'))) hideTip(); });
   function toggle() {
     var h = $('header'); if (!h || $('#navtog')) return;
     var b = document.createElement('button'); b.type = 'button'; b.id = 'navtog'; b.className = 'ntg'; b.setAttribute('aria-label', 'Collapse or expand the menu'); b.title = 'Menu';
