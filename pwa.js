@@ -7,7 +7,8 @@
   try { if ((document.referrer || '').indexOf('android-app://') === 0) sessionStorage.setItem('gte_twa', '1'); twa = sessionStorage.getItem('gte_twa') === '1'; } catch (e) {}
   var standalone = mq('(display-mode: standalone)') || mq('(display-mode: fullscreen)') || mq('(display-mode: minimal-ui)') || navigator.standalone === true || twa;
   document.documentElement.classList.toggle('is-app', standalone);
-  if (standalone) { var st = document.createElement('style'); st.textContent = '.is-app footer{display:none!important}.app-legal{margin:28px auto 22px;max-width:640px;padding:0 16px;text-align:center;font-size:.78rem;opacity:.7}.app-legal a{color:inherit;margin:0 8px;text-decoration:underline}'; document.head.appendChild(st); }
+  function appCss() { if (document.getElementById('gte-appcss')) return; var st = document.createElement('style'); st.id = 'gte-appcss'; st.textContent = '.is-app footer{display:none!important}.app-legal{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;margin:28px auto 0;max-width:640px;padding:0 16px 96px;font-size:.78rem;opacity:.75}.app-legal a{color:inherit!important;text-decoration:none!important}.app-legal a:hover{text-decoration:underline!important}'; document.head.appendChild(st); }
+  if (standalone) appCss();
   var ua = navigator.userAgent || '';
   var os = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios'
     : /Android/.test(ua) ? 'android' : 'desktop';
@@ -44,7 +45,7 @@
     var keep = /^(my-account|pricing|guide|faq|download|apps)\.html/;
     document.querySelectorAll('.nav a').forEach(function (a) { var h = a.getAttribute('href') || ''; if (!keep.test(h) || a.classList.contains('pill')) a.hidden = true; });
     var br = document.querySelector('.brand'); if (br) br.setAttribute('href', 'my-account.html');
-    var f = document.querySelector('body > footer, footer'); if (f) f.hidden = true;
+    appCss(); var f = document.querySelector('body > footer, footer'); if (f) f.hidden = true;
     var mn = document.querySelector('main'); if (mn && !mn.querySelector('.app-legal')) { var lg = document.createElement('p'); lg.className = 'app-legal'; lg.innerHTML = '<a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="refund.html">Refunds</a><a href="risk.html">Risk</a>'; mn.appendChild(lg); }
   }
 
