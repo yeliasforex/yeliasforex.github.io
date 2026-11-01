@@ -125,6 +125,7 @@
   var pal;
   function actions() {
     var out = [];
+    out.push({k: 'overview', name: 'Switch to my Customer account', hint: 'Switch account', run: function () { location.href = 'my-account.html'; }});
     $$('#pd-bar button[data-t]').forEach(function (b) { out.push({k: b.dataset.t, name: b.textContent.trim(), hint: 'Open section', run: function () { b.click(); window.scrollTo({top: 0}); }}); });
     [['#pd-cl', 'Copy my link', 'overview'], ['#pd-cc', 'Copy my code', 'overview'], ['#pd-sh', 'Share my link', 'campaigns'], ['#pd-qr', 'Show my QR code', 'kit'], ['#pd-req', 'Request a payout', 'payouts']].forEach(function (a) {
       if ($(a[0])) out.push({k: a[2], name: a[1], hint: 'Action', run: function () { var el = $(a[0]); if (el) el.click(); }});
@@ -199,6 +200,14 @@
     }, true);
   }
 
+  /* ---------- account switcher: a partner is also a customer ---------- */
+  function swHtml(cur, cls) { return '<div class="acsw ' + cls + '" data-v="'+cur+'" role="group" aria-label="Switch account"><a href="my-account.html" data-sw="c" class="'+(cur==="c"?"on":"")+'" title="Customer account"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg><span>Customer</span></a><a href="partner.html" data-sw="p" class="'+(cur==="p"?"on":"")+'" title="Partner dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6zM8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg><span>Partner</span></a><i></i></div>'; }
+  function switcher() {
+    var bar = $('#pd-bar'), app = $('#pd-app'); if (!bar || !app) return;
+    if (!$('.acsw', bar)) bar.insertAdjacentHTML('afterbegin', swHtml('p', 'side'));
+    if (!$('.acsw.mob', app)) app.insertAdjacentHTML('afterbegin', swHtml('p', 'mob'));
+  }
+  document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[data-sw]'); if (a && a.closest('.acsw').dataset.v === a.dataset.sw) e.preventDefault(); });
   var booted = false, lastTab = null;
   function boot() {
     if (!ready()) return;
@@ -207,7 +216,7 @@
       setInterval(function () { if (ready()) hero(); }, 20000);
     }
     var k = tabKey(); if (k !== lastTab) { if (lastTab !== null) sweep(); lastTab = k; }
-    groups(); hero(); renderInsights(); tools();
+    groups(); switcher(); hero(); renderInsights(); tools();
     if (window.__pdMark) window.__pdMark();
   }
   function start() {

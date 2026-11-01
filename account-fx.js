@@ -23,8 +23,8 @@
   function ic(k) { return '<svg class="maz-i" viewBox="0 0 24 24" aria-hidden="true"><path d="' + (ICON[k] || ICON.overview) + '"/></svg>'; }
   var DESC = {overview: 'Live status, equity and anything that needs you', results: 'Charts, calendar and statistics of every closed trade', trades: 'Every trade the EA made, newest first', billing: 'Your license keys, orders and invoices'};
   var SHORT = [['download.html', 'Download EA', 'dl'], ['apps.html', 'Get the app', 'app'], ['free-backtest.html', 'Free backtest', 'bt'], ['pricing.html', 'Plans', 'plans'], ['https://t.me/GoldTriEngine_Support', 'Support', 'help']];
-  function tabKey() { var on = $('#subnav a.on'); return on ? on.dataset.tab : 'overview'; }
-  function tabName() { var on = $('#subnav a.on'); return on ? on.textContent.replace(/\d+$/, '').trim() : 'Overview'; }
+  function tabKey() { var on = $('#subnav a[data-tab].on'); return on ? on.dataset.tab : 'overview'; }
+  function tabName() { var on = $('#subnav a[data-tab].on'); return on ? on.textContent.replace(/\d+$/, '').trim() : 'Overview'; }
 
   /* ---------- side menu: icons, groups, shortcuts, collapse ---------- */
   function menu() {
@@ -84,6 +84,7 @@
     if (M() && M().lic) out.push({k: 'key', name: 'Copy my license key', hint: 'Action', run: copyKey});
     SHORT.forEach(function (s) { out.push({k: s[2], name: s[1], hint: 'Open', run: function () { if (/^https?:/.test(s[0])) window.open(s[0], '_blank', 'noopener'); else location.href = s[0]; }}); });
     [['#mabell', 'Notifications', 'bell'], ['#mager', 'Settings', 'gear']].forEach(function (p) { var b = $(p[0]); if (b && !b.hidden) out.push({k: p[2], name: p[1], hint: 'Open', run: function () { b.click(); }}); });
+    if (window.GTE_PE && (window.GTE_PE.status === 'active' || window.GTE_PE.status === 'paused')) out.push({k: 'billing', name: 'Switch to my Partner dashboard', hint: 'Switch account', run: function () { location.href = 'partner.html'; }});
     var tb = $('.theme-btn'); if (tb) out.push({k: 'moon', name: 'Switch day / night', hint: 'Appearance', run: function () { tb.click(); }});
     return out;
   }
@@ -177,12 +178,22 @@
     if (!rio) return;
     $$('#acct .panel:not([data-rv])').forEach(function (el) { el.dataset.rv = '1'; var r = el.getBoundingClientRect(); if (r.top < innerHeight * .92) return; el.classList.add('mzr'); rio.observe(el); });
   }
+  /* ---------- account switcher: only for customers who are also approved partners ---------- */
+  function swHtml(cur, cls) { return '<div class="acsw ' + cls + '" data-v="'+cur+'" role="group" aria-label="Switch account"><a href="my-account.html" data-sw="c" class="'+(cur==="c"?"on":"")+'" title="Customer account"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/></svg><span>Customer</span></a><a href="partner.html" data-sw="p" class="'+(cur==="p"?"on":"")+'" title="Partner dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a3 3 0 100-6 3 3 0 000 6zM6 15a3 3 0 100-6 3 3 0 000 6zM18 22a3 3 0 100-6 3 3 0 000 6zM8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg><span>Partner</span></a><i></i></div>'; }
+  function switcher() {
+    var pe = window.GTE_PE; if (!pe || (pe.status !== 'active' && pe.status !== 'paused')) return;
+    var nav = $('#subnav'), mc = $('#macc'), old = $('#pe'); if (old) old.remove();
+    if (nav && !$('.acsw', nav)) nav.insertAdjacentHTML('afterbegin', swHtml('c', 'side'));
+    if (mc && !$('.acsw.mob', mc)) mc.insertAdjacentHTML('afterbegin', swHtml('c', 'mob'));
+  }
+  document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[data-sw]'); if (a && a.closest('.acsw').dataset.v === a.dataset.sw) e.preventDefault(); else if (a) document.body.classList.add('acsw-go'); });
+  document.addEventListener('gte-partner', function () { setTimeout(switcher, 0); });
   /* ---------- wire up ---------- */
   var lastTab = null, booted = false;
   function boot() {
     var A = $('#acct'); if (!A || !$('#subnav')) return;
     if (!booted) { booted = true; document.body.classList.add('mzfx'); if (document.documentElement.classList.contains('mznc-pre')) document.body.classList.add('mznc'); net(); glow(); wipe(); chip(); setInterval(header, 20000); }
-    menu(); header(); checklist(); tools(); reveal();
+    menu(); header(); checklist(); tools(); reveal(); switcher();
     var k = tabKey(); A.dataset.tab = k; if (k !== lastTab) { if (lastTab !== null) { sweep(); var hh = $('#macc'); if (hh) setTimeout(function () { window.scrollTo({top: Math.max(0, hh.getBoundingClientRect().top + window.scrollY - 84), behavior: reduce ? 'auto' : 'smooth'}); }, 60); } lastTab = k; }
   }
   function start() {

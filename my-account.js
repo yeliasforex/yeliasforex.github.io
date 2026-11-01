@@ -261,6 +261,7 @@
   let PE;
   async function partnerEntry(host) {
     if (PE === undefined) { try { PE = (await rpc('partner_status')) || null; } catch (e) { PE = null; } }
+    window.GTE_PE = PE; document.dispatchEvent(new CustomEvent('gte-partner'));
     if (!PE || host.querySelector('#pe')) return;
     const a = document.createElement('a'); a.id = 'pe'; a.className = 'alertp'; a.href = PE.status === 'active' || PE.status === 'paused' ? 'partner.html' : 'partners.html'; a.style.textDecoration = 'none'; a.style.color = 'inherit';
     a.innerHTML = PE.status === 'active' ? '<div class="alertp-t"><b>Partner dashboard</b><span>Your link, earnings, campaigns and marketing kit.</span></div><div class="alertp-b"><span class="btn sm mint">Open</span></div>'
