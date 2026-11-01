@@ -324,3 +324,20 @@ span.pdx-hc{cursor:default}button.pdx-hc:hover{transform:translateY(-2px)}
 .pd-bn:hover{transform:translateY(-3px);border-color:var(--cyan);box-shadow:0 18px 34px -18px var(--glow)}
 .pd-bn canvas{width:100%;height:auto;max-height:230px;object-fit:contain;display:block;border-radius:10px;cursor:zoom-in;margin-bottom:8px}
 @media (max-width:999px){#pdx-pulse{display:none}}
+
+/* ===== logos and brand ===== */
+.pdk-lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:12px}
+.pdk-lt{padding:10px;border-radius:16px;border:1px solid var(--line);background:var(--glass2);display:flex;flex-direction:column;gap:3px}
+.pdk-lt b{font-size:.9rem;margin-top:6px}.pdk-lt small{color:var(--mut);font-size:.74rem;line-height:1.35}
+.pdk-lp{height:112px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line);overflow:hidden}
+.pdk-lp.dark{background:linear-gradient(135deg,#05080f,#0e1830)}
+.pdk-lp.light{background:linear-gradient(135deg,#fbfcff,#e6edf9)}
+.pdk-lp.checker{background-color:#e9edf5;background-image:linear-gradient(45deg,#cfd6e4 25%,transparent 25%,transparent 75%,#cfd6e4 75%),linear-gradient(45deg,#cfd6e4 25%,transparent 25%,transparent 75%,#cfd6e4 75%);background-size:16px 16px;background-position:0 0,8px 8px}
+.pdk-lp canvas{display:block;max-width:92%}
+.pdk-ld{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pdk-ld .pd-btn{padding:5px 10px;font-size:.74rem;border-radius:10px}
+.pdk-co{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:10px}
+.pdk-cs{font:inherit;color:var(--text);text-align:left;border:1px solid var(--line);background:var(--glass2);border-radius:14px;padding:8px;cursor:pointer;display:flex;flex-direction:column;gap:2px;transition:transform .18s,border-color .2s}
+.pdk-cs:hover{transform:translateY(-3px);border-color:var(--cyan)}
+.pdk-cs i{display:block;height:34px;border-radius:9px;border:1px solid var(--line);margin-bottom:5px}
+.pdk-cs b{font-size:.82rem}.pdk-cs small{color:var(--mut);font-family:ui-monospace,Consolas,monospace;font-size:.72rem}
