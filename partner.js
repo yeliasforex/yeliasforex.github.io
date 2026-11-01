@@ -302,6 +302,10 @@
     g.fillStyle = '#2a1d03'; g.textBaseline = 'middle'; g.fillText(text, x + size * .8, y + ph / 2 + size * .04); g.textBaseline = 'top'; return [x, y, pw, ph];
   }
   function spaced(g, text, x, y, size, px) { if (g.letterSpacing !== undefined) { g.letterSpacing = px + 'px'; g.fillText(text, x, y); g.letterSpacing = '0px'; } else g.fillText(text, x, y); }
+  function lockup(g, x, y, lg, P, word) {
+    mark(g, x, y, lg); if (!word) return lg;
+    g.fillStyle = P.h; g.font = '600 ' + lg * .5 + 'px ' + SANS; g.fillText('GoldTriEngine', x + lg * 1.28, y + (lg - lg * .5) / 2 - lg * .02); return lg * 1.28 + g.measureText('GoldTriEngine').width;
+  }
   function drawBanner(c, w, h) {
     var me = S.me, g = c.getContext('2d'), d = Number(me.discountPct) || 0, P = PAL[S.kitStyle || 'night'], link = kitLink(), url = link.replace(/^https?:\/\//, ''), fonts = ensureFonts();
     c.width = w; c.height = h; g.textBaseline = 'top'; g.textAlign = 'left';
@@ -310,30 +314,21 @@
     var wide = w / h > 2.2, tall = h / w > 1.4, offt = d ? d + '% off' : 'Live record', codeT = d ? 'CODE ' + me.code : 'MY LINK';
     var LONG = [['A gold trading robot you can ', 's'], ['watch', 'i'], [' trade.', 's']], SHORT = [['Gold EA you can ', 's'], ['watch', 'i'], [' trade.', 's']];
     if (wide) {
-      var u = h, pad = u * (h < 120 ? .17 : .14), small = w < 500, big = h >= 200, lg = u * (big ? .3 : .4);
-      if (!big) mark(g, pad, (h - lg) / 2, lg, P);
-      var tx = pad + lg + u * (big ? .16 : .2), ps = u * (big ? .15 : small ? .15 : .17), rightW = (function () { g.font = '600 ' + ps + 'px ' + SANS; return g.measureText(offt).width + ps * 1.6; })();
-      var maxW = w - tx - pad - rightW - u * .25, hs;
+      var u = h, pad = u * .15, small = w < 500, big = h >= 200, lgS = u * (big ? .2 : .25), lw = lockup(g, pad, pad, lgS, P, true);
+      var ps = u * (big ? .13 : small ? .14 : .15); g.font = '600 ' + ps + 'px ' + SANS; var pillW = g.measureText(offt).width + ps * 1.6, availW = w - pad * 2 - pillW - u * .4, hs, y0 = pad + lgS + u * (big ? .14 : .08);
       if (big) {
-        lg = u * .5; mark(g, pad, (h - lg) / 2, lg, P); tx = pad + lg + u * .22;
-        var availW = w - tx - pad - rightW - u * .35; hs = Math.min(u * .2, availW / richWidth(g, [['A gold trading robot', 's']], 100) * 100);
-        g.fillStyle = P.mono; g.font = '500 ' + u * .06 + 'px ' + MONO; spaced(g, 'GOLD EA FOR MT5 · LIVE 24/5', tx, h * .5 - hs * 1.12 - u * .1, u * .06, u * .008);
-        rich(g, LONG, tx, h * .5 - hs * 1.12 + u * .0, availW + 4, hs, hs * 1.12, P);
+        hs = Math.min(u * .17, availW / richWidth(g, [['A gold trading robot you', 's']], 100) * 100); rich(g, LONG, pad, y0, availW + 4, hs, hs * 1.12, P);
         var pb = pill(g, w - pad, h * .5 - ps * 1.9, offt, ps, P, true); g.fillStyle = P.gold; g.font = '500 ' + ps * .62 + 'px ' + MONO; if (d) { var ct = g.measureText(codeT).width; spaced(g, codeT, pb[0] + (pb[2] - ct) / 2, pb[1] + pb[3] + ps * .4, ps, ps * .05); }
         g.fillStyle = P.fine; g.font = '500 ' + ps * .55 + 'px ' + MONO; var uu = url.length < 28 ? url : 'goldtriengine.com'; g.fillText(uu, w - pad - g.measureText(uu).width, h - pad - ps * .55);
         return;
       }
-      var segs = small ? SHORT : (w > 600 ? LONG : SHORT);
-      if (small) { hs = u * .17; var hy0 = (h - hs * 2.2) / 2; rich(g, segs, tx, hy0, maxW + 2, hs, hs * 1.1, P); }
-      else { hs = Math.min(u * .27, maxW / richWidth(g, segs, 100) * 100); var hy = (h - hs * 1.14) / 2 - u * .08; rich(g, segs, tx, hy, maxW + 2, hs, hs * 1.14, P); }
-      if (!small) { g.fillStyle = P.mono; g.font = '500 ' + u * .1 + 'px ' + MONO; spaced(g, 'GOLD EA FOR MT5 · LIVE 24/5', tx, (h - hs * 1.14) / 2 - u * .08 + hs * 1.25, u * .1, u * .01); }
-      var pr = pill(g, w - pad, (h - ps * 1.9) / 2 - (d && !small ? u * .08 : 0), offt, ps, P, true);
-      if (d && !small) { g.fillStyle = P.gold; g.font = '500 ' + ps * .6 + 'px ' + MONO; var ct = g.measureText(codeT).width; spaced(g, codeT, pr[0] + (pr[2] - ct) / 2, pr[1] + pr[3] + ps * .4, ps, ps * .05); }
+      var segs = small ? SHORT : LONG; hs = Math.min(u * .24, (small ? w - pad * 2 : availW) / richWidth(g, segs, 100) * 100); rich(g, segs, pad, y0, w, hs, hs * 1.14, P);
+      pill(g, w - pad, small ? pad : (h - ps * 1.9) / 2 + (d ? -u * .06 : 0), offt, ps, P, true);
+      if (d && !small) { g.fillStyle = P.gold; g.font = '500 ' + ps * .6 + 'px ' + MONO; var ct2 = g.measureText(codeT).width; spaced(g, codeT, w - pad - pillW / 2 - ct2 / 2, (h - ps * 1.9) / 2 - u * .06 + ps * 1.9 + ps * .4, ps, ps * .05); }
       return;
     }
     var u2 = tall ? w : Math.min(w, h * .8), pd = u2 * .09, y = pd, bigF = u2 > 600, narrow = tall && w < 300;
-    var lg2 = u2 * (narrow ? .22 : .105); mark(g, pd, y, lg2, P); g.fillStyle = P.h;
-    if (!narrow) { g.font = '600 ' + u2 * .052 + 'px ' + SANS; g.fillText('GoldTriEngine', pd + lg2 * 1.3, y + (lg2 - u2 * .052) / 2 - u2 * .004); }
+    var lg2 = u2 * (narrow ? .22 : .105); lockup(g, pd, y, lg2, P, !narrow);
     y += lg2 + (narrow ? pd * .8 : u2 * .09);
     if (!narrow) { g.fillStyle = P.mono; g.font = '500 ' + u2 * .032 + 'px ' + MONO; spaced(g, 'GOLD EA FOR MT5 · LIVE 24/5', pd, y, u2 * .032, u2 * .006); y += u2 * .07; }
     var hs2 = narrow ? u2 * .135 : tall ? u2 * (bigF ? .135 : .12) : u2 * .115;
