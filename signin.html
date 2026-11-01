@@ -23,6 +23,16 @@
 <script src="pwa.js?v=20261102app8" defer></script><script src="track.js?v=20261021app5" defer></script>
 
 <style>
+/* the host robot roams the whole page: it flies, lands, walks along the bottom and talks. It never blocks clicks. */
+#siRoam{position:fixed;left:0;top:0;width:250px;height:330px;z-index:40;pointer-events:none;will-change:transform;opacity:0;transition:opacity .6s}
+#siRoam.on{opacity:1}
+#siRoam iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color-scheme:light;pointer-events:none;filter:drop-shadow(0 22px 26px rgba(0,0,0,.35))}
+.rsay{position:absolute;left:66%;top:2%;width:max-content;max-width:210px;padding:10px 14px 11px;border-radius:16px 16px 16px 4px;border:1px solid var(--line-2);background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(12px);box-shadow:0 18px 40px -18px rgba(0,0,0,.55);font-size:.8rem;line-height:1.45;color:var(--fg);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+.rsay.on{opacity:1;transform:none}
+.rsay b{display:block;font:600 .6rem/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.rsay.left{left:auto;right:66%;border-radius:16px 16px 4px 16px}
+@media (max-width:640px){#siRoam{width:170px;height:225px}.rsay{max-width:160px;font-size:.74rem}}
+@media (prefers-reduced-motion:reduce){#siRoam{display:none}}
 /* the interactive host robot */
 .si-bot{position:relative;height:440px;margin-top:34px;animation:siup .8s .5s both}
 .si-bot iframe{position:absolute;left:0;bottom:0;width:100%;height:100%;border:0;background:transparent;color-scheme:light;transform:scale(1.14);transform-origin:36% 95%;pointer-events:none;filter:drop-shadow(0 30px 40px rgba(0,0,0,.35))}
@@ -111,9 +121,9 @@
     <h1>Welcome <em>back</em>.</h1>
     <p class="lead">Sign in with a one-time email link or Google. New here? The same step creates your account.</p>
     <ul class="si-perks"><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><div><b>No password to remember</b><small>One secure link by email, or Google.</small></div></li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><div><b>Free account</b><small>Unlocks the free backtest EA.</small></div></li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><div><b>Everything in one place</b><small>License, orders, results and notifications.</small></div></li></ul>
-    <div class="si-bot" id="siBot"><iframe id="siRobot" title="GoldTriEngine host robot" loading="lazy" tabindex="-1" aria-hidden="true"></iframe><button type="button" class="si-hit" id="siHit" aria-label="Say hi to the robot"></button><div class="si-say" id="siSay" role="status" aria-live="polite"><b>Host</b><span id="siSayT"></span></div></div>
+    
   </div>
-  <div class="si-r"><div class="si-chip c1"><i></i>Live 24/5</div><div class="si-chip c2">Public record</div><div class="si-chip c3">Free account</div><div class="si-rings" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="si-r"><div class="si-rings" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="f" id="form">
     <div class="si-brand"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span><div><b>GoldTriEngine</b><small>Sign in or create your account</small></div></div>
     <label class="agree-box" id="agreeBox" for="agree"><input type="checkbox" id="agree"> <span><b>Step 1: agree to continue.</b> I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>, including that my EA results, country and profile photo may be shown on the public Proof Wall under my chosen display name (a first name or nickname by default). I can turn this off or hide any part of it any time in My account.</span></label>
@@ -126,6 +136,7 @@
     <p class="si-trust"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>Secure one-time link. No password, and we never post anything for you.</p>
   </div></div>
 </div></section>
+<div id="siRoam" aria-hidden="true"><iframe id="siRobot" title="GoldTriEngine host robot" tabindex="-1"></iframe><div class="rsay" id="rSay"><b>Host</b><span id="rSayT"></span></div></div>
 </main>
 <footer>
   <div class="wrap">
@@ -192,31 +203,83 @@
 })();
 </script>
 <script>
-/* the host robot reacts to what the visitor does on this page (it only looks, waves and talks; it never touches the form) */
+/* The host robot flies and walks all over this page, looks at your pointer and reacts to the form.
+   It only moves itself and talks; it never touches the form, and clicks pass straight through it. */
 (function () {
-  var bot = document.getElementById('siBot'), fr = document.getElementById('siRobot'); if (!bot || !fr) return;
-  var say = document.getElementById('siSay'), txt = document.getElementById('siSayT'), swT, typeT, lastMove = 0, touched = false;
-  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var roam = document.getElementById('siRoam'), fr = document.getElementById('siRobot'); if (!roam || !fr) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var say = document.getElementById('rSay'), txt = document.getElementById('rSayT'), W = 250, H = 330, FX = .41, FY = .66;     // where the feet sit inside the frame
+  var R = {x: -200, y: 200, tx: 0, ty: 0, mode: 'idle', flyAt: 0, until: 0, hold: 0, bob: 0}, last = 0, ready = false, sayT, typeT, lastLook = 0, busyUntil = 0, lastHi = 0, face = 1;
   function post(m) { try { fr.contentWindow.postMessage(m, '*'); } catch (e) {} }
-  function talk(t, fx, scene) {
-    touched = true; clearTimeout(swT); clearInterval(typeT); say.classList.add('sw');
-    swT = setTimeout(function () { say.classList.remove('sw'); if (reduce) { txt.textContent = t; } else { var i = 0; txt.textContent = ''; typeT = setInterval(function () { i += 2; txt.textContent = t.slice(0, i); if (i >= t.length) clearInterval(typeT); }, 18); } }, 220);
-    if (scene) post({scene: scene}); if (fx) post({fx: fx}); post({talk: Math.min(6000, 1500 + t.length * 45)});
+  function size() { var r = roam.getBoundingClientRect(); W = roam.offsetWidth; H = roam.offsetHeight; }
+  function place() { roam.style.transform = 'translate3d(' + Math.round(R.x - FX * W) + 'px,' + Math.round(R.y - FY * H + R.bob) + 'px,0)'; }
+  function floorY() { return innerHeight - 18; }
+  function rand(a, b) { return a + Math.random() * (b - a); }
+  function talk(t, ms) {
+    clearTimeout(sayT); clearInterval(typeT); var cd = card(); say.classList.toggle('left', cd ? R.x > cd.left - 260 : R.x > innerWidth * .62); say.classList.add('on'); var i = 0; txt.textContent = '';
+    typeT = setInterval(function () { i += 2; txt.textContent = t.slice(0, i); if (i >= t.length) clearInterval(typeT); }, 18);
+    post({talk: Math.min(6000, 1500 + t.length * 45)}); sayT = setTimeout(function () { say.classList.remove('on'); }, ms || 3800 + t.length * 30);
   }
-  var loaded = false;
-  function load() { if (loaded) return; loaded = true; fr.src = 'robot3d.html?scene=happy&full=1'; fr.onload = function () { setTimeout(function () { if (!touched) talk('Hi! I am the host of the GoldTriEngine live stream. Tick the box, then pick Google or email.', 'wave', 'happy'); }, 900); }; }
-  if ('IntersectionObserver' in window) { new IntersectionObserver(function (es, o) { if (es[0].isIntersecting) { load(); o.disconnect(); } }, {rootMargin: '200px'}).observe(bot); } else load();
-  /* the head follows the pointer */
-  addEventListener('pointermove', function (e) { var n = performance.now(); if (n - lastMove < 90) return; lastMove = n; var r = bot.getBoundingClientRect(), cx = r.left + r.width * .42, cy = r.top + r.height * .3; post({look: [Math.max(-1, Math.min(1, (e.clientX - cx) / (innerWidth * .45))), Math.max(-1, Math.min(1, (e.clientY - cy) / (innerHeight * .5)))]}); }, {passive: true});
-  /* tap the robot */
-  var HI = ['Hi! You found me. I read every trade out loud on the live stream.', 'Fun fact: I never hide a losing trade.', 'No password here. Just a one-time link, or Google.', 'Trading gold can lose money. I will always say so.'], hi = 0;
-  document.getElementById('siHit').onclick = function () { talk(HI[hi++ % HI.length], hi % 2 ? 'wave' : 'thumbs', 'happy'); };
-  /* react to the form */
-  var agree = document.getElementById('agree'), email = document.getElementById('email'), out = document.getElementById('out');
-  if (agree) agree.addEventListener('change', function () { if (agree.checked) talk('Thank you. Now choose Google, or type your email below.', 'thumbs', 'happy'); else talk('No problem. Tick the box when you are ready.', null, 'rest'); });
-  if (email) email.addEventListener('focus', function () { talk('Type your email and I will send you a one-time link. No password.', 'point', 'happy'); }, {once: true});
-  if (out) new MutationObserver(function () { var m = out.querySelector('.msg'); if (!m) return; if (m.classList.contains('err')) talk(m.textContent, 'concerned', 'concerned'); else talk('Link sent! Open it on this device and you are in.', 'cheer', 'happy'); }).observe(out, {childList: true});
-  var box = document.getElementById('agreeBox'); if (box) new MutationObserver(function () { if (box.classList.contains('need')) talk('One quick step first: tick the box above.', 'point', 'happy'); }).observe(box, {attributes: true, attributeFilter: ['class']});
+  /* what is allowed to be covered: while the visitor types or ticks, the robot keeps clear of the sign-in card */
+  function card() { var c = document.getElementById('form'); return c ? c.getBoundingClientRect() : null; }
+  function typing() { var a = document.activeElement; return a && (a.id === 'email' || a.id === 'agree'); }
+  function fly(x, y, then) {
+    R.tx = Math.max(40, Math.min(innerWidth - 40, x)); R.ty = Math.max(H * FY + 10, Math.min(innerHeight - 8, y)); R.mode = 'fly'; R.then = then || null; R.flyAt = performance.now();
+    post({pose: 'front', fx: 'fly'}); face = R.tx >= R.x ? 1 : -1;
+  }
+  function walk(x, then) {
+    R.tx = Math.max(40, Math.min(innerWidth - 40, x)); R.ty = R.y; R.mode = 'walk'; R.then = then || null; var dx = R.tx - R.x; post({pose: dx >= 0 ? 'side' : 'side2'});
+  }
+  function rest(ms, gesture, line) {
+    R.mode = 'idle'; post({fxStop: true}); setTimeout(function () { post({pose: 'rest'}); if (gesture) post({fx: gesture}); }, 120); R.hold = performance.now() + (ms || 1800);
+    if (line) setTimeout(function () { talk(line); }, 500);
+  }
+  var LINES = ['I read every trade out loud on the live stream.', 'I never hide a losing trade.', 'No password here. Just a one-time link, or Google.', 'Trading gold can lose money. I will always say so.', 'Need a hand? Tick the box, then pick Google or email.', 'I can fly. I can also walk. Mostly I fly.'], li = 0, GEST = ['wave', 'thumbs', 'idea', 'point', 'cheer'];
+  function next() {
+    var now = performance.now(); if (document.hidden) { R.hold = now + 1500; return; }
+    var vw = innerWidth, vh = innerHeight, c = card(), keep = typing() || now < busyUntil, tries = 0, x, y;
+    var r = Math.random();
+    if (R.y < floorY() - 6 && r < .55) { x = rand(60, vw - 60); fly(x, floorY(), function () { walk(R.x + (Math.random() < .5 ? -1 : 1) * rand(120, 360), function () { rest(rand(900, 2200)); }); }); return; }
+    do { x = rand(60, vw - 60); y = rand(vh * .28, vh * .82); tries++; } while (keep && c && x > c.left - 70 && x < c.right + 70 && y > c.top - 40 && y < c.bottom + 80 && tries < 14);
+    fly(x, y, function () { var g = Math.random() < .55 ? GEST[Math.floor(Math.random() * GEST.length)] : null, line = Math.random() < .5 ? LINES[li++ % LINES.length] : null; rest(rand(1600, 3600), g, line); });
+  }
+  function frame(t) {
+    var dt = Math.min(.05, (t - last) / 1000 || .016); last = t;
+    if (ready) {
+      if (R.mode === 'idle') { R.bob += (Math.sin(t / 700) * 3 - R.bob) * Math.min(1, dt * 4); if (performance.now() > R.hold) next(); }
+      else {
+        var dx = R.tx - R.x, dy = R.ty - R.y, d = Math.hypot(dx, dy), sp = R.mode === 'fly' ? Math.max(120, Math.min(300, d * 1.1 + 90)) : 85;
+        if (d < 5) { R.x = R.tx; R.y = R.ty; var th = R.then; R.then = null; R.mode = 'idle'; R.bob = 0; if (th) th(); else rest(1200); }
+        else { var st = Math.min(d, sp * dt); R.x += dx / d * st; R.y += dy / d * st; if (R.mode === 'fly') { R.bob = Math.sin(t / 260) * 5; if (performance.now() - R.flyAt > 4300) { R.flyAt = performance.now(); post({fx: 'fly'}); } } }
+      }
+      place();
+    }
+    requestAnimationFrame(frame);
+  }
+  /* pointer: the head follows it, and a wave if it comes close */
+  addEventListener('pointermove', function (e) {
+    var n = performance.now(); if (n - lastLook < 90 || !ready) return; lastLook = n;
+    var cx = R.x, cy = R.y - H * .42; post({look: [Math.max(-1, Math.min(1, (e.clientX - cx) / (innerWidth * .45))), Math.max(-1, Math.min(1, (e.clientY - cy) / (innerHeight * .5)))]});
+    if (Math.hypot(e.clientX - cx, e.clientY - cy) < 110 && n - lastHi > 14000 && R.mode === 'idle') { lastHi = n; post({fx: 'wave'}); talk('Hi there!', 2200); }
+  }, {passive: true});
+  /* the form */
+  function near(el, gesture, line, dx) {
+    var r = el.getBoundingClientRect(), tx = r.left - (dx || 140), ty = r.top + r.height / 2 + H * FY * .55; if (tx < 70) { tx = r.right + (dx || 140); }
+    busyUntil = performance.now() + 9000; fly(tx, Math.min(innerHeight - 10, Math.max(H * FY + 10, ty)), function () { rest(5000, gesture, line); });
+  }
+  var agree = document.getElementById('agree'), email = document.getElementById('email'), out = document.getElementById('out'), box = document.getElementById('agreeBox');
+  if (agree) agree.addEventListener('change', function () { if (agree.checked) near(document.getElementById('google'), 'thumbs', 'Thank you. Now choose Google, or type your email.'); });
+  if (email) email.addEventListener('focus', function () { near(email, 'point', 'Type your email and I will send you a one-time link.'); }, {once: true});
+  if (box) new MutationObserver(function () { if (box.classList.contains('need')) near(box, 'point', 'One quick step first: tick the box.'); }).observe(box, {attributes: true, attributeFilter: ['class']});
+  if (out) new MutationObserver(function () { var m = out.querySelector('.msg'); if (!m) return; if (m.classList.contains('err')) near(out, 'concerned', m.textContent.slice(0, 80)); else near(out, 'cheer', 'Link sent! Open it on this device and you are in.'); }).observe(out, {childList: true});
+  /* start */
+  size(); addEventListener('resize', size);
+  document.addEventListener('visibilitychange', function () { post({paused: document.hidden}); });
+  setTimeout(function () {
+    fr.onload = function () { setTimeout(function () { ready = true; R.x = -120; R.y = floorY() - 220; roam.classList.add('on'); fly(innerWidth * .3, innerHeight * .55, function () { rest(2400, 'wave', 'Hi! I am the host of the GoldTriEngine live stream. Tick the box, then pick Google or email.'); }); }, 700); };
+    fr.src = 'robot3d.html?scene=happy&full=1';
+  }, 800);
+  requestAnimationFrame(frame);
 })();
 </script>
 </body>
