@@ -265,47 +265,120 @@
     ar: { n: 'العربية', risk: 'التداول في الذهب قد يسبب خسائر.', disc: 'أحصل على عمولة إذا اشتريت عبر رابطي.', p: ['خبير ذهب آلي على MT5 وسجله المباشر متاح للجميع. شاهد: {link}\n{off}', 'معظم خبراء الذهب يخفون نتائجهم. هذا يعرض حسابه المباشر على يوتيوب. احكم بنفسك: {link}', 'ثلاثة محركات وحساب MT5 واحد ولا حاجة للتداول يدويا. مساعدة الإعداد مشمولة. {link}\n{off}', 'تفكر في خبير ذهب آلي؟ شاهد السجل المباشر أولا ثم قرر: {link}', 'قبل شراء أي خبير اطلب حسابا حيا لا اختبارا تاريخيا فقط. GoldTriEngine يعرض الاثنين: {link}'], offT: 'خصم {disc}% عبر رابطي أو الكود {code}.' }
   };
   var SIZES = [['Leaderboard', 728, 90], ['Medium rectangle', 300, 250], ['Skyscraper', 160, 600], ['Billboard', 970, 250], ['Mobile banner', 320, 100], ['Square post', 1080, 1080], ['Story or reel cover', 1080, 1920], ['YouTube thumbnail', 1280, 720]];
+  var PAL = {
+    brand: { n: 'Brand', bg: [[0, '#0a1a5c'], [.55, '#1747C8'], [1, '#0d2c8f']], g1: 'rgba(63,226,155,.35)', g2: 'rgba(120,160,255,.35)', grid: 'rgba(255,255,255,.06)', h: '#ffffff', sub: '#d3dcff', acc: '#3FE29B', accT: '#04230f', gold: '#FFE9A8', n1: '#3FE29B', n2: '#ffffff', line: 'rgba(255,255,255,.45)' },
+    night: { n: 'Night', bg: [[0, '#060b18'], [.55, '#0d2147'], [1, '#0a4f7a']], g1: 'rgba(60,210,255,.40)', g2: 'rgba(245,193,101,.30)', grid: 'rgba(255,255,255,.045)', h: '#ffffff', sub: '#b9c6da', acc: '#3CD2FF', accT: '#04111f', gold: '#FFE29A', n1: '#3CD2FF', n2: '#F5C165', line: 'rgba(160,220,255,.55)' },
+    gold: { n: 'Gold', bg: [[0, '#0b0905'], [.6, '#1d1708'], [1, '#3a2a08']], g1: 'rgba(245,193,101,.38)', g2: 'rgba(255,233,168,.18)', grid: 'rgba(255,225,150,.05)', h: '#FFF4D6', sub: '#d9c9a0', acc: '#F5C165', accT: '#1a1203', gold: '#FFE29A', n1: '#F5C165', n2: '#FFE9A8', line: 'rgba(255,225,150,.5)' },
+    day: { n: 'Day', bg: [[0, '#f7f9fd'], [.6, '#e8f0fb'], [1, '#d5e6f7']], g1: 'rgba(60,170,230,.28)', g2: 'rgba(245,193,101,.30)', grid: 'rgba(20,50,90,.06)', h: '#0d1b33', sub: '#4a5b75', acc: '#0a8fc2', accT: '#ffffff', gold: '#9a6200', n1: '#0a8fc2', n2: '#d99a1f', line: 'rgba(10,100,160,.45)' }
+  };
+  var kitLink = function () { return linkOf(S.kitLink || ''); };
+  function ensureQr(cb) { if (window.qrcode) return cb && cb(); if (S._qrLoading) return; S._qrLoading = true; var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = function () { if (cb) cb(); }; document.head.appendChild(s); }
+  function glowAt(g, x, y, r, col) { var a = g.createRadialGradient(x, y, 0, x, y, r); a.addColorStop(0, col); a.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = a; g.fillRect(0, 0, 4000, 4000); }
+  function wrapY(g, t, x, y, mw, lh) { var words = t.split(' '), line = ''; words.forEach(function (w) { var test = line + w + ' '; if (g.measureText(test).width > mw && line) { g.fillText(line.trim(), x, y); line = w + ' '; y += lh; } else line = test; }); g.fillText(line.trim(), x, y); return y + lh; }
+  function fitFont(g, text, wt, size, mw, F) { g.font = wt + ' ' + size + 'px ' + F; var m = g.measureText(text).width; return m > mw ? size * mw / m : size; }
+  var LOGO = new Image(); LOGO.onload = function () { if (S.me && $('#pd-kit canvas')) redrawBanners(); }; LOGO.src = 'icon-512.png';
+  function mark(g, x, y, s, P) {
+    if (LOGO.complete && LOGO.naturalWidth) { g.save(); g.beginPath(); g.moveTo(x + s * .24, y); g.arcTo(x + s, y, x + s, y + s, s * .24); g.arcTo(x + s, y + s, x, y + s, s * .24); g.arcTo(x, y + s, x, y, s * .24); g.arcTo(x, y, x + s, y, s * .24); g.closePath(); g.clip(); g.drawImage(LOGO, x, y, s, s); g.restore(); return; }
+    g.fillStyle = '#1747C8'; rr(g, x, y, s, s, s * .24);
+  }
+  function tri(g, cx, cy, r, P) {
+    var gl = g.createRadialGradient(cx, cy, r * .2, cx, cy, r * 1.5); gl.addColorStop(0, P.n1); gl.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = .45; g.fillStyle = gl; g.beginPath(); g.arc(cx, cy, r * 1.5, 0, 6.2832); g.fill(); g.globalAlpha = 1;
+    g.lineWidth = Math.max(1, r * .03); g.strokeStyle = P.line; g.beginPath(); g.arc(cx, cy, r * 1.22, 0, 6.2832); g.stroke(); g.globalAlpha = .45; g.beginPath(); g.arc(cx, cy, r * 1.5, 0, 6.2832); g.stroke(); g.globalAlpha = 1;
+    g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = r * .35; g.shadowOffsetY = r * .12; mark(g, cx - r * .85, cy - r * .85, r * 1.7, P); g.shadowColor = 'transparent'; g.shadowBlur = 0; g.shadowOffsetY = 0;
+  }
+  function qrTile(g, text, x, y, s) {
+    if (!window.qrcode) return false;
+    try { var q = window.qrcode(0, 'M'); q.addData(text); q.make(); var n = q.getModuleCount(), pad = s * .08, m = (s - pad * 2) / n;
+      g.fillStyle = '#fff'; rr(g, x, y, s, s, s * .08); g.fillStyle = '#0b1424'; for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(x + pad + c * m, y + pad + r * m, Math.ceil(m), Math.ceil(m)); return true; } catch (e) { return false; }
+  }
   function drawBanner(c, w, h) {
-    var me = S.me, g = c.getContext('2d'), d = Number(me.discountPct) || 0; c.width = w; c.height = h;
-    var bgc = g.createLinearGradient(0, 0, w, h); bgc.addColorStop(0, '#0f1b34'); bgc.addColorStop(.6, '#17315f'); bgc.addColorStop(1, '#0c5f8c'); g.fillStyle = bgc; g.fillRect(0, 0, w, h);
-    var r1 = g.createRadialGradient(w * .9, 0, 0, w * .9, 0, Math.max(w, h) * .7); r1.addColorStop(0, 'rgba(60,210,255,.45)'); r1.addColorStop(1, 'transparent'); g.fillStyle = r1; g.fillRect(0, 0, w, h);
-    var r2 = g.createRadialGradient(0, h, 0, 0, h, Math.max(w, h) * .6); r2.addColorStop(0, 'rgba(245,193,101,.35)'); r2.addColorStop(1, 'transparent'); g.fillStyle = r2; g.fillRect(0, 0, w, h);
-    var wide = w / h > 2.2, u = wide ? h : Math.min(w, h * .8), pad = u * .08, F = 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
-    g.textBaseline = 'top'; g.fillStyle = '#FFE9A8'; g.font = '700 ' + u * (wide ? .2 : .075) + 'px ' + F;
-    var title = 'GoldTriEngine'; var head = 'Automatic gold EA for MT5';
+    var me = S.me, g = c.getContext('2d'), d = Number(me.discountPct) || 0, P = PAL[S.kitStyle || 'brand'], link = kitLink(), url = link.replace(/^https?:\/\//, '');
+    c.width = w; c.height = h; g.textBaseline = 'top'; g.textAlign = 'left';
+    var F = 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif', bg = g.createLinearGradient(0, 0, w, h); P.bg.forEach(function (s) { bg.addColorStop(s[0], s[1]); }); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    glowAt(g, w * .92, h * .02, Math.max(w, h) * .75, P.g1); glowAt(g, w * .04, h * .98, Math.max(w, h) * .6, P.g2);
+    var st = Math.max(16, Math.min(w, h) / 12); g.strokeStyle = P.grid; g.lineWidth = 1; for (var gx = 0; gx < w; gx += st) { g.beginPath(); g.moveTo(gx, 0); g.lineTo(gx, h); g.stroke(); } for (var gy = 0; gy < h; gy += st) { g.beginPath(); g.moveTo(0, gy); g.lineTo(w, gy); g.stroke(); }
+    var wide = w / h > 2.2, tall = h / w > 1.4, offt = d ? d + '% OFF' : 'LIVE RECORD', codeT = d ? 'Code ' + me.code : 'Use my link';
+    function chip(x, y, u, size) { g.font = '800 ' + size + 'px ' + F; var tw = g.measureText(offt).width + size * 1.1, hh = size * 1.7; g.fillStyle = P.acc; rr(g, x, y, tw, hh, hh / 2); g.fillStyle = P.accT; g.fillText(offt, x + size * .55, y + size * .36); return [tw, hh]; }
     if (wide) {
-      g.fillText(title, pad, pad); g.fillStyle = '#fff'; g.font = '700 ' + u * .28 + 'px ' + F; g.fillText(head, pad, pad + u * .3);
-      var offt = d ? d + '% OFF' : 'Live record'; g.font = '800 ' + u * .26 + 'px ' + F; var tw = g.measureText(offt).width + u * .4, bx = w - tw - pad, by = pad; g.fillStyle = '#3CD2FF'; rr(g, bx, by, tw, u * .42, u * .21); g.fillStyle = '#07121f'; g.fillText(offt, bx + u * .2, by + u * .08);
-      g.fillStyle = '#cfd8e6'; g.font = '500 ' + u * .15 + 'px ' + F; g.fillText((d ? 'Code ' + me.code + '  ' : '') + 'goldtriengine.com/p/?ref=' + me.code, pad, h - pad - u * .16);
-    } else {
-      var y = h * .1; g.fillText(title, pad, y); y += u * .13; g.fillStyle = '#fff'; g.font = '700 ' + u * .095 + 'px ' + F; wrap(g, head + ' with a public live record', pad, y, w - pad * 2, u * .115);
-      var offt2 = d ? d + '% OFF' : 'Live record', by2 = h * .56; g.font = '800 ' + u * .16 + 'px ' + F; var tw2 = g.measureText(offt2).width + u * .3; g.fillStyle = '#3CD2FF'; rr(g, pad, by2, tw2, u * .24, u * .12); g.fillStyle = '#07121f'; g.fillText(offt2, pad + u * .15, by2 + u * .04);
-      g.fillStyle = '#FFE9A8'; g.font = '700 ' + u * .075 + 'px ' + F; g.fillText(d ? 'Code ' + me.code : 'Use my link', pad, by2 + u * .31);
-      g.fillStyle = '#cfd8e6'; g.font = '500 ' + u * .05 + 'px ' + F; wrap(g, 'goldtriengine.com/p/?ref=' + me.code, pad, h - pad - u * .08, w - pad * 2, u * .06);
-      g.fillStyle = 'rgba(207,216,230,.8)'; g.font = '400 ' + u * .036 + 'px ' + F; g.fillText('Trading gold can lose money. I earn a commission.', pad, h - pad * .9 - u * .0);
+      var u = h, pad = u * .12, small = w < 500, big = w > 900, mk = u * .2, f1 = u * .13;
+      mark(g, pad, pad, mk, P); g.fillStyle = P.gold; g.font = '800 ' + f1 + 'px ' + F; if (g.letterSpacing !== undefined) g.letterSpacing = (f1 * .12) + 'px'; g.fillText('GOLDTRIENGINE', pad + mk * 1.35, pad + (mk - f1) / 2); if (g.letterSpacing !== undefined) g.letterSpacing = '0px';
+      var triW = small ? 0 : u * (big ? 1.05 : 1.25), cs = u * (small ? .13 : big ? .14 : .17), hh = cs * 1.7; g.font = '800 ' + cs + 'px ' + F; var chW = g.measureText(offt).width + cs * 1.1, chX = small ? w - pad - chW : w - pad - triW - chW - u * .15, chY = small ? pad : pad + u * .04;
+      g.fillStyle = P.acc; rr(g, chX, chY, chW, hh, hh / 2); g.fillStyle = P.accT; g.font = '800 ' + cs + 'px ' + F; g.fillText(offt, chX + cs * .55, chY + cs * .36);
+      if (!small) { g.fillStyle = P.gold; g.font = '700 ' + cs * .9 + 'px ' + F; g.fillText(codeT, chX, chY + hh + cs * .3); }
+      var maxW = small ? w - pad * 2 : chX - pad - u * .2, H = 'Automatic gold EA for MT5', hy = pad + u * .34, hs, hEnd;
+      g.fillStyle = P.h;
+      if (big) { hs = Math.min(u * .21, fitFont(g, 'Automatic gold EA', '800', u * .21, maxW, F)); g.font = '800 ' + hs + 'px ' + F; g.fillText('Automatic gold EA', pad, pad + u * .3); g.fillText('for MT5', pad, pad + u * .3 + hs * 1.12); hEnd = pad + u * .3 + hs * 2.2;
+        g.fillStyle = P.sub; g.font = '500 ' + u * .075 + 'px ' + F; g.fillText('Public live record', chX, chY + hh + cs * 1.55); }
+      else { hs = fitFont(g, H, '800', u * .3, maxW, F); g.font = '800 ' + hs + 'px ' + F; g.fillText(H, pad, hy); hEnd = hy + hs * 1.1; }
+      var uy = h - pad - u * .16;
+      if (!big && uy >= hEnd) { g.fillStyle = P.sub; g.font = '500 ' + u * .14 + 'px ' + F; g.fillText(url.length * u * .075 < maxW ? url : 'goldtriengine.com', pad, uy); }
+      if (!small) tri(g, w - pad - u * (big ? .5 : .62), h / 2, u * (big ? .27 : .3), P);
+      return;
     }
+    var u2 = tall ? w : Math.min(w, h * .8), pd = u2 * .075, y = pd, big = u2 > 600;
+    mark(g, pd, y, u2 * .1, P); g.fillStyle = P.gold; var f2 = u2 * (tall && w < 300 ? .075 : .05); g.font = '800 ' + f2 + 'px ' + F; if (g.letterSpacing !== undefined) g.letterSpacing = (f2 * .12) + 'px'; g.fillText('GOLDTRIENGINE', pd + u2 * .13, y + (u2 * .1 - f2) / 2); if (g.letterSpacing !== undefined) g.letterSpacing = '0px';
+    y += u2 * .1 + pd;
+    if (tall) { tri(g, w / 2, y + u2 * (big ? .38 : .3), u2 * (big ? .26 : .24), P); y += u2 * (big ? .85 : .72); }
+    else tri(g, w - pd - u2 * .2, pd + u2 * .2, u2 * .17, P);
+    var hs2 = tall ? u2 * (big ? .125 : .105) : u2 * .105, mw = tall ? w - pd * 2 : w * .6;
+    g.fillStyle = P.h; g.font = '800 ' + hs2 + 'px ' + F; y = wrapY(g, 'Automatic gold EA for MT5', pd, tall ? y : y + u2 * .02, mw, hs2 * 1.12) + u2 * .02;
+    g.fillStyle = P.sub; g.font = '500 ' + u2 * (tall && !big ? .075 : .045) + 'px ' + F; y = wrapY(g, 'A public live record you can check', pd, y, w - pd * 2 - (tall ? 0 : u2 * .3), u2 * (tall && !big ? .09 : .058)) + u2 * .035;
+    var cs3 = u2 * (tall && !big ? .08 : .055), cr = chip(pd, y, u2, cs3); g.fillStyle = P.gold; g.font = '700 ' + cs3 * .95 + 'px ' + F; if (!tall || big) g.fillText(codeT, pd + cr[0] + cs3 * .7, y + cr[1] * .2); else g.fillText(codeT, pd, y + cr[1] + cs3 * .4);
+    var fu = u2 * (tall && !big ? .06 : .04), bottom = h - pd;
+    g.fillStyle = 'rgba(' + (S.kitStyle === 'day' ? '40,55,80' : '200,215,235') + ',.7)'; g.font = '400 ' + u2 * (tall && !big ? .045 : .027) + 'px ' + F; var dh = u2 * (tall && !big ? .05 : .03);
+    wrapY(g, 'Trading gold can lose money. I earn a commission.', pd, bottom - dh * (tall && !big ? 2.2 : 1), w - pd * 2, dh * 1.1);
+    g.fillStyle = P.sub; g.font = '600 ' + fu + 'px ' + F; var uy = bottom - dh * (tall && !big ? 2.2 : 1) - fu * 1.5; if (g.measureText(url).width < w - pd * 2 - (big ? u2 * .3 : 0)) g.fillText(url, pd, uy); else g.fillText('goldtriengine.com', pd, uy);
+    if (w >= 1000) { var qs = u2 * (tall ? .3 : .24); if (!qrTile(g, link, w - pd - qs, h - pd - qs, qs)) ensureQr(function () { redrawBanners(); }); }
   }
   function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); g.fill(); }
   function wrap(g, t, x, y, mw, lh) { var words = t.split(' '), line = ''; words.forEach(function (w) { var test = line + w + ' '; if (g.measureText(test).width > mw && line) { g.fillText(line, x, y); line = w + ' '; y += lh; } else line = test; }); g.fillText(line, x, y); }
+  var PLAT = [
+    ['YouTube', 7, 'Put the link in the first line of the description, then pin a comment with it.'],
+    ['Instagram', 5, 'Post the square in the feed. For stories use the story cover. Put your landing page in your bio.'],
+    ['TikTok', 6, 'Use the cover on your video and put your landing page in your bio.'],
+    ['Telegram', 5, 'Post the square with the caption and pin it in your channel.'],
+    ['Facebook', 5, 'Post the square with the caption. Add the link in the first comment as well.'],
+    ['X', 3, 'Use the wide banner. Keep the caption short and put the link at the end.'],
+    ['WhatsApp', 6, 'Share the cover as a status and send the link in your groups.']
+  ];
+  function redrawBanners() { $$('#pd-kit canvas[data-i]').forEach(function (c) { var s = SIZES[+c.dataset.i]; drawBanner(c, s[1], s[2]); }); drawQuick(); }
+  function drawQuick() { var c = $('#pd-qpv'); if (!c) return; var s = SIZES[+c.dataset.i]; drawBanner(c, s[1], s[2]); }
+  function bannerFile(i) { var s = SIZES[i], cv = document.createElement('canvas'); drawBanner(cv, s[1], s[2]); var a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'goldtriengine-' + s[0].toLowerCase().replace(/[^a-z]+/g, '-') + '-' + S.kitStyle + '-' + S.me.code + '.png'; document.body.appendChild(a); a.click(); a.remove(); toast('Downloaded'); api('partner_kit_log', { p_item: s[0] + ' ' + S.kitStyle }).catch(function () {}); }
   function renderKit() {
-    var me = S.me, d = Number(me.discountPct) || 0, lang = S.lang || 'en', L = CAPS[lang], link = linkOf(), el = $('#pd-kit');
+    var me = S.me, d = Number(me.discountPct) || 0, lang = S.lang || 'en', L = CAPS[lang], link = kitLink(), el = $('#pd-kit'); S.kitStyle = S.kitStyle || 'brand'; S.qp = S.qp == null ? 0 : S.qp; S.qdone = S.qdone || {};
     var fillT = function (t) { return t.replace(/\{link\}/g, link).replace(/\{code\}/g, me.code).replace(/\{disc\}/g, d).replace(/\{off\}/g, d ? L.offT.replace(/\{code\}/g, me.code).replace(/\{disc\}/g, d) : ''); };
     var caps = L.p.map(function (t) { return fillT(t).trim() + '\n' + L.risk + ' ' + L.disc; });
-    el.innerHTML = '<div class="pd-card"><h3>Your personal landing page</h3><div class="pd-help">Put this in your bio. It shows your name and your fan discount, and tracks your sales.</div><div class="pd-link" id="pd-k-lk" role="button" tabindex="0">' + esc(link) + '</div><div class="pd-row" style="margin-top:10px;gap:8px"><button class="pd-btn ghost" id="pd-k-c">Copy</button><a class="pd-btn ghost" href="' + esc(link) + '" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Preview</a><button class="pd-btn ghost" id="pd-k-q">QR</button></div></div>'
-      + '<div class="pd-card" style="margin-top:12px"><h3>Banners and covers</h3><div class="pd-help">Made with your code' + (d ? ' and your ' + d + '% fan discount' : '') + '. Tap one to download it as a PNG.</div><div class="pd-banners">' + SIZES.map(function (s, i) { return '<div class="pd-bn"><canvas data-i="' + i + '"></canvas><div class="pd-row"><span style="font-size:.82rem"><b>' + s[0] + '</b><br><span class="pd-help" style="margin:0">' + s[1] + ' x ' + s[2] + '</span></span><button class="pd-btn ghost" data-dl="' + i + '" style="padding:6px 12px;font-size:.8rem">Download</button></div></div>'; }).join('') + '</div></div>'
+    var camps = (S.camps || []).filter(function (c) { return c.slug; }), pl = PLAT[S.qp];
+    el.innerHTML = '<div class="pd-card"><div class="pd-row"><h3>Your link</h3>' + (camps.length ? '<label class="pdk-sel">Link for <select id="pd-k-camp"><option value="">Main link</option>' + camps.map(function (c) { return '<option value="' + esc(c.slug) + '"' + (c.slug === S.kitLink ? ' selected' : '') + '>' + esc(c.label || c.slug) + '</option>'; }).join('') + '</select></label>' : '') + '</div><div class="pd-help">Put this in your bio. It shows your name and your fan discount, and tracks your sales. Banners, QR and captions below use the link chosen here.</div><div class="pd-link" id="pd-k-lk" role="button" tabindex="0">' + esc(link) + '</div><div class="pd-row" style="margin-top:10px;gap:8px"><button class="pd-btn ghost" id="pd-k-c">Copy</button><a class="pd-btn ghost" href="' + esc(link) + '" target="_blank" rel="noopener noreferrer" style="text-decoration:none">Preview</a><button class="pd-btn ghost" id="pd-k-q">QR</button></div></div>'
+      + '<div class="pd-card pdk-rules" style="margin-top:12px"><h3>Say this, never this</h3><div class="pd-warn"><b>Always say:</b> "I earn a commission if you buy through my link." and "Trading gold can lose money."<br><b>Never say:</b> guaranteed profit, risk-free, "you will earn", or show results that are not the real live record.</div><div class="pd-help" style="margin-top:8px">Every caption and banner below already includes the required lines. Breaking the rules can pause your partner account. See the fair play rules on the <a href="partners.html#apply">Partners page</a>.</div></div>'
+      + '<div class="pd-card pdk-qp" style="margin-top:12px"><div class="pd-row"><h3>Post in 30 seconds</h3><span class="pd-pill c">pick where you post</span></div><div class="pdk-pl" id="pd-pl2" role="tablist">' + PLAT.map(function (p, i) { return '<button type="button" role="tab" class="' + (i === S.qp ? 'on' : '') + '" data-p="' + i + '">' + p[0] + '</button>'; }).join('') + '</div>'
+      + '<div class="pdk-qb"><div class="pdk-pv"><canvas id="pd-qpv" data-i="' + pl[1] + '"></canvas><small>' + SIZES[pl[1]][0] + ' &middot; ' + SIZES[pl[1]][1] + ' x ' + SIZES[pl[1]][2] + '</small></div><div class="pdk-st">'
+      + '<button type="button" class="pdk-s' + (S.qdone.a ? ' done' : '') + '" id="pd-qa"><i>' + (S.qdone.a ? '&#10003;' : '1') + '</i><span><b>Download the banner</b><small>PNG, made with your code</small></span></button>'
+      + '<button type="button" class="pdk-s' + (S.qdone.b ? ' done' : '') + '" id="pd-qb"><i>' + (S.qdone.b ? '&#10003;' : '2') + '</i><span><b>Copy the caption</b><small>' + esc(CAPS[lang].n) + ', link and required lines included</small></span></button>'
+      + '<button type="button" class="pdk-s' + (S.qdone.c ? ' done' : '') + '" id="pd-qc"><i>' + (S.qdone.c ? '&#10003;' : '3') + '</i><span><b>Share or copy the link</b><small>Opens your phone share sheet when available</small></span></button>'
+      + '<div class="pdk-tip"><b>Tip for ' + pl[0] + '</b>' + esc(pl[2]) + '</div></div></div></div>'
+      + '<div class="pd-card" style="margin-top:12px"><div class="pd-row"><h3>Banners and covers</h3><div class="pd-seg" id="pd-ks" role="group" aria-label="Banner style">' + Object.keys(PAL).map(function (k) { return '<button data-st="' + k + '" class="' + (k === S.kitStyle ? 'on' : '') + '">' + PAL[k].n + '</button>'; }).join('') + '</div></div><div class="pd-help">Made with your code' + (d ? ' and your ' + d + '% fan discount' : '') + '. Big sizes include a scannable QR code. Tap a banner to enlarge it.</div><div class="pd-banners">' + SIZES.map(function (s, i) { return '<div class="pd-bn"><canvas data-i="' + i + '" class="pd-click" role="button" tabindex="0" aria-label="Enlarge ' + s[0] + '"></canvas><div class="pd-row"><span style="font-size:.82rem"><b>' + s[0] + '</b><br><span class="pd-help" style="margin:0">' + s[1] + ' x ' + s[2] + '</span></span><button class="pd-btn ghost" data-dl="' + i + '" style="padding:6px 12px;font-size:.8rem">Download</button></div></div>'; }).join('') + '</div></div>'
       + '<div class="pd-card" style="margin-top:12px"><h3>Ready-to-post captions</h3><div class="pd-help">Tap a caption to copy it. Your link, code and discount are filled in. Have a native speaker check the wording before you post.</div><div class="pd-seg2" id="pd-lang">' + Object.keys(CAPS).map(function (k) { return '<button class="pd-btn ghost ' + (k === lang ? 'pd-on' : '') + '" data-l="' + k + '" style="padding:6px 14px;font-size:.82rem">' + CAPS[k].n + '</button>'; }).join('') + '</div><div id="pd-caps">' + caps.map(function (c, i) { return '<div class="pd-cap" data-c="' + i + '" role="button" tabindex="0" dir="auto">' + esc(c) + '</div>'; }).join('') + '</div></div>'
       + '<div class="pd-grid pd-g2" style="margin-top:12px"><div class="pd-card"><h3>Short video ideas</h3><div class="pd-help">30 seconds each. Tap one for the full script.</div>' + [['Is this EA real?', 'Show the live account on the home page and the YouTube stream. Say what you see, including losing days.'], ['Backtest vs live', 'Show the free backtest next to the live record. Explain why both matter.'], ['Setup in 3 steps', 'Show buying a plan, pasting the key into the EA, and the account page turning green.']].map(function (v, i) { return '<div class="pd-item pd-click" role="button" tabindex="0" data-v="' + i + '"><div class="pd-ic">' + (i + 1) + '</div><div><b>' + esc(v[0]) + '</b><small>tap for the script</small></div></div>'; }).join('') + '</div>'
-      + '<div class="pd-card"><h3>Facts you can quote</h3><div class="pd-help">Only things that are true and published.</div><div id="pd-facts"></div></div></div>'
-      + '<div class="pd-card" style="margin-top:12px"><h3>Rules and required lines</h3><div class="pd-warn"><b>Always say:</b> "I earn a commission if you buy through my link." and "Trading gold can lose money."<br><b>Never say:</b> guaranteed profit, risk-free, "you will earn", or show results that are not the real live record.</div><div class="pd-help" style="margin-top:8px">Breaking these rules can pause your partner account. See the fair play rules on the <a href="partners.html#apply">Partners page</a>.</div></div>';
+      + '<div class="pd-card"><h3>Facts you can quote</h3><div class="pd-help">Only things that are true and published.</div><div id="pd-facts"></div></div></div>';
     var VID = [['Is this EA real?', ['Hook: "Most gold EAs never show a live account. This one does."', 'Show: the live account section and the YouTube live stream. Say today\'s real result, even if it is a loss.', 'Close: "Judge for yourself, link in the description. I earn a commission if you buy. Trading gold can lose money."']], ['Backtest vs live', ['Hook: "A backtest is a promise. A live record is proof."', 'Show: the free backtest, then the live account. Explain the difference calmly.', 'Close: your link and code, the commission line, the risk line.']], ['Setup in 3 steps', ['Hook: "From purchase to running in one afternoon."', 'Show: 1 buy a plan, 2 paste the key into the EA, 3 the account page shows EA online.', 'Close: your link and code, the commission line, the risk line.']]];
-    $$('#pd-kit canvas').forEach(function (c) { var s = SIZES[+c.dataset.i]; drawBanner(c, s[1], s[2]); });
-    $$('#pd-kit [data-dl]').forEach(function (b) { b.onclick = function () { var s = SIZES[+b.dataset.dl], cv = document.createElement('canvas'); drawBanner(cv, s[1], s[2]); var a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'goldtriengine-' + s[0].toLowerCase().replace(/[^a-z]+/g, '-') + '-' + me.code + '.png'; document.body.appendChild(a); a.click(); a.remove(); toast('Downloaded'); api('partner_kit_log', { p_item: s[0] }).catch(function () {}); }; });
+    redrawBanners();
+    var pickCap = function () { return caps[S.qp === 0 ? 0 : S.qp % caps.length]; }, tick = function (k) { S.qdone[k] = true; if (S.qdone.a && S.qdone.b && S.qdone.c) { toast('Ready to post. Good luck!'); S.qdone = {}; } setTimeout(function () { renderKit(); }, 250); };
+    $$('#pd-pl2 [data-p]').forEach(function (b) { b.onclick = function () { S.qp = +b.dataset.p; S.qdone = {}; renderKit(); }; });
+    $('#pd-qa').onclick = function () { bannerFile(PLAT[S.qp][1]); tick('a'); };
+    $('#pd-qb').onclick = function () { copy(pickCap(), 'Caption copied'); api('partner_kit_log', { p_item: 'caption ' + PLAT[S.qp][0] }).catch(function () {}); tick('b'); };
+    $('#pd-qc').onclick = function () { if (navigator.share) navigator.share({ text: pickCap(), url: link }).catch(function () {}); else copy(link, 'Link copied'); tick('c'); };
+    $$('#pd-ks [data-st]').forEach(function (b) { b.onclick = function () { S.kitStyle = b.dataset.st; $$('#pd-ks button').forEach(function (x) { x.classList.toggle('on', x === b); }); redrawBanners(); }; });
+    var sel = $('#pd-k-camp'); if (sel) sel.onchange = function () { S.kitLink = sel.value; renderKit(); };
+    $$('#pd-kit .pd-banners canvas').forEach(function (c) { var f = function () { var s = SIZES[+c.dataset.i], cv = document.createElement('canvas'); drawBanner(cv, s[1], s[2]); sheet(s[0] + ' (' + s[1] + ' x ' + s[2] + ')', 'Style: ' + PAL[S.kitStyle].n + '. Tap Download for the full size PNG.', [], '<img alt="' + esc(s[0]) + ' preview" src="' + cv.toDataURL('image/png') + '" style="width:100%;border-radius:14px;display:block"><div style="margin-top:12px"><button class="pd-btn" id="pd-bigdl">Download PNG</button></div>'); var b = $('#pd-bigdl'); if (b) b.onclick = function () { bannerFile(+c.dataset.i); }; }; c.onclick = f; c.onkeydown = function (e) { if (e.key === 'Enter') f(); }; });
+    $$('#pd-kit [data-dl]').forEach(function (b) { b.onclick = function () { bannerFile(+b.dataset.dl); }; });
     $$('#pd-lang [data-l]').forEach(function (b) { b.onclick = function () { S.lang = b.dataset.l; renderKit(); }; });
     $$('#pd-caps .pd-cap').forEach(function (c) { var f = function () { copy(caps[+c.dataset.c], 'Caption copied'); api('partner_kit_log', { p_item: 'caption ' + lang }).catch(function () {}); }; c.onclick = f; c.onkeydown = function (e) { if (e.key === 'Enter') f(); }; });
     $$('#pd-kit [data-v]').forEach(function (e) { e.onclick = function () { var v = VID[+e.dataset.v]; sheet(v[0], 'A 30 second video. Use your own words.', [], '<div class="pd-tl">' + v[1].map(function (x) { return '<div>' + esc(x) + '</div>'; }).join('') + '</div>'); }; });
     $('#pd-k-lk').onclick = $('#pd-k-c').onclick = function () { copy(link, 'Link copied'); }; $('#pd-k-q').onclick = function () { showQr(link); };
     $('#pd-facts').innerHTML = ['One MT5 USD account per yearly license', 'Three engines trade gold automatically', 'Telegram alerts and personal setup help', 'Free updates during the year', 'A live public account and a free backtest you can check'].map(function (f) { return '<div class="pd-kv" style="display:flex;gap:8px;padding:6px 0;border-top:1px solid var(--line)"><span style="color:var(--green)">&#10003;</span><span>' + esc(f) + '</span></div>'; }).join('') + (S.plans.length ? '<div class="pd-help" style="margin-top:8px">Plans: ' + S.plans.map(function (p) { return esc(p.name) + ' ' + usd(p.price_usd, 0); }).join(', ') + '</div>' : '');
   }
+
 
   // ---------- shell ----------
   var TABS = [['overview', 'Overview'], ['campaigns', 'Campaigns'], ['customers', 'Customers'], ['reports', 'Reports'], ['payouts', 'Payouts'], ['kit', 'Marketing kit']];

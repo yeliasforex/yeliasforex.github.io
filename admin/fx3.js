@@ -6,7 +6,7 @@
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---- 1. side menu: groups, collapse button ---- */
-  var GROUPS = [['Sales', ['orders', 'revenue', 'licenses', 'customers', 'affiliates']], ['Growth', ['visitors', 'funnel', 'marketing', 'blog', 'proof', 'email']], ['Care', ['support', 'health']], ['Tools', ['settings', 'backtest', 'videos', 'audit']]];
+  var GROUPS = [['Act now', ['orders', 'support', 'health']], ['Money', ['revenue', 'licenses', 'affiliates']], ['Audience', ['customers', 'visitors', 'funnel', 'marketing', 'blog', 'proof', 'email']], ['Tools', ['settings', 'backtest', 'videos', 'audit']]];
   function groups() {
     var nav = $('#tabs'); if (!nav || nav.querySelector('.ng')) return;
     GROUPS.forEach(function (g, gi) {
@@ -110,11 +110,16 @@
     });
   }
 
+  function order(view) {
+    var on = $('#tabs button.on'); if (!on || on.dataset.t !== 'orders') return;
+    var ch = Array.prototype.filter.call(view.children, function (c) { return c.querySelector && c.querySelector('.mb'); })[0];
+    if (ch && ch !== view.lastElementChild) view.appendChild(ch);
+  }
   function boot() {
     var nav = $('#tabs'), view = $('#view');
     groups(); toggle();
     if (nav) new MutationObserver(function () { groups(); if (window.__fxClock) window.__fxClock(); var h = $('#hero'), o = $('#tabs button.on'); if (h && o) h.dataset.tab = o.dataset.t; }).observe(nav, {childList: true});
-    var tm; if (view) { new MutationObserver(function () { clearTimeout(tm); tm = setTimeout(function () { pulse(); tools(view); }, 80); }).observe(view, {childList: true, subtree: true}); }
+    var tm; if (view) { new MutationObserver(function () { clearTimeout(tm); tm = setTimeout(function () { pulse(); tools(view); order(view); }, 80); }).observe(view, {childList: true, subtree: true}); }
     setTimeout(function () { pulse(); if (view) tools(view); }, 400);
     new MutationObserver(function () { setTimeout(function () { if (window.__fxMark) window.__fxMark(); }, 480); }).observe(document.body, {attributes: true, attributeFilter: ['class']});
   }
