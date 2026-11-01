@@ -116,7 +116,7 @@
     var c = document.createElement('button'); c.type = 'button'; c.id = 'pdx-chip'; c.setAttribute('aria-label', 'Open payouts');
     c.innerHTML = '<span class="pdx-cd"></span><span><small>Ready to pay out</small><b id="pdx-cb">' + money(d.ready) + '</b></span><em>Payouts</em>';
     c.onclick = function () { var b = $('#pd-bar button[data-t="payouts"]'); if (b) b.click(); window.scrollTo({top: 0, behavior: reduce ? 'auto' : 'smooth'}); };
-    document.body.appendChild(c);
+    ($('.pd') || document.body).appendChild(c);
     var tk; addEventListener('scroll', function () { if (tk) return; tk = requestAnimationFrame(function () { tk = 0; var dd = dat(); if (dd) $('#pdx-cb').textContent = money(dd.ready); c.classList.toggle('on', scrollY > 520 && !$('.pd-sheet.on')); }); }, {passive: true});
   }
 
