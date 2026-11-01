@@ -95,7 +95,7 @@
   function ensure() {
     var ov = $('#pd-overview'), d = dat(); if (!ov || !d || !ov.children.length) return;
     if (!$('#pdx-j', ov)) {
-      var j = journey(d); ov.insertAdjacentHTML('afterbegin', j.html);
+      var j = journey(d), hh = $('#pd-kpis2', ov) || $('.pd-hero', ov); if (hh) hh.insertAdjacentHTML('afterend', j.html); else ov.insertAdjacentHTML('afterbegin', j.html);
       var firstView = false; try { firstView = localStorage.getItem('gte_pd_ms') === null; } catch (e) {}
       if (j.fresh.length) {
         j.fresh.forEach(function (x) { j.seen[x.m.k] = 1; }); try { localStorage.setItem('gte_pd_ms', JSON.stringify(j.seen)); } catch (e) {}

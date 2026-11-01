@@ -106,7 +106,7 @@
     var L = insights(); if (!L.length) return;
     var c = document.createElement('div'); c.className = 'pd-card pdx-in pd-fadeup in'; c.id = 'pdx-in'; c.dataset.k = key;
     c.innerHTML = '<div class="pd-row"><h3>Smart insights</h3><span class="pd-pill c">written from your numbers</span></div><div class="pdx-il">' + L.map(function (x, i) { return '<div class="pdx-it ' + x.t + '" style="animation-delay:' + (i * 70) + 'ms"><i></i><div><b>' + esc(x.h) + '</b><span>' + esc(x.d) + '</span></div></div>'; }).join('') + '</div>';
-    j.insertAdjacentElement('afterend', c);
+    var ech = $('#pd-ech', ov), g = ech && ech.closest('.pd-grid'); (g || j).insertAdjacentElement('afterend', c);
   }
 
   /* ---------- quick search ---------- */
