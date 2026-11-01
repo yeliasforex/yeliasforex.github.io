@@ -2,11 +2,14 @@
 (async function () {
   const {esc, date, ago, DEMO} = gte, R = window.gteResults, $ = s => document.querySelector(s), A = $('#acct');
   const usd = (n, d) => d !== undefined ? R.usd(n, d) : (Number.isInteger(+n) ? R.usd(n, 0) : R.usd(n, 2));   // always two decimals unless a whole amount
-  let c, S = {}, cur = null, range = 'all';
+  let c, S = {}, cur = null, range = 'all', UID = null;
+  const mine = b => UID ? b.eq('user_id', UID) : b;      // an admin may read every profile: always ask for the signed-in user's own row
   const tflt = {eng: 'all', res: 'all', page: 1};
   let tab = (location.hash.match(/tab=(\w+)/) || [])[1] || 'overview'; if (tab === 'alerts' || tab === 'inbox') tab = 'overview';
   const TABS = [['overview', 'Overview'], ['results', 'Results'], ['trades', 'Trades'], ['billing', 'Keys & orders']];
-  const NOTIFY = [['ea_started', 'EA started / stopped'], ['trade_open', 'Trade opened'], ['trade_close', 'Trade closed with result'], ['addon', 'Add-on filled / closed'], ['daily_report', 'Daily report'], ['offline', 'EA offline / back online']];
+  const NOTIFY = [['trade_open', 'Trade opened', 'Trading'], ['trade_close', 'Trade closed with result', 'Trading'], ['addon', 'Add-on filled / closed', 'Trading'], ['risk_skip', 'Trade skipped by the risk cap', 'Trading'],
+    ['ea_started', 'EA started / stopped', 'EA status'], ['offline', 'EA offline / back online', 'EA status'], ['regime', 'Strategy paused / resumed', 'EA status'], ['profile', 'Risk profile changed', 'EA status'],
+    ['daily_report', 'Daily report', 'Reports and warnings'], ['drawdown', 'Drawdown alerts', 'Reports and warnings'], ['update', 'New EA version', 'Reports and warnings']];
   const SEV = {error: 0, warning: 1, info: 2}, tradeCache = {};
   const QS = new URLSearchParams(location.search), INJ = QS.has('inject');
   const AS = QS.get('as') || (INJ ? 'inject' : null);      // admin "view as customer" (read-only). inject = the admin panel posts the data in
@@ -29,14 +32,19 @@
     if (DEMO) return demoData();
     if (INJ) return window.__inj.S;
     const q = async p => { const r = await p; if (r.error) throw r.error; return r.data; };
+    if (!AS) { const ss = await gte.session(); UID = ss && ss.user && ss.user.id; }
     const notices = AS ? [] : (await c.from('customer_notices').select('*').order('created_at', {ascending: false}).limit(60)).data || [];
     const [profile, licenses, statuses, plans, catalog, orders, settings] = await Promise.all([
-      AS ? Promise.resolve(null) : q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').maybeSingle()),
+      AS ? Promise.resolve(null) : q(mine(c.from('profiles').select('email,telegram_chat_id,notify_prefs')).maybeSingle()),
       q(c.from('licenses').select('id,key,plan_id,owner_user_id,status,activated_at,expires_at,bound_account,bound_broker,bound_is_demo,extra_allowance_usd,created_at').order('created_at')),
       q(c.from('license_status').select('*')), q(c.from('plans').select('*').order('sort')), q(c.from('message_catalog').select('*')),
       q(c.from('orders').select('*').order('created_at', {ascending: false})), gte.settings()]);
-    if (!AS && profile) { try { const w = await c.from('profiles').select('terms_version,wall_on,wall_name,wall_quote,wall_country,auto_country,wall_photo,wall_slug').maybeSingle(); if (!w.error && w.data) Object.assign(profile, w.data); } catch (e) {} }   // absent until the Proof Wall migration is applied
-    if (!AS) return {profile, licenses, statuses, plans, catalog, orders, settings, notices};
+    if (!AS && profile) { try { const w = await mine(c.from('profiles').select('terms_version,wall_on,wall_name,wall_quote,wall_country,auto_country,wall_photo,wall_slug')).maybeSingle(); if (!w.error && w.data) Object.assign(profile, w.data); } catch (e) {} }   // absent until the Proof Wall migration is applied
+    if (!AS) {                                              // an admin reaches every customer's rows: show only the signed-in user's own licenses and orders
+      const own = UID ? licenses.filter(l => l.owner_user_id === UID) : licenses, ids = new Set(own.map(l => l.id));
+      return {profile, licenses: own, statuses: statuses.filter(x => ids.has(x.license_id)), plans, catalog,
+              orders: UID ? orders.filter(o => o.user_id === UID || ids.has(o.license_id)) : orders, settings, notices};
+    }
     // Admin view: the database lets an admin (signed in and verified with the Telegram code) read everything; show just this one customer's license
     const lic = licenses.filter(l => l.id === AS), owner = lic[0] && lic[0].owner_user_id;
     const prof = owner ? await q(c.from('profiles').select('email,telegram_chat_id,notify_prefs').eq('user_id', owner).maybeSingle()) : null;
@@ -110,7 +118,7 @@
       const k = KI[n.kind] ? n.kind : 'info';
       const act = n.link ? `<a class="btn sm ${n.kind === 'update' ? 'mint' : ''}" href="${esc(n.link)}">${n.kind === 'update' ? 'Update now' : 'Open'}</a>`
         : /^A license key was added/.test(n.title) ? '<a class="btn sm mint" href="#tab=billing" data-go="billing">See your keys</a>' : '';
-      return `<div class="ni ${n.read_at ? '' : 'new'}"><button class="ni-h" type="button" aria-expanded="false"><i class="ni-ic k-${k}">${svgI(k)}</i><span class="ni-t">${esc(n.title)}</span><time>${sago(n.created_at)}</time><u class="ni-dot"></u></button>${n.body || act ? `<div class="ni-b">${n.body ? `<p>${esc(n.body).replace(/\n/g, '<br>')}</p>` : ''}${act}</div>` : ''}</div>`;
+      return `<div class="ni ${n.read_at ? '' : 'new'}"><button class="ni-h" type="button" aria-expanded="false"><i class="ni-ic k-${k}">${svgI(k)}</i><span class="ni-t">${esc(n.title)}</span><time>${sago(n.created_at)}</time><u class="ni-dot"></u></button><button class="ni-x" type="button" data-dismiss="${n.id}" aria-label="Dismiss this notification">&times;</button>${n.body || act ? `<div class="ni-b">${n.body ? `<p>${esc(n.body).replace(/\n/g, '<br>')}</p>` : ''}${act}</div>` : ''}</div>`;
     }).join('');
   }
   function paintBell() {
@@ -124,10 +132,11 @@
     const bell = $('#mabell'), np = $('#np'), bk = $('#npbk'); if (!bell || !np) return;
     const close = () => { np.hidden = true; bk.hidden = true; bell.setAttribute('aria-expanded', 'false'); };
     const open = () => {
-      np.innerHTML = '<div class="np-h"><b>Notifications</b><button class="np-mk" type="button">Mark all read</button></div><div class="np-list"></div>';
+      np.innerHTML = '<div class="np-h"><b>Notifications</b><span><button class="np-mk" type="button">Mark all read</button><button class="np-mk np-clr" type="button">Clear all</button></span></div><div class="np-list"></div>';
       np.querySelector('.np-list').innerHTML = notifRows((S.notices || []).slice(0, 30));
       np.hidden = false; bk.hidden = false; bell.setAttribute('aria-expanded', 'true');
       np.querySelector('.np-mk').onclick = guard(async () => { await markRead(true); });
+      np.querySelector('.np-clr').onclick = guard(async () => { await clearNotices(); });
       if (unread() && !DEMO) setTimeout(() => { if (!np.hidden) markRead(); }, 1500);
     };
     bell.onclick = e => { e.stopPropagation(); np.hidden ? open() : close(); };
@@ -135,6 +144,8 @@
     bk.onclick = close;
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !np.hidden) close(); });
     document.addEventListener('click', e => {
+      const xb = e.target.closest && e.target.closest('.ni-x');
+      if (xb) { e.stopPropagation(); guard(async () => { await dismissNotice(xb.dataset.dismiss); })(); return; }
       const h = e.target.closest && e.target.closest('.ni-h');
       if (h) { const it = h.parentElement, o = !it.classList.contains('open'); it.classList.toggle('open', o); h.setAttribute('aria-expanded', o); return; }
       const go = e.target.closest && e.target.closest('#np [data-go]');
@@ -314,6 +325,15 @@
     A.querySelectorAll('[data-go]').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.go; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x.dataset.tab === tab)); drawTab(l, all); });
   }
 
+  async function clearNotices() {
+    if (!(S.notices || []).length) return toast('Nothing to clear');
+    if (!DEMO) await rpc('clear_my_notices');
+    S.notices = []; const b = A.querySelector('#subnav [data-tab="inbox"] .nb'); if (b) b.remove(); paintBell(); toast('Notifications cleared');
+  }
+  async function dismissNotice(id) {
+    if (!DEMO) await rpc('dismiss_my_notice', {p_id: Number(id)});
+    S.notices = (S.notices || []).filter(n => String(n.id) !== String(id)); paintBell();
+  }
   async function markRead(now) {
     const stamp = new Date().toISOString();
     if (DEMO) { (S.notices || []).forEach(n => { n.read_at = n.read_at || stamp; }); paintBell(); return; }
@@ -403,7 +423,7 @@
     else if (!AS) {
       try { await c.rpc('sync_profile_identity'); } catch (e) {}
       try {
-        const {data} = await c.from('profiles').select('avatar,full_name,picture_url,email').maybeSingle();
+        const {data} = await mine(c.from('profiles').select('avatar,full_name,picture_url,email')).maybeSingle();
         cur = data && (data.avatar || data.picture_url) || null; nm = data && data.full_name || ''; em = data && data.email || em;
       } catch (e) {}
     }
@@ -447,9 +467,11 @@
       <section class="st-s"><h3>${sic('bell')}Alerts</h3>
         ${window.gteDevice ? gteDevice.rowsPhone() : ''}
         <div class="st-r"><div class="st-t"><b>Telegram</b><span class="hint" id="tgHint">${on ? 'Connected' : 'Trade alerts, daily report and warnings.'}</span></div>${on ? '<button class="btn sm" id="tgOff" type="button">Disconnect</button>' : '<button class="btn sm mint" id="tgOn" type="button">Connect</button>'}</div>
-        <details class="st-d"${S.__stDet ? ' open' : ''}><summary>Choose what I get</summary>
-          ${NOTIFY.map(([k, label]) => `<div class="st-r"><div class="st-t"><b>${label}</b></div><label class="sw"><input type="checkbox" data-pref="${k}" ${prefs[k] === false || prefs[k] === 'false' ? '' : 'checked'}><span></span></label></div>`).join('')}
-          <p class="hint">Applies to Telegram and phone alerts. License and deposit-limit warnings are always sent.</p></details>
+        <details class="st-d" open><summary>Choose what I get</summary>
+          <div class="al-all"><button class="btn sm" id="alAll" type="button">Turn all on</button><button class="btn sm" id="alNone" type="button">Turn all off</button></div>
+          ${['Trading', 'EA status', 'Reports and warnings'].map(g => `<h4 class="al-g">${g}</h4>` + NOTIFY.filter(n => n[2] === g).map(([k, label]) => `<div class="st-r"><div class="st-t"><b>${label}</b></div><label class="sw"><input type="checkbox" data-pref="${k}" ${prefs[k] === false || prefs[k] === 'false' ? '' : 'checked'}><span></span></label></div>`).join('')).join('')}
+          <p class="hint">Applies to Telegram, phone alerts and this page. Always sent, because they protect your account: license and renewal warnings, deposit-limit warnings, payments and support answers.</p></details>
+        <div class="st-r"><div class="st-t"><b>Notifications on this page</b><span class="hint">Remove everything shown under the bell.</span></div><button class="btn sm" id="clrAll" type="button">Clear all</button></div>
       </section>
       ${prof.terms_version === undefined ? '' : `<section class="st-s"><h3>${sic('user')}Proof Wall</h3>
         <div class="st-r"><div class="st-t"><b>Show my results publicly</b><span class="hint">${prof.wall_on ? 'Your results are on the public Proof Wall.' : 'You are not shown on the Proof Wall.'} Never your email, key or account number.</span></div><label class="sw"><input type="checkbox" id="pwon" ${prof.wall_on ? 'checked' : ''}><span></span></label></div>
@@ -478,10 +500,18 @@
     $('#stsave').onclick = save; inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } };
     if (window.gteDevice) gteDevice.wire(rpc, toast, guard);
     st.querySelectorAll('[data-pref]').forEach(i => i.onchange = guard(async () => { if (AS) { i.checked = !i.checked; throw new Error('Read-only admin view.'); } if (DEMO) { toast('Saved'); return; } const prefs = {...(S.profile.notify_prefs || {})}; prefs[i.dataset.pref] = i.checked; const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; S.profile.notify_prefs = prefs; toast('Saved'); }));
+    const setAll = on => guard(async () => {
+      if (AS) throw new Error('Read-only admin view.');
+      const prefs = {...(S.profile.notify_prefs || {})}; NOTIFY.forEach(n => { prefs[n[0]] = on; });
+      if (!DEMO) { const {error} = await c.from('profiles').update({notify_prefs: prefs}).eq('user_id', (await gte.session()).user.id); if (error) throw error; }
+      S.profile.notify_prefs = prefs; st.querySelectorAll('[data-pref]').forEach(i => { i.checked = on; }); toast(on ? 'All alerts on' : 'All alerts off');
+    });
+    const aa = $('#alAll'), an = $('#alNone'); if (aa) aa.onclick = setAll(true); if (an) an.onclick = setAll(false);
+    const ca = $('#clrAll'); if (ca) ca.onclick = guard(async () => { if (AS) throw new Error('Read-only admin view.'); await clearNotices(); });
     const tgOn = $('#tgOn'); if (tgOn) tgOn.onclick = guard(async () => {
       const bot = S.settings.botUsername || 'GoldTriEngine_Bot'; const tok = DEMO ? 'demo' : await rpc('create_telegram_link');
       window.open('https://t.me/' + bot + '?start=' + tok, '_blank', 'noopener'); $('#tgHint').textContent = 'Waiting for you to tap Start in Telegram...';
-      for (let i = 0; i < 40 && !DEMO; i++) { await new Promise(r => setTimeout(r, 3000)); const {data} = await c.from('profiles').select('telegram_chat_id').maybeSingle(); if (data && data.telegram_chat_id) { await refresh(); toast('Telegram connected'); return; } }
+      for (let i = 0; i < 40 && !DEMO; i++) { await new Promise(r => setTimeout(r, 3000)); const {data} = await mine(c.from('profiles').select('telegram_chat_id')).maybeSingle(); if (data && data.telegram_chat_id) { await refresh(); toast('Telegram connected'); return; } }
     });
     const tgOff = $('#tgOff'); if (tgOff) tgOff.onclick = guard(async () => { await rpc('disconnect_telegram'); await refresh(); });
     $('#stout').onclick = signOut;

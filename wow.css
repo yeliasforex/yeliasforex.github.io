@@ -782,3 +782,11 @@ html.st-lock{overflow:hidden}
 .pw-plan{align-self:flex-start;font:600 .62rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold);border-radius:99px;padding:6px 10px;margin-bottom:2px;background:color-mix(in srgb,var(--gold) 10%,transparent)}
 .pw-tip span{display:block}
 .pw-alt{display:flex;justify-content:center;gap:22px;margin-top:12px}.pw-alt button{background:none;border:0;color:var(--muted,#667);font:500 .85rem/1 var(--sans,inherit);text-decoration:underline;cursor:pointer;padding:6px}.pw-alt button:hover{color:var(--fg,#111)}.pw-note{margin:8px 0 0;text-align:center;font-size:.78rem;color:var(--muted,#667)}
+
+/* notifications: clear and dismiss, grouped alert switches */
+.ni{position:relative}.ni-x{position:absolute;right:6px;top:6px;width:24px;height:24px;border-radius:50%;border:0;background:transparent;color:var(--muted);font-size:1.1rem;line-height:1;cursor:pointer;opacity:.0;transition:opacity .15s,background .15s}
+.ni:hover .ni-x,.ni-x:focus-visible{opacity:1}.ni-x:hover{background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red)}.ni-h time{margin-right:22px}
+@media (hover:none){.ni-x{opacity:.7}}
+.np-h span{display:flex;gap:2px}.np-clr{color:var(--red)}
+.al-g{margin:14px 0 4px;font:700 .72rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.al-all{display:flex;gap:8px;margin:6px 0 2px}
