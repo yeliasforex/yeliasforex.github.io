@@ -238,3 +238,16 @@ body.inject .subnav{top:0}
 /* phones: less empty space under the header, room above the floating buttons, a small label under the offline open-trades number */
 .lv-lk{display:block;margin-top:2px;font:500 .66rem var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
 @media (max-width:600px){.pg{padding-block:20px 36px}main{padding-bottom:64px}}
+
+/* chart axis text is HTML so it never stretches with the chart */
+.chw{position:relative}
+.axy{position:absolute;left:0;transform:translateY(-50%);text-align:right;padding-right:8px;box-sizing:border-box;font:500 11px/1 var(--mono);color:var(--fg-2);opacity:.65;pointer-events:none;white-space:nowrap}
+.axx{position:absolute;bottom:4px;font:500 11px/1 var(--mono);color:var(--fg-2);opacity:.65;pointer-events:none;white-space:nowrap}
+.axx.l{transform:none}.axx.m{transform:translateX(-50%)}.axx.r{transform:translateX(-100%)}
+@media(max-width:640px){
+  .db.mid{padding-top:36px}.db.mid.neg{padding-bottom:36px}
+  .db.mid .xbar b{font-size:9px;writing-mode:vertical-rl}.db.mid .xbar.xup b{transform:translate(-50%,-4px) rotate(180deg)}
+  .db.mid.neg .dx{margin-top:42px}
+  .tbl2.rec td,.tbl2.rec th{white-space:nowrap}
+  .tbl2.rec th:nth-child(n+5):nth-child(-n+7),.tbl2.rec td:nth-child(n+5):nth-child(-n+7){display:none}
+}

@@ -790,3 +790,8 @@ html.st-lock{overflow:hidden}
 .np-h span{display:flex;gap:2px}.np-clr{color:var(--red)}
 .al-g{margin:14px 0 4px;font:700 .72rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
 .al-all{display:flex;gap:8px;margin:6px 0 2px}
+
+/* back-to-top: a small round button with its own background, so it never sits on bare text */
+.totop{width:44px;height:44px;padding:0;justify-content:center;border-radius:50%;background:rgba(255,255,255,.92);border:1px solid rgba(217,164,65,.45);box-shadow:0 4px 14px rgba(20,30,60,.18)}
+.totop svg{width:20px;height:20px}.totop svg+svg{margin-top:-12px}
+:root[data-theme="dark"] .totop{background:rgba(30,38,56,.92)}

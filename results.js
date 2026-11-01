@@ -66,8 +66,10 @@
     const X = t => P.l + (x1 === x0 ? 0 : (t - x0) / (x1 - x0)) * (W - P.l - P.r), Y = v => P.t + (1 - (v - y0) / (y1 - y0)) * (H - P.t - P.b);
     const d = pts.map((p, i) => (i ? 'L' : 'M') + X(p.t).toFixed(1) + ' ' + Y(val(p)).toFixed(1)).join(' ');
     const area = d + ' L' + X(x1).toFixed(1) + ' ' + Y(0).toFixed(1) + ' L' + X(x0).toFixed(1) + ' ' + Y(0).toFixed(1) + ' Z';
-    const grid = [0, .25, .5, .75, 1].map(f => { const v = y0 + f * (y1 - y0), y = Y(v); return `<line x1="${P.l}" x2="${W - P.r}" y1="${y}" y2="${y}" stroke="currentColor" opacity=".09"/><text x="${P.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="currentColor" opacity=".55">${usd(v, 0)}</text>`; }).join('');
-    const ticks = [0, .5, 1].map(f => { const t = x0 + f * (x1 - x0); return `<text x="${X(t)}" y="${H - 8}" text-anchor="${f === 0 ? 'start' : f === 1 ? 'end' : 'middle'}" font-size="11" fill="currentColor" opacity=".55">${new Date(t).toLocaleDateString([], {month: 'short', day: 'numeric'})}</text>`; }).join('');
+    const grid = [0, .25, .5, .75, 1].map(f => { const v = y0 + f * (y1 - y0), y = Y(v); return `<line x1="${P.l}" x2="${W - P.r}" y1="${y}" y2="${y}" stroke="currentColor" opacity=".09"/>`; }).join('');
+    const ylab = [0, .25, .5, .75, 1].map(f => { const v = y0 + f * (y1 - y0); return `<span class="axy" style="top:${Y(v).toFixed(1)}px;width:${(P.l / W * 100).toFixed(2)}%">${usd(v, 0)}</span>`; }).join('');
+    const ticks = '';
+    const xlab = [0, .5, 1].map(f => { const t = x0 + f * (x1 - x0); return `<span class="axx ${f === 0 ? 'l' : f === 1 ? 'r' : 'm'}" style="left:${(X(t) / W * 100).toFixed(2)}%">${new Date(t).toLocaleDateString([], {month: 'short', day: 'numeric'})}</span>`; }).join('');
     const zero = (y0 < 0 && y1 > 0) ? `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}" stroke="currentColor" opacity=".3" stroke-dasharray="4 4"/>` : '';
     const last = pts[pts.length - 1];
     return `<div class="chw" id="${id}-w" data-x0="${x0}" data-x1="${x1}" data-pl="${P.l / W}" data-pr="${P.r / W}">
@@ -76,7 +78,7 @@
       ${grid}${ticks}${zero}<g class="rev"><path d="${area}" fill="url(#g-${id})"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></g>
       <line id="${id}-v" x1="0" x2="0" y1="${P.t}" y2="${H - P.b}" stroke="${color}" opacity="0" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>
       <i class="endpt" style="left:${((W - P.r) / W * 100).toFixed(2)}%;top:${Y(val(last)).toFixed(1)}px;--c:${color}"></i>
-      <div class="tipbox" id="${id}-t"></div></div>`;
+      ${ylab}${xlab}<div class="tipbox" id="${id}-t"></div></div>`;
   }
   function bindHover(root, id, pts, key, neg) {
     const w = root.querySelector('#' + id + '-w'); if (!w || pts.length < 2) return;
@@ -122,7 +124,7 @@
       const dn = it.v < 0 ? `<div class="xbar dn" style="height:${(it.v / bot * 100).toFixed(2)}%;--i:${i}"><u></u><b>${lab(it.v)}</b></div>` : '';
       return `<div class="dc ${it.v > 0 ? 'p' : it.v < 0 ? 'n' : 'e'}" title="${esc(it.label)}: ${it.v === 0 && !hasV ? 'no closed trades' : sgn(it.v)}"><div class="u" style="height:${upH}%">${up}</div><div class="d" style="height:${dnH}%">${dn}</div><span class="dx">${esc(it.short)}</span></div>`;
     }).join('');
-    return `<div class="db ${bot < 0 ? 'neg' : ''} ${opt.full ? 'wide' : ''} ${items.length > 16 ? 'dense' : ''}" style="height:${h || 190}px"><div class="dbi">${cols}</div></div>`;
+    return `<div class="db ${bot < 0 ? 'neg' : ''} ${opt.full ? 'wide' : ''} ${items.length > 16 ? 'dense' : items.length > 10 ? 'mid' : ''}" style="height:${h || 190}px"><div class="dbi">${cols}</div></div>`;
   }
   function monthItems(t) {
     const m = {}; t.forEach(x => { const d = new Date(x.closed_at), k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); m[k] = (m[k] || 0) + x.profit; });
