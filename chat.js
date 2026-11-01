@@ -42,6 +42,7 @@
   :root[data-theme="light"] .gc-f{border-color:rgba(25,40,80,.12)}
   :root[data-theme="light"] .gc-f input{background:#f4f6fb;color:#0d1424;border-color:rgba(25,40,80,.2)}
   :root[data-theme="light"] .gc-f button{background:#0b8a5c;color:#fff}
+  @media (max-width:600px){.gc-fab{right:14px;height:46px;width:46px;padding:0;justify-content:center;font-size:0;gap:0}.gc-fab i{display:none}.gc-fab::after{content:'\\1F4AC';font-size:21px;line-height:1}}
   @media (prefers-reduced-motion:reduce){.gc-fab i,.gc-box.on{animation:none}}`;
   document.head.appendChild(css);
   if (document.querySelector('.fab')) document.documentElement.style.setProperty('--gcb', window.innerWidth <= 600 ? '82px' : '86px');   // sit above the Contact button, never on top of it

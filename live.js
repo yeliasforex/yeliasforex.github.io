@@ -72,6 +72,7 @@
     D = d; var now = Date.now(), m = model(d, now), st = d.st || {}, l = d.l;
     var online = m.s === 'trade' || m.s === 'wait' || m.s === 'rest' || m.s === 'warn';
     var fl = (st.equity != null && st.balance != null) ? st.equity - st.balance : null;
+    var openHtml = st.open_positions == null ? '-' : esc(String(st.open_positions)) + ' <small class="lv-lk">last known</small>';
     var openTxt = online ? ((st.open_positions || 0) + (fl != null && (st.open_positions || 0) > 0 ? ' · ' + d.sgn(fl) : '')) : (st.open_positions == null ? '-' : st.open_positions + ' (last known)');
     return '<section class="lv lv-' + m.s + '" id="lv">'
       + '<div class="lv-orb"><i class="lv-ripple"></i><i class="lv-ripple r2"></i><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="lv-track" cx="50" cy="50" r="' + R + '"/><circle class="lv-arc" cx="50" cy="50" r="' + R + '" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + (C * (1 - m.fresh)).toFixed(1) + '"/></svg>'
@@ -81,7 +82,7 @@
       + '<div class="lv-meta"><span class="lv-ago">' + (m.ago ? 'Last report ' + esc(m.ago) : 'No report yet') + '</span>' + (st.ea_version ? '<span>EA v' + esc(st.ea_version) + '</span>' : '') + (d.upd ? '<a class="lv-up" href="download.html">Update v' + esc(d.upd) + ' available</a>' : '') + '<span class="lv-chk">Checked just now</span></div>'
       + '<svg class="lv-ecg" viewBox="0 0 240 36" preserveAspectRatio="none" aria-hidden="true"><path class="lv-flat" d="M0 18H240"/><path class="lv-base" pathLength="1" d="M0 18H40L48 18L54 6L62 30L68 12L74 18H120L128 18L134 6L142 30L148 12L154 18H200L208 18L214 6L222 30L228 12L234 18H240"/><path class="lv-beat" pathLength="1" d="M0 18H40L48 18L54 6L62 30L68 12L74 18H120L128 18L134 6L142 30L148 12L154 18H200L208 18L214 6L222 30L228 12L234 18H240"/></svg></div>'
       + '<div class="lv-stats"><div><span>Today, closed</span><b style="color:' + d.col(d.today) + '" data-cu="' + d.today + '" data-f="sgn">' + d.sgn(d.today) + '</b></div>'
-      + '<div><span>Open trades</span><b class="lv-open">' + (online && (st.open_positions || 0) > 0 && fl != null ? (st.open_positions || 0) + ' &middot; <span style="color:' + d.col(fl) + '">' + esc(d.sgn(fl)) + '</span>' : esc(openTxt)) + '</b></div>'
+      + '<div><span>Open trades</span><b class="lv-open">' + (online && (st.open_positions || 0) > 0 && fl != null ? (st.open_positions || 0) + ' &middot; <span style="color:' + d.col(fl) + '">' + esc(d.sgn(fl)) + '</span>' : (online ? esc(openTxt) : openHtml)) + '</b></div>'
       + '<div><span>Floating</span><b style="color:' + (fl == null ? 'inherit' : d.col(fl)) + '">' + (fl == null || !online ? '-' : d.sgn(fl)) + '</b></div></div>'
       + detail(d)
       + '<div class="lv-foot">' + foot(m.s, d) + '</div></section>';

@@ -234,3 +234,7 @@ body.inject .subnav{top:0}
 .nt{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0;background:var(--ink-2)}
 .nt.new{border-color:var(--blue-hi);box-shadow:inset 3px 0 0 var(--blue-hi)}
 .nt .nb2{color:var(--fg-2);font-size:.93rem;margin-top:6px;line-height:1.5}
+
+/* phones: less empty space under the header, room above the floating buttons, a small label under the offline open-trades number */
+.lv-lk{display:block;margin-top:2px;font:500 .66rem var(--mono);letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+@media (max-width:600px){.pg{padding-block:20px 36px}main{padding-bottom:64px}}

@@ -18,6 +18,7 @@
     '.gx-cookie a{color:var(--blue-hi,#5B86FF)}.gx-cookie .gx-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}' +
     '.gx-btn{font:600 .85rem var(--sans,system-ui);padding:8px 14px;border-radius:10px;border:1px solid var(--line-2,rgba(170,190,230,.18));background:transparent;color:var(--fg,#ECEFF6);cursor:pointer}.gx-btn.p{background:var(--blue,#1747C8);border-color:transparent;color:#fff}' +
     '.gx-news{max-width:760px;margin:40px auto;padding:22px 22px 18px;border:1px solid var(--line-2,rgba(170,190,230,.18));border-radius:18px;background:var(--panel,#0E1322);color:var(--fg-2,#C3CADA)}' +
+    '@media (max-width:600px){.gx-cookie{left:0;right:0;bottom:0;max-width:none;border-radius:14px 14px 0 0;padding:9px 12px;display:flex;gap:10px;align-items:center;font-size:.74rem;line-height:1.35}.gx-cookie .gx-row{margin:0;flex:none}.gx-cookie .gx-btn{padding:7px 14px}}' +
     '.gx-news h3{margin:0 0 6px;font:500 1.25rem var(--sans,system-ui);color:var(--fg,#ECEFF6)}.gx-news p{margin:0 0 12px;font-size:.95rem}.gx-news form{display:flex;gap:10px;flex-wrap:wrap}' +
     '.gx-news input[type=email]{flex:1 1 220px;padding:11px 13px;border-radius:10px;border:1px solid var(--line-2,rgba(170,190,230,.18));background:var(--ink,#06080E);color:var(--fg,#ECEFF6);font:400 1rem var(--sans,system-ui)}' +
     '.gx-news small{display:block;margin-top:10px;color:var(--muted,#8892A8);font-size:.8rem}.gx-news .gx-msg{margin-top:8px;font-size:.9rem}';
@@ -42,8 +43,9 @@
   if (!get('gte_consent') && !/\/admin/.test(path)) {
     var ck = el('div', 'gx-cookie', '<div>We keep a small amount of data in your browser to make the site work, and count visits anonymously (no cookies, no ads, no trackers). Details, and how to stop the count, are in the <a href="' + (path.indexOf('/blog/') === 0 ? '../' : '') + 'privacy.html#stats">privacy policy</a>.</div><div class="gx-row"><button class="gx-btn p" type="button" data-ok>OK</button></div>');
     ck.setAttribute('role', 'dialog'); ck.setAttribute('aria-label', 'Privacy notice');
-    ck.querySelector('[data-ok]').onclick = function () { set('gte_consent', 'ok'); ck.remove(); };
-    document.body.appendChild(ck);
+    var lift = function (on) { try { document.documentElement.style.setProperty('--gcb', on ? (ck.offsetHeight + 12) + 'px' : '18px'); } catch (e) {} };
+    ck.querySelector('[data-ok]').onclick = function () { set('gte_consent', 'ok'); ck.remove(); lift(false); };
+    document.body.appendChild(ck); if (innerWidth <= 600) setTimeout(function () { lift(true); }, 60);
   }
 
   /* 3. newsletter box on the blog and the main reading pages */
