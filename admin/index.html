@@ -1151,7 +1151,6 @@ async function vEmail() {
       <button class="em-t" data-tpl="news"><b>Big news day reminder</b><span>Heads-up before a major release or rate decision. You fill in the event and time.</span></button>
       <button class="em-t" data-tpl="feedback"><b>What should we cover next?</b><span>Asks readers what they want to learn. Replies come to your sending inbox.</span></button>
     </div>
-    <div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="b" id="em_inv">Send me a sample invoice</button><span class="mute" style="font-size:12px">See exactly what a customer receives when you press Payment received. Made-up data, sent only to you.</span></div>
     <div id="em_pick" style="display:none;margin-top:10px"></div>
     <details style="margin-top:12px"><summary class="mute" style="cursor:pointer">Why send emails at all, and how often?</summary>
       <div class="mute" style="margin-top:8px;font-size:13px;line-height:1.6">
@@ -1228,7 +1227,6 @@ async function vEmail() {
   drawDrafts().then(() => { if ($('#dr_list') && /waiting|writing/.test($('#dr_list').innerText)) watch(); });
   const post = async body => { const {data: sess} = await sb.auth.getSession(); const r = await fetch(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.session.access_token, apikey: SB_KEY}, body: JSON.stringify(body)}); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.status); return j; };
   const blanks = () => /\{\{[^}]*\}\}/.test($('#em_s').value + $('#em_b').value);
-  $('#em_inv').onclick = async () => { const m = await sendMailKind({kind: 'invoice_sample'}); toast(m.ok ? 'Sample invoice sent to ' + m.to : 'Not sent: ' + m.error, !m.ok); };
   $('#em_test').onclick = async () => {
     if ($('#em_s').value.trim().length < 3 || $('#em_b').value.trim().length < 10) return toast('Write a subject and a message first', true);
     if (blanks()) return toast('Fill in the {{ }} parts first', true);
