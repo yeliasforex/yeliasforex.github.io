@@ -267,19 +267,24 @@
   var SIZES = [['Leaderboard', 728, 90], ['Medium rectangle', 300, 250], ['Skyscraper', 160, 600], ['Billboard', 970, 250], ['Mobile banner', 320, 100], ['Square post', 1080, 1080], ['Story or reel cover', 1080, 1920], ['YouTube thumbnail', 1280, 720]];
   /* Banners follow the site's own look: Geist headline with one gold Instrument Serif word, mono kicker, real logo, gold pill, no decoration lines. */
   var PAL = {
-    night: { n: 'Night', a: '#05080f', b: '#0e1830', g1: 'rgba(227,185,95,.20)', g2: 'rgba(40,90,220,.22)', h: '#F4F6FB', sub: '#aab6cc', mono: '#8d9bb4', gold: '#F0C96F', ring: 'rgba(255,255,255,.10)', fine: 'rgba(200,212,232,.62)' },
-    day: { n: 'Day', a: '#fbfcff', b: '#e6edf9', g1: 'rgba(227,185,95,.34)', g2: 'rgba(60,110,230,.16)', h: '#0b1222', sub: '#4a5870', mono: '#5c6b85', gold: '#9a6a0a', ring: 'rgba(11,18,34,.10)', fine: 'rgba(40,55,80,.62)' },
-    brand: { n: 'Brand', a: '#0a1c63', b: '#1747C8', g1: 'rgba(255,214,120,.26)', g2: 'rgba(80,140,255,.30)', h: '#ffffff', sub: '#d3dcff', mono: '#b9c8ff', gold: '#FFE19A', ring: 'rgba(255,255,255,.16)', fine: 'rgba(220,230,255,.7)' }
+    night: { n: 'Night', a: '#05080f', b: '#0e1830', g1: 'rgba(227,185,95,.20)', g2: 'rgba(40,90,220,.22)', h: '#F4F6FB', sub: '#aab6cc', mono: '#8d9bb4', gold: '#F0C96F', gh: '#FFF0C2', gl: '#D9A441', ring: 'rgba(255,255,255,.22)', fine: 'rgba(200,212,232,.62)' },
+    day: { n: 'Day', a: '#fbfcff', b: '#e6edf9', g1: 'rgba(227,185,95,.34)', g2: 'rgba(60,110,230,.16)', h: '#0b1222', sub: '#4a5870', mono: '#5c6b85', gold: '#9a6a0a', gh: '#C98F15', gl: '#7a4f04', ring: 'rgba(11,18,34,.22)', fine: 'rgba(40,55,80,.62)' },
+    brand: { n: 'Brand', a: '#0a1c63', b: '#1747C8', g1: 'rgba(255,214,120,.26)', g2: 'rgba(80,140,255,.30)', h: '#ffffff', sub: '#d3dcff', mono: '#b9c8ff', gold: '#FFE19A', gh: '#FFF3CF', gl: '#F0C259', ring: 'rgba(255,255,255,.3)', fine: 'rgba(220,230,255,.7)' }
   };
   var SANS = 'Geist,ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif', MONO = '"Geist Mono",ui-monospace,Consolas,monospace', SERIF = '"Instrument Serif",ui-serif,Georgia,serif';
   var kitLink = function () { return linkOf(S.kitLink || ''); };
   function ensureQr(cb) { if (window.qrcode) return cb && cb(); if (S._qrLoading) return; S._qrLoading = true; var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = function () { if (cb) cb(); }; document.head.appendChild(s); }
   function ensureFonts() { if (S._fonts || !document.fonts) return true; var ok = document.fonts.check('600 20px Geist') && document.fonts.check('italic 400 20px "Instrument Serif"') && document.fonts.check('500 20px "Geist Mono"'); if (ok) { S._fonts = true; return true; } if (!S._fontsLoading) { S._fontsLoading = true; Promise.all(['600 20px Geist', '500 20px Geist', '500 20px "Geist Mono"', 'italic 400 20px "Instrument Serif"'].map(function (f) { return document.fonts.load(f); })).then(function () { S._fonts = true; redrawBanners(); }, function () { S._fonts = true; }); } return false; }
   function glowAt(g, x, y, r, col) { var a = g.createRadialGradient(x, y, 0, x, y, r); a.addColorStop(0, col); a.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = a; g.fillRect(0, 0, 4000, 4000); }
-  var LOGO = new Image(); LOGO.onload = function () { if (S.me && $('#pd-kit canvas')) redrawBanners(); }; LOGO.src = 'icon-512.png';
+  var LOGO = new Image(), LC = {}; LOGO.onload = function () { LC = {}; if (S.me && $('#pd-kit canvas')) redrawBanners(); }; LOGO.src = 'icon-512.png';
+  function logoAt(s) {
+    s = Math.max(8, Math.round(s)); if (LC[s]) return LC[s];
+    var cur = LOGO, cw = LOGO.naturalWidth; while (cw / 2 >= s) { var t = document.createElement('canvas'); cw = Math.round(cw / 2); t.width = t.height = cw; var tg = t.getContext('2d'); tg.imageSmoothingEnabled = true; tg.imageSmoothingQuality = 'high'; tg.drawImage(cur, 0, 0, cw, cw); cur = t; }
+    var f = document.createElement('canvas'); f.width = f.height = s; var fg = f.getContext('2d'); fg.imageSmoothingEnabled = true; fg.imageSmoothingQuality = 'high'; fg.drawImage(cur, 0, 0, s, s); LC[s] = f; return f;
+  }
   function mark(g, x, y, s) {
-    if (LOGO.complete && LOGO.naturalWidth) { g.save(); g.beginPath(); g.moveTo(x + s * .24, y); g.arcTo(x + s, y, x + s, y + s, s * .24); g.arcTo(x + s, y + s, x, y + s, s * .24); g.arcTo(x, y + s, x, y, s * .24); g.arcTo(x, y, x + s, y, s * .24); g.closePath(); g.clip(); g.drawImage(LOGO, x, y, s, s); g.restore(); return; }
-    g.fillStyle = '#1747C8'; rr(g, x, y, s, s, s * .24);
+    if (LOGO.complete && LOGO.naturalWidth) { var im = logoAt(s), r = s * .22; g.save(); g.shadowColor = 'rgba(0,0,0,.35)'; g.shadowBlur = s * .22; g.shadowOffsetY = s * .08; g.fillStyle = '#1747C8'; rr(g, x, y, s, s, r); g.restore(); g.save(); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + s, y, x + s, y + s, r); g.arcTo(x + s, y + s, x, y + s, r); g.arcTo(x, y + s, x, y, r); g.arcTo(x, y, x + s, y, r); g.closePath(); g.clip(); g.drawImage(im, x, y, s, s); g.restore(); return; }
+    g.fillStyle = '#1747C8'; rr(g, x, y, s, s, s * .22);
   }
   function qrTile(g, text, x, y, s) {
     if (!window.qrcode) return false;
@@ -292,16 +297,37 @@
   function richWidth(g, segs, size) { var tot = 0; words(segs, size).forEach(function (w) { g.font = fontOf(w, size); tot += g.measureText(w.t).width; }); return tot; }
   function rich(g, segs, x, y, mw, size, lh, P) {
     var ws = words(segs, size), line = [], lw = 0, yy = y;
-    function flush() { var cx = x; line.forEach(function (w) { g.font = fontOf(w, size); g.fillStyle = w.k === 'i' ? P.gold : P.h; g.fillText(w.t, cx, yy); cx += w.w; }); line = []; lw = 0; yy += lh; }
+    function flush() { var cx = x; line.forEach(function (w) { g.font = fontOf(w, size); if (w.k === 'i') { var mg = g.createLinearGradient(0, yy, 0, yy + size * 1.05); mg.addColorStop(0, P.gh); mg.addColorStop(.55, P.gold); mg.addColorStop(1, P.gl); g.fillStyle = mg; } else g.fillStyle = P.h; g.fillText(w.t, cx, yy); cx += w.w; }); line = []; lw = 0; yy += lh; }
     ws.forEach(function (w) { g.font = fontOf(w, size); w.w = g.measureText(w.t).width; if (/^\s+$/.test(w.t)) { if (line.length) { line.push(w); lw += w.w; } return; } if (lw + w.w > mw && line.length) { while (line.length && /^\s+$/.test(line[line.length - 1].t)) line.pop(); flush(); } line.push(w); lw += w.w; });
     if (line.length) flush(); return yy;
   }
   function pill(g, x, y, text, size, P, alignRight) {
     g.font = '600 ' + size + 'px ' + SANS; var tw = g.measureText(text).width, ph = size * 1.9, pw = tw + size * 1.6; if (alignRight) x -= pw;
-    var gr = g.createLinearGradient(x, y, x + pw, y + ph); gr.addColorStop(0, '#F6DC9B'); gr.addColorStop(1, '#E3B95F'); g.fillStyle = gr; rr(g, x, y, pw, ph, ph / 2);
+    var gr = g.createLinearGradient(x, y, x + pw, y + ph); gr.addColorStop(0, '#F6DC9B'); gr.addColorStop(1, '#E3B95F'); g.fillStyle = gr; rr(g, x, y, pw, ph, ph / 2); var gl2 = g.createLinearGradient(0, y, 0, y + ph); gl2.addColorStop(0, 'rgba(255,255,255,.55)'); gl2.addColorStop(.5, 'rgba(255,255,255,0)'); g.fillStyle = gl2; rr(g, x, y, pw, ph, ph / 2);
     g.fillStyle = '#2a1d03'; g.textBaseline = 'middle'; g.fillText(text, x + size * .8, y + ph / 2 + size * .04); g.textBaseline = 'top'; return [x, y, pw, ph];
   }
   function spaced(g, text, x, y, size, px) { if (g.letterSpacing !== undefined) { g.letterSpacing = px + 'px'; g.fillText(text, x, y); g.letterSpacing = '0px'; } else g.fillText(text, x, y); }
+  function frameBox(g, w, h, P) {
+    var lw = Math.max(1.5, Math.min(w, h) * .004), r = Math.min(w, h) * .035, gr = g.createLinearGradient(0, 0, w, h); var gold = S.kitStyle === 'day' ? '154,106,10' : '246,220,155';
+    gr.addColorStop(0, 'rgba(' + gold + ',.85)'); gr.addColorStop(.35, 'rgba(' + gold + ',.10)'); gr.addColorStop(.7, 'rgba(' + gold + ',.10)'); gr.addColorStop(1, 'rgba(' + gold + ',.6)');
+    g.save(); g.lineWidth = lw; g.strokeStyle = gr; var x = lw, y = lw, ww = w - lw * 2, hh = h - lw * 2; g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + ww, y, x + ww, y + hh, r); g.arcTo(x + ww, y + hh, x, y + hh, r); g.arcTo(x, y + hh, x, y, r); g.arcTo(x, y, x + ww, y, r); g.closePath(); g.stroke(); g.restore();
+  }
+  function watermark(g, w, h) {
+    var sz = Math.min(w, h) * 1.4, k = sz / 512, day = S.kitStyle === 'day';
+    g.save(); g.translate(w - sz * .66, h - sz * .78); g.scale(k, k); g.fillStyle = day ? 'rgba(11,18,34,.055)' : 'rgba(255,225,150,.07)';
+    g.beginPath(); g.moveTo(256, 140); g.lineTo(299, 208); g.lineTo(299, 376); g.lineTo(213, 376); g.lineTo(213, 208); g.closePath(); g.fill(); g.fillRect(250, 105, 12, 40); g.fillRect(250, 376, 12, 28);
+    g.beginPath(); g.moveTo(117, 376); g.lineTo(202, 230); g.lineTo(202, 376); g.closePath(); g.fill(); g.fillRect(156, 274, 9, 130);
+    g.beginPath(); g.moveTo(395, 376); g.lineTo(310, 230); g.lineTo(310, 376); g.closePath(); g.fill(); g.fillRect(347, 274, 9, 130);
+    g.restore();
+  }
+  function chips(g, x, y, size, P, maxW) {
+    var L = ['LIVE 24/5', '3 ENGINES', 'PUBLIC RECORD'], cx = x; g.font = '500 ' + size + 'px ' + MONO;
+    L.forEach(function (t, i) { var tw = g.measureText(t).width, pw = tw + size * (i === 0 ? 2.6 : 1.7), ph = size * 2; if (cx + pw > x + maxW) return;
+      g.strokeStyle = P.ring; g.lineWidth = Math.max(1, size * .08); g.beginPath(); var r = ph / 2; g.moveTo(cx + r, y); g.arcTo(cx + pw, y, cx + pw, y + ph, r); g.arcTo(cx + pw, y + ph, cx, y + ph, r); g.arcTo(cx, y + ph, cx, y, r); g.arcTo(cx, y, cx + pw, y, r); g.closePath(); g.stroke();
+      if (i === 0) { g.fillStyle = '#2de2a6'; g.beginPath(); g.arc(cx + size * 1, y + ph / 2, size * .26, 0, 6.2832); g.fill(); }
+      g.fillStyle = P.mono; g.textBaseline = 'middle'; g.fillText(t, cx + size * (i === 0 ? 1.7 : .85), y + ph / 2 + size * .04); g.textBaseline = 'top'; cx += pw + size * .6; });
+    return size * 2;
+  }
   function lockup(g, x, y, lg, P, word) {
     mark(g, x, y, lg); if (!word) return lg;
     g.fillStyle = P.h; g.font = '600 ' + lg * .5 + 'px ' + SANS; g.fillText('GoldTriEngine', x + lg * 1.28, y + (lg - lg * .5) / 2 - lg * .02); return lg * 1.28 + g.measureText('GoldTriEngine').width;
@@ -311,6 +337,7 @@
     c.width = w; c.height = h; g.textBaseline = 'top'; g.textAlign = 'left';
     var bg = g.createLinearGradient(0, 0, w * .7, h); bg.addColorStop(0, P.a); bg.addColorStop(1, P.b); g.fillStyle = bg; g.fillRect(0, 0, w, h);
     glowAt(g, w * .96, h * .02, Math.max(w, h) * .8, P.g1); glowAt(g, w * .02, h * 1.0, Math.max(w, h) * .7, P.g2);
+    var wide0 = w / h > 2.2; if (!(wide0 && h < 120)) watermark(g, w, h); frameBox(g, w, h, P);
     var wide = w / h > 2.2, tall = h / w > 1.4, offt = d ? d + '% off' : 'Live record', codeT = d ? 'CODE ' + me.code : 'MY LINK';
     var LONG = [['A gold trading robot you can ', 's'], ['watch', 'i'], [' trade.', 's']], SHORT = [['Gold EA you can ', 's'], ['watch', 'i'], [' trade.', 's']];
     if (wide) {
@@ -337,11 +364,13 @@
     var sy = y; (function () { var t = 'A public live record you can check.', words_ = t.split(' '), line = '', lh = u2 * (narrow ? .1 : .062); words_.forEach(function (wd) { var test = line + wd + ' '; if (g.measureText(test).width > w - pd * 2 && line) { g.fillText(line.trim(), pd, sy); line = wd + ' '; sy += lh; } else line = test; }); g.fillText(line.trim(), pd, sy); y = sy + lh + u2 * .035; })();
     var ps2 = u2 * (narrow ? .085 : .055), pb2 = pill(g, pd, y, offt, ps2, P, false);
     if (d) { g.fillStyle = P.gold; g.font = '500 ' + ps2 * .62 + 'px ' + MONO; if (narrow) spaced(g, codeT, pd, pb2[1] + pb2[3] + ps2 * .5, ps2, ps2 * .05); else spaced(g, codeT, pb2[0] + pb2[2] + ps2 * .6, pb2[1] + pb2[3] / 2 - ps2 * .3, ps2, ps2 * .05); }
+    if (u2 >= 400 && !narrow) chips(g, pd, pb2[1] + pb2[3] + u2 * .05, u2 * .027, P, w - pd * 2 - (w >= 1000 ? u2 * .3 : 0));
     var fs = u2 * (narrow ? .06 : .031), dh = u2 * (narrow ? .05 : .026), bottom = h - pd;
     g.fillStyle = P.fine; g.font = '400 ' + dh + 'px ' + SANS; var dis = 'Trading gold can lose money. I earn a commission.', dl = narrow ? 3 : 1;
     if (narrow) { var dy = bottom - dh * 3.4; ['Trading gold can', 'lose money. I earn a', 'commission.'].forEach(function (t, i) { g.fillText(t, pd, dy + i * dh * 1.2); }); }
+    else if (tall && bigF) { g.fillText('Trading gold can lose money.', pd, bottom - dh * 2.3); g.fillText('I earn a commission.', pd, bottom - dh * 1.1); }
     else g.fillText(dis, pd, bottom - dh);
-    g.fillStyle = P.h; g.font = '500 ' + fs + 'px ' + MONO; var shortUrl = g.measureText(url).width < w - pd * 2 - (w >= 1000 ? u2 * .3 : 0) ? url : 'goldtriengine.com'; g.fillText(shortUrl, pd, bottom - dh * (narrow ? 4.2 : 1) - fs * 1.7);
+    g.fillStyle = P.h; g.font = '500 ' + fs + 'px ' + MONO; var shortUrl = g.measureText(url).width < w - pd * 2 - (w >= 1000 ? u2 * .3 : 0) ? url : 'goldtriengine.com'; g.fillText(shortUrl, pd, bottom - dh * (narrow ? 4.2 : (tall && bigF ? 2.3 : 1)) - fs * 1.7);
     if (w >= 1000) { var qs = u2 * (tall ? .3 : .22); if (!qrTile(g, link, w - pd - qs, h - pd - qs, qs)) ensureQr(function () { redrawBanners(); }); }
     if (!fonts) { /* redrawn as soon as the fonts arrive */ }
   }
