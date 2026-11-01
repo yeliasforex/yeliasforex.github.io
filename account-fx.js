@@ -29,12 +29,12 @@
   /* ---------- side menu: icons, groups, shortcuts, collapse ---------- */
   function menu() {
     var nav = $('#subnav'); if (!nav) return;
-    $$('a[data-tab]', nav).forEach(function (a) { if (!a.querySelector('.maz-i')) a.insertAdjacentHTML('afterbegin', ic(a.dataset.tab)); });
+    $$('a[data-tab]', nav).forEach(function (a) { if (!a.querySelector('.maz-i')) a.insertAdjacentHTML('afterbegin', ic(a.dataset.tab)); a.title = a.textContent.replace(/\d+$/, '').trim(); });
     if (nav.querySelector('.mzg')) return;
     var mk = function (t, ord) { var s = document.createElement('span'); s.className = 'mzg'; s.textContent = t; s.style.order = ord; nav.appendChild(s); };
     mk('Account', 0); $$('a[data-tab]', nav).forEach(function (a, i) { a.style.order = 1 + i; });
     mk('Shortcuts', 20);
-    SHORT.forEach(function (s, i) { var a = document.createElement('a'); a.className = 'mzs'; a.href = s[0]; if (/^https?:/.test(s[0])) a.rel = 'noopener'; a.style.order = 21 + i; a.innerHTML = ic(s[2]) + '<span>' + s[1] + '</span>'; nav.appendChild(a); });
+    SHORT.forEach(function (s, i) { var a = document.createElement('a'); a.className = 'mzs'; a.href = s[0]; if (/^https?:/.test(s[0])) a.rel = 'noopener'; a.style.order = 21 + i; a.title = s[1]; a.innerHTML = ic(s[2]) + '<span>' + s[1] + '</span>'; nav.appendChild(a); });
     var bt = document.createElement('button'); bt.type = 'button'; bt.className = 'mzt'; bt.style.order = 40; bt.setAttribute('aria-label', 'Collapse or expand the menu'); bt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg><span>Collapse</span>';
     bt.onclick = function () { var c = document.body.classList.toggle('mznc'); try { localStorage.setItem('gte_ma_nav', c ? 'c' : 'o'); } catch (e) {} };
     nav.appendChild(bt);
@@ -178,7 +178,7 @@
     var A = $('#acct'); if (!A || !$('#subnav')) return;
     if (!booted) { booted = true; document.body.classList.add('mzfx'); if (document.documentElement.classList.contains('mznc-pre')) document.body.classList.add('mznc'); net(); glow(); wipe(); chip(); setInterval(header, 20000); }
     menu(); header(); checklist(); tools();
-    var k = tabKey(); if (k !== lastTab) { if (lastTab !== null) sweep(); lastTab = k; }
+    var k = tabKey(); A.dataset.tab = k; if (k !== lastTab) { if (lastTab !== null) { sweep(); var hh = $('#macc'); if (hh) setTimeout(function () { window.scrollTo({top: Math.max(0, hh.getBoundingClientRect().top + window.scrollY - 84), behavior: reduce ? 'auto' : 'smooth'}); }, 60); } lastTab = k; }
   }
   function start() {
     var A = $('#acct'); if (!A) return; var tm;

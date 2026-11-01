@@ -84,29 +84,30 @@
     const w = root.querySelector('#' + id + '-w'); if (!w || pts.length < 2) return;
     const svg = w.querySelector('svg'), tip = w.querySelector('.tipbox'), vl = w.querySelector('#' + id + '-v');
     const x0 = +w.dataset.x0, x1 = +w.dataset.x1, pl = +w.dataset.pl, pr = +w.dataset.pr;
+    let lastB = null;
     const move = ev => {
       const r = svg.getBoundingClientRect(), cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left, f = Math.min(1, Math.max(0, (cx / r.width - pl) / (1 - pl - pr)));
-      const t = x0 + f * (x1 - x0); let b = pts[0]; pts.forEach(p => { if (Math.abs(p.t - t) < Math.abs(b.t - t)) b = p; });
+      const t = x0 + f * (x1 - x0); let b = pts[0]; pts.forEach(p => { if (Math.abs(p.t - t) < Math.abs(b.t - t)) b = p; }); lastB = b;
       const bx = (pl + (x1 === x0 ? 0 : (b.t - x0) / (x1 - x0)) * (1 - pl - pr)) * r.width;
       vl.setAttribute('x1', bx / r.width * 760); vl.setAttribute('x2', bx / r.width * 760); vl.setAttribute('opacity', '.5');
       const v = neg ? -b[key] : b[key];
       tip.style.display = 'block'; tip.style.left = Math.min(r.width - 150, Math.max(0, bx - 70)) + 'px';
       tip.innerHTML = `<b>${usd(v, 2)}</b><br><span>${loc(b.t)}</span>${b.tr ? '<br><span>' + (ENG[b.tr.engine] || '') + ' ' + (b.tr.dir > 0 ? 'Buy' : 'Sell') + ' ' + sgn(b.tr.profit) + '</span>' : ''}`;
     };
-    svg.onmousemove = svg.ontouchmove = move; svg.onmouseleave = () => { tip.style.display = 'none'; vl.setAttribute('opacity', '0'); };
+    svg.style.cursor = 'pointer'; svg.onclick = ev => { move(ev); if (lastB && lastB.tr && window.gteSheet) window.gteSheet.trade(lastB.tr); }; svg.onmousemove = svg.ontouchmove = move; svg.onmouseleave = () => { tip.style.display = 'none'; vl.setAttribute('opacity', '0'); };
   }
 
   function engineBars(t) {
     const rows = ['M', 'I', 'D'].map(e => { const x = t.filter(y => y.engine === e), s = stats(x); return {e, n: s.n, net: s.net, win: s.win}; });
     const mx = Math.max(1, ...rows.map(r => Math.abs(r.net)));
-    return rows.map((r, i) => `<div class="eb"><div class="ebh"><span class="chip" style="--c:${ECL[r.e]}">${ENG[r.e]}</span><span class="hint">${r.n} trades${r.n ? ' · ' + r.win.toFixed(0) + '% win' : ''}</span><b style="color:${col(r.net)}">${r.n ? sgn(r.net) : '-'}</b></div>
+    return rows.map((r, i) => `<div class="eb"${r.n ? ` data-eng="${r.e}" role="button" tabindex="0"` : ''}><div class="ebh"><span class="chip" style="--c:${ECL[r.e]}">${ENG[r.e]}</span><span class="hint">${r.n} trades${r.n ? ' · ' + r.win.toFixed(0) + '% win' : ''}</span><b style="color:${col(r.net)}">${r.n ? sgn(r.net) : '-'}</b></div>
       <div class="ebb"><i style="width:${r.n ? Math.max(2, Math.abs(r.net) / mx * 100) : 0}%;background:${r.net >= 0 ? `linear-gradient(90deg,${ECL[r.e]}88,${ECL[r.e]})` : 'var(--red)'};--i:${i}"></i></div></div>`).join('');
   }
 
   // win/loss ring; the number in the middle counts up (data-cu)
   function donut(w, l) {
     const n = w + l, Rr = 48, C = 2 * Math.PI * Rr, wf = n ? w / n : 0;
-    return `<svg class="donut" viewBox="0 0 120 120"><circle cx="60" cy="60" r="${Rr}" fill="none" stroke="${l ? 'var(--red)' : 'var(--panel-2)'}" stroke-width="12" opacity=".8"/>
+    return `<svg class="donut" data-sel="winloss" role="button" tabindex="0" viewBox="0 0 120 120"><circle cx="60" cy="60" r="${Rr}" fill="none" stroke="${l ? 'var(--red)' : 'var(--panel-2)'}" stroke-width="12" opacity=".8"/>
       ${w ? `<circle class="arc" cx="60" cy="60" r="${Rr}" fill="none" stroke="var(--mint)" stroke-width="12" stroke-linecap="${wf >= 1 ? 'butt' : 'round'}" stroke-dasharray="${(C * wf).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 60 60)" style="--c:${C.toFixed(1)}"/>` : ''}
       <text x="60" y="63" text-anchor="middle" font-size="25" font-weight="600" style="fill:var(--fg)" data-cu="${(wf * 100).toFixed(2)}" data-f="pct">${(wf * 100).toFixed(0)}%</text>
       <text x="60" y="80" text-anchor="middle" font-size="9" fill="currentColor" opacity=".6" letter-spacing="1.2">WIN RATE</text></svg>`;
@@ -122,17 +123,17 @@
       const hasV = it.v !== 0 || it.has;
       const up = it.v > 0 ? `<div class="xbar xup" style="height:${(it.v / top * 100).toFixed(2)}%;--i:${i}"><u></u><b>${lab(it.v)}</b></div>` : (it.v === 0 && hasV ? `<div class="xbar z" style="--i:${i}"><u></u></div>` : '');
       const dn = it.v < 0 ? `<div class="xbar dn" style="height:${(it.v / bot * 100).toFixed(2)}%;--i:${i}"><u></u><b>${lab(it.v)}</b></div>` : '';
-      return `<div class="dc ${it.v > 0 ? 'p' : it.v < 0 ? 'n' : 'e'}" title="${esc(it.label)}: ${it.v === 0 && !hasV ? 'no closed trades' : sgn(it.v)}"><div class="u" style="height:${upH}%">${up}</div><div class="d" style="height:${dnH}%">${dn}</div><span class="dx">${esc(it.short)}</span></div>`;
+      return `<div class="dc ${it.v > 0 ? 'p' : it.v < 0 ? 'n' : 'e'}"${it.key && hasV ? ` data-bar="${it.key}" role="button" tabindex="0"` : ''} title="${esc(it.label)}: ${it.v === 0 && !hasV ? 'no closed trades' : sgn(it.v)}"><div class="u" style="height:${upH}%">${up}</div><div class="d" style="height:${dnH}%">${dn}</div><span class="dx">${esc(it.short)}</span></div>`;
     }).join('');
     return `<div class="db ${bot < 0 ? 'neg' : ''} ${opt.full ? 'wide' : ''} ${items.length > 16 ? 'dense' : items.length > 10 ? 'mid' : ''}" style="height:${h || 190}px"><div class="dbi">${cols}</div></div>`;
   }
   function monthItems(t) {
     const m = {}; t.forEach(x => { const d = new Date(x.closed_at), k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); m[k] = (m[k] || 0) + x.profit; });
-    return Object.keys(m).sort().map(k => ({label: k, short: new Date(k + '-02').toLocaleDateString([], {month: 'short'}), v: m[k], has: true}));
+    return Object.keys(m).sort().map(k => ({key: k, label: k, short: new Date(k + '-02').toLocaleDateString([], {month: 'short'}), v: m[k], has: true}));
   }
   function dayItems(t, days) {
     const m = dayMap(t), out = [], now = new Date(); now.setHours(0, 0, 0, 0);
-    for (let i = days - 1; i >= 0; i--) { const d = new Date(now.getTime() - i * 864e5), k = dk(d); out.push({label: locDay(d), short: d.getDate() % 2 === 0 || i === 0 ? String(d.getDate()) : '', v: m[k] ? m[k].v : 0, has: k in m}); }
+    for (let i = days - 1; i >= 0; i--) { const d = new Date(now.getTime() - i * 864e5), k = dk(d); out.push({key: k, label: locDay(d), short: d.getDate() % 2 === 0 || i === 0 ? String(d.getDate()) : '', v: m[k] ? m[k].v : 0, has: k in m}); }
     return out;
   }
 
@@ -145,21 +146,21 @@
     const ks = Object.keys(m).sort(), firstIdx = ks.length ? (+ks[0].slice(0, 4)) * 12 + (+ks[0].slice(5, 7) - 1) : y * 12 + mo, nowIdx = today.getFullYear() * 12 + today.getMonth(), idxM = y * 12 + mo;
     let cells = WD.map(d => `<div class="ch">${d}</div>`).join('') + '<div class="ch wk">Week</div>', idx = 0, net = 0, up = 0, dn = 0, trades = 0, best = null, worst = null;
     for (let w = 0; w < weeks; w++) {
-      let ws = 0, wn = 0;
+      let ws = 0, wn = 0, wk0 = null, wk1 = null;
       for (let r = 0; r < 7; r++) {
         const no = w * 7 + r - lead + 1;
         if (no < 1 || no > days) { cells += '<div class="cd off"></div>'; continue; }
-        const d = new Date(y, mo, no), o = m[dk(d)], fut = d > today;
+        const d = new Date(y, mo, no), o = m[dk(d)], fut = d > today; if (!wk0) wk0 = dk(d); wk1 = dk(d);
         if (o) { ws += o.v; wn += o.n; net += o.v; trades += o.n; if (o.v >= 0) up++; else dn++; if (!best || o.v > best.v) best = {v: o.v, d}; if (!worst || o.v < worst.v) worst = {v: o.v, d}; }
         const a = o ? (.16 + .6 * Math.min(1, Math.abs(o.v) / mx)).toFixed(2) : 0, cls = (o ? (o.v >= 0 ? 'pos' : 'neg') : fut ? 'fut' : 'none') + (d.getTime() === today.getTime() ? ' today' : '');
-        cells += `<div class="cd ${cls}" style="--a:${a};--i:${idx++}" title="${esc(locDay(d))}: ${o ? sgn(o.v) + ' · ' + o.n + ' trade' + (o.n > 1 ? 's' : '') : 'no closed trades'}"><span class="dnum">${no}</span>${o ? `<b class="full">${sgn(o.v)}</b><b class="cmp">${csgn(o.v)}</b><em>${o.n} trade${o.n > 1 ? 's' : ''}</em>` : ''}</div>`;
+        cells += `<div class="cd ${cls}" style="--a:${a};--i:${idx++}"${o ? ` data-day="${dk(d)}" role="button" tabindex="0"` : ''} title="${esc(locDay(d))}: ${o ? sgn(o.v) + ' · ' + o.n + ' trade' + (o.n > 1 ? 's' : '') : 'no closed trades'}"><span class="dnum">${no}</span>${o ? `<b class="full">${sgn(o.v)}</b><b class="cmp">${csgn(o.v)}</b><em>${o.n} trade${o.n > 1 ? 's' : ''}</em>` : ''}</div>`;
       }
-      cells += `<div class="cw ${wn ? (ws >= 0 ? 'pos' : 'neg') : ''}" style="--i:${idx++}"><span>W${w + 1}</span>${wn ? `<b class="full">${sgn(ws)}</b><b class="cmp">${csgn(ws)}</b><em>${wn} trade${wn > 1 ? 's' : ''}</em>` : '<b class="mut">-</b>'}</div>`;
+      cells += `<div class="cw ${wn ? (ws >= 0 ? 'pos' : 'neg') : ''}" style="--i:${idx++}"${wn ? ` data-wk="${wk0}|${wk1}" role="button" tabindex="0"` : ''}><span>W${w + 1}</span>${wn ? `<b class="full">${sgn(ws)}</b><b class="cmp">${csgn(ws)}</b><em>${wn} trade${wn > 1 ? 's' : ''}</em>` : '<b class="mut">-</b>'}</div>`;
     }
     const dd = x => x ? x.d.toLocaleDateString([], {month: 'short', day: 'numeric'}) : '';
     return `<div class="calhead"><div class="calnav"><button class="btn sm" data-cal="-1" ${idxM <= firstIdx ? 'disabled' : ''} aria-label="Previous month">&#8249;</button><b>${first.toLocaleDateString([], {month: 'long', year: 'numeric'})}</b><button class="btn sm" data-cal="1" ${idxM >= nowIdx ? 'disabled' : ''} aria-label="Next month">&#8250;</button></div>
-      <div class="calsum"><div><span>Month result</span><b style="color:${keys.length ? col(net) : 'var(--fg-2)'}">${keys.length ? sgn(net) : '-'}</b></div><div><span>Green / red days</span><b><i class="gd">${up}</i> / <i class="rd">${dn}</i></b></div>
-      <div><span>Best day</span><b style="color:var(--mint)">${best ? sgn(best.v) + ' <small>' + dd(best) + '</small>' : '-'}</b></div><div><span>Worst day</span><b style="color:${worst && worst.v < 0 ? 'var(--red)' : 'var(--fg-2)'}">${worst ? sgn(worst.v) + ' <small>' + dd(worst) + '</small>' : '-'}</b></div><div><span>Trades</span><b>${trades}</b></div></div></div>
+      <div class="calsum"><div data-cs="month" data-ym="${y}-${String(mo + 1).padStart(2, '0')}" role="button" tabindex="0"><span>Month result</span><b style="color:${keys.length ? col(net) : 'var(--fg-2)'}">${keys.length ? sgn(net) : '-'}</b></div><div data-cs="days" data-ym="${y}-${String(mo + 1).padStart(2, '0')}" role="button" tabindex="0"><span>Green / red days</span><b><i class="gd">${up}</i> / <i class="rd">${dn}</i></b></div>
+      <div data-cs="best" data-ym="${y}-${String(mo + 1).padStart(2, '0')}" data-day="${best ? dk(best.d) : ''}" role="button" tabindex="0"><span>Best day</span><b style="color:var(--mint)">${best ? sgn(best.v) + ' <small>' + dd(best) + '</small>' : '-'}</b></div><div data-cs="worst" data-ym="${y}-${String(mo + 1).padStart(2, '0')}" data-day="${worst ? dk(worst.d) : ''}" role="button" tabindex="0"><span>Worst day</span><b style="color:${worst && worst.v < 0 ? 'var(--red)' : 'var(--fg-2)'}">${worst ? sgn(worst.v) + ' <small>' + dd(worst) + '</small>' : '-'}</b></div><div data-cs="trades" data-ym="${y}-${String(mo + 1).padStart(2, '0')}" role="button" tabindex="0"><span>Trades</span><b>${trades}</b></div></div></div>
       <div class="calg">${cells}</div>`;
   }
 
@@ -167,16 +168,16 @@
   function weekdayBars(t) {
     const a = WD.map(() => ({v: 0, n: 0})); t.forEach(x => { const o = a[(new Date(x.closed_at).getDay() + 6) % 7]; o.v += x.profit; o.n++; });
     const mx = Math.max(1, ...a.map(o => Math.abs(o.v)));
-    return a.map((o, i) => (i > 4 && !o.n) ? '' : `<div class="wd"><span class="wdl">${WD[i]}</span><div class="wdb"><i class="${o.v < 0 ? 'neg' : ''}" style="width:${o.n ? Math.max(1.5, Math.abs(o.v) / mx * 100) : 0}%;--i:${i}"></i></div><b style="color:${o.n ? col(o.v) : 'var(--muted)'}">${o.n ? sgn(o.v) : '-'}</b><span class="hint wdn">${o.n} trade${o.n === 1 ? '' : 's'}</span></div>`).join('');
+    return a.map((o, i) => (i > 4 && !o.n) ? '' : `<div class="wd"${o.n ? ` data-wd="${i}" role="button" tabindex="0"` : ''}><span class="wdl">${WD[i]}</span><div class="wdb"><i class="${o.v < 0 ? 'neg' : ''}" style="width:${o.n ? Math.max(1.5, Math.abs(o.v) / mx * 100) : 0}%;--i:${i}"></i></div><b style="color:${o.n ? col(o.v) : 'var(--muted)'}">${o.n ? sgn(o.v) : '-'}</b><span class="hint wdn">${o.n} trade${o.n === 1 ? '' : 's'}</span></div>`).join('');
   }
   function hourStrip(t) {
     const h = Array.from({length: 24}, () => ({v: 0, n: 0})); t.forEach(x => { const o = h[new Date(x.closed_at).getHours()]; o.v += x.profit; o.n++; });
     const mx = Math.max(1, ...h.map(o => Math.abs(o.v)));
-    return `<div class="hrs">${h.map((o, i) => `<div class="hc ${o.n ? (o.v >= 0 ? 'pos' : 'neg') : 'none'}" style="--a:${o.n ? (.16 + .6 * Math.min(1, Math.abs(o.v) / mx)).toFixed(2) : 0};--i:${i}" title="${String(i).padStart(2, '0')}:00 to ${String(i).padStart(2, '0')}:59 · ${o.n ? sgn(o.v) + ' · ' + o.n + ' trade' + (o.n > 1 ? 's' : '') : 'no closed trades'}"><span>${String(i).padStart(2, '0')}h</span><b>${o.n ? csgn(o.v) : ''}</b></div>`).join('')}</div>`;
+    return `<div class="hrs">${h.map((o, i) => `<div class="hc ${o.n ? (o.v >= 0 ? 'pos' : 'neg') : 'none'}"${o.n ? ` data-hr="${i}" role="button" tabindex="0"` : ''} style="--a:${o.n ? (.16 + .6 * Math.min(1, Math.abs(o.v) / mx)).toFixed(2) : 0};--i:${i}" title="${String(i).padStart(2, '0')}:00 to ${String(i).padStart(2, '0')}:59 · ${o.n ? sgn(o.v) + ' · ' + o.n + ' trade' + (o.n > 1 ? 's' : '') : 'no closed trades'}"><span>${String(i).padStart(2, '0')}h</span><b>${o.n ? csgn(o.v) : ''}</b></div>`).join('')}</div>`;
   }
 
   function tradeRows(list) {
-    return list.map(t => `<tr><td>${loc(t.closed_at)}</td><td><span class="chip" style="--c:${ECL[t.engine]}">${ENG[t.engine] || ''}${t.is_add ? ' add-on' : ''}</span></td>
+    return list.map(t => `<tr class="ct" data-ct="${t.closed_at}|${t.lots}|${t.profit}" role="button" tabindex="0"><td>${loc(t.closed_at)}</td><td><span class="chip" style="--c:${ECL[t.engine]}">${ENG[t.engine] || ''}${t.is_add ? ' add-on' : ''}</span></td>
       <td><span class="side ${t.dir > 0 ? 'b' : 's'}">${t.dir > 0 ? 'BUY' : 'SELL'}</span></td><td>${Number(t.lots).toFixed(2)}</td><td>${Number(t.open_price).toFixed(2)}</td><td>${Number(t.close_price).toFixed(2)}</td>
       <td class="hint">${held(t)}</td><td style="color:${col(t.profit)};font-weight:600">${sgn(t.profit)}<span class="hint" style="margin-left:6px;font-weight:400">${(t.result_r || 0) >= 0 ? '+' : ''}${(t.result_r || 0).toFixed(2)}R</span></td></tr>`).join('');
   }
@@ -185,8 +186,8 @@
     let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647, out = [];
     for (let i = 0; i < 90; i++) { const eng = ['M', 'I', 'D'][Math.floor(r() * 3)], win = r() < .55, R = win ? .3 + r() * 2.2 : -(.5 + r() * .6), lots = .01 + Math.floor(r() * 3) / 100, hrs = 1 + r() * 20;
       const closed = Date.now() - (90 - i) * 5.2 * 36e5;
-      out.push({engine: eng, dir: r() < .5 ? 1 : -1, is_add: false, opened_at: new Date(closed - hrs * 36e5).toISOString(), closed_at: new Date(closed).toISOString(), open_price: 4100 + r() * 100, close_price: 4100 + r() * 100, lots, result_r: R, profit: R * 25 * lots * 100}); }
+      out.push({engine: eng, dir: r() < .5 ? 1 : -1, is_add: false, opened_at: new Date(closed - hrs * 36e5).toISOString(), closed_at: new Date(closed).toISOString(), open_price: 4100 + r() * 100, close_price: 4100 + r() * 100, lots, result_r: R, profit: R * 25 * lots * 100, exit_reason: R < 0 ? (r() < .8 ? 'stop' : 'closed') : (r() < .6 ? 'target' : 'closed')}); }
     return out;
   }
-  window.gteResults = {stats, curve, spark, lineChart, bindHover, engineBars, donut, bars, monthItems, dayItems, calendar, weekdayBars, hourStrip, tradeRows, demo, ENG, ECL, sgn, usd, col, loc, fmtMin};
+  window.gteResults = {dk, held, holdMin, locDay, stats, curve, spark, lineChart, bindHover, engineBars, donut, bars, monthItems, dayItems, calendar, weekdayBars, hourStrip, tradeRows, demo, ENG, ECL, sgn, usd, col, loc, fmtMin};
 })();

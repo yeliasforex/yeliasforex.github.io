@@ -56,7 +56,7 @@
     if (DEMO) { toast('Demo mode: ' + fn); return {id: 'demo', ref: 'GTE-DEMO01', amountUsd: 1700}; }
     const {data, error} = await c.rpc(fn, args || {}); if (error) throw error; return data;
   }
-  const TCOLS = 'engine,dir,is_add,opened_at,closed_at,open_price,close_price,lots,result_r,profit';
+  const TCOLS = 'engine,dir,is_add,opened_at,closed_at,open_price,close_price,lots,result_r,profit,exit_reason,symbol';
   const tnorm = rows => { rows.forEach(t => { t.profit = Number(t.profit); t.result_r = Number(t.result_r); t.lots = Number(t.lots); }); return rows; };
   async function tradesFor(id) {
     const hit = tradeCache[id]; if (hit && Date.now() - hit.at < 55000) return hit.rows;
@@ -187,7 +187,7 @@
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · …${esc(String(l.key).slice(-4))}</option>`).join('')}</select></div>`);
     const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
     const updAvail = !!(lv && cv && lic.status === 'active' && vc(lv, cv) > 0);
-    window.GTE_MA = {lic, st: stOf(lic.id), trades, profile: S.profile, admin: !!(AS || INJ)};
+    window.GTE_MA = {lic, st: stOf(lic.id), trades, profile: S.profile, admin: !!(AS || INJ), rng: a => inRange(a, range), licenses: S.licenses, orders: S.orders, plans: S.plans, plan: planOf(lic.plan_id), tol: S.settings.toleranceActive ?? 5, settings: S.settings};
     parts.push(hero(lic, trades));
     parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}${k === 'inbox' && unread() ? `<span class="nb">${unread()}</span>` : ''}</a>`).join('')}</div><div id="tabbody"></div>`);
     A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount(); paintBell(); if (window.gteDevice && !AS && !DEMO) gteDevice.prompt(A, rpc, toast, guard); if (!AS && !DEMO) partnerEntry(A); if (stOpen && !quiet) renderSettings();
@@ -213,10 +213,10 @@
         ${R.spark(R.curve(trades).map(p => p.c), '#3EE09A', 54)}
       </div>
       <div class="hero-r">
-        <div class="tile"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div></div>
-        <div class="tile"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div></div>
-        <div class="tile"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades</div></div>
-        <div class="tile"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2)}</div></div>
+        <div class="tile" data-sel="month" role="button" tabindex="0"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div></div>
+        <div class="tile" data-sel="week" role="button" tabindex="0"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div></div>
+        <div class="tile" data-sel="allnet" role="button" tabindex="0"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades</div></div>
+        <div class="tile" data-sel="win" role="button" tabindex="0"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2)}</div></div>
       </div>
       <div class="hero-f">
         <div class="row"><button class="btn sm" data-copy="${esc(l.key)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:15px;height:15px;margin-right:6px;vertical-align:-2px"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>Copy license key</button><a class="hint" href="#tab=billing" data-go="billing">See all keys</a></div>
@@ -233,7 +233,7 @@
     if (!S.licenses.length) return '';
     return `<div class="panel"><h2>Your license keys</h2><p class="sub">Each key works on one MT5 account. Paste a key into the EA's only setting.</p>
       <div style="overflow-x:auto"><table class="tbl2"><tr><th>Key</th><th>Plan</th><th>Status</th><th>MT5 account</th><th>Valid until</th><th></th></tr>
-      ${S.licenses.map(l => { const [pc, pt] = statePill(l.status); return `<tr><td><span class="key" style="font-size:.85rem;padding:3px 7px">${esc(l.key)}</span> <button class="btn sm" data-copy="${esc(l.key)}">Copy</button></td><td>${esc(planOf(l.plan_id).name)}</td><td><span class="pill ${pc}">${pt}</span></td><td>${l.bound_account ? esc(l.bound_account) + (l.bound_is_demo ? ' (demo)' : '') : 'Not used yet'}</td><td>${l.expires_at ? date(l.expires_at) : 'Starts when first used'}</td><td>${l.id === cur ? '<span class="hint">shown above</span>' : `<button class="btn sm" data-lic="${l.id}">View</button>`}</td></tr>`; }).join('')}</table></div></div>`;
+      ${S.licenses.map(l => { const [pc, pt] = statePill(l.status); return `<tr class="ct" data-lk="${l.id}" role="button" tabindex="0"><td><span class="key" style="font-size:.85rem;padding:3px 7px">${esc(l.key)}</span> <button class="btn sm" data-copy="${esc(l.key)}">Copy</button></td><td>${esc(planOf(l.plan_id).name)}</td><td><span class="pill ${pc}">${pt}</span></td><td>${l.bound_account ? esc(l.bound_account) + (l.bound_is_demo ? ' (demo)' : '') : 'Not used yet'}</td><td>${l.expires_at ? date(l.expires_at) : 'Starts when first used'}</td><td>${l.id === cur ? '<span class="hint">shown above</span>' : `<button class="btn sm" data-lic="${l.id}">View</button>`}</td></tr>`; }).join('')}</table></div></div>`;
   }
   function tOverview(l, trades) {
     const st = stOf(l.id), pl = planOf(l.plan_id), probs = problems(l, st);
@@ -247,7 +247,7 @@
         <div class="kv"><span>MT5 account</span><b>${l.bound_account ? esc(l.bound_account) : 'Not bound yet'}</b></div>
         <div class="kv"><span>Broker</span><b>${esc(l.bound_broker || '-')}</b></div>
         <div class="kv"><span>Plan covers</span><b>${lim == null ? 'No deposit limit' : usd(lim, 0)}</b></div>
-        <div class="kv"><span>Deposited minus withdrawn</span><b>${usd(funded)}</b></div>
+        <div class="kv" data-sel="limit" role="button" tabindex="0"><span>Deposited minus withdrawn</span><b>${usd(funded)}</b></div>
         ${lim == null ? '' : `<div class="meter ${over ? 'bad' : near ? 'warn' : ''}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div><div class="hint">Limit ${usd(lim, 0)} + ${tol}% tolerance${Number(l.extra_allowance_usd) ? ' + ' + usd(l.extra_allowance_usd, 0) + ' allowance' : ''}. Profits never count.</div>`}
         ${over ? '<div class="msg err" style="margin-top:12px">Deposits are above your plan. New trades are paused until you upgrade or withdraw the excess. Open trades keep being managed.</div><div class="row" style="margin-top:10px"><a class="btn sm mint" href="#tab=billing" data-go="billing">Upgrade plan</a></div>' : ''}</div></div>
       <div class="panel"><div class="row sp"><div><h2>Equity curve</h2><p class="sub" style="margin:0">Cumulative net result of closed trades.</p></div><a class="btn sm" href="#tab=results" data-go="results">All charts</a></div><div id="ov-eq"></div></div>
@@ -271,25 +271,25 @@
   function rangeTabs() { return `<div class="tabsx" id="rs-tabs">${[['1m', '1 month'], ['3m', '3 months'], ['all', 'All']].map(([k, n]) => `<a href="#" data-r="${k}" class="${k === range ? 'on' : ''}">${n}</a>`).join('')}</div>`; }
   function tResults(l, all) {
     if (!all.length) return `<div class="panel"><h2>Results</h2><div class="empty">Charts appear here after the EA closes its first trade on your account.</div></div>`;
-    const t = inRange(all, range), s = R.stats(t), k = (lab, v, sub, clr, cu, f) => `<div class="tile"><div class="l">${lab}</div><div class="v"${clr ? ` style="color:${clr}"` : ''}${cu != null ? ` data-cu="${cu}" data-f="${f}"` : ''}>${v}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
+    const t = inRange(all, range), s = R.stats(t), k = (lab, v, sub, clr, cu, f, sel) => `<div class="tile"${sel ? ` data-sel="${sel}" role="button" tabindex="0"` : ''}><div class="l">${lab}</div><div class="v"${clr ? ` style="color:${clr}"` : ''}${cu != null ? ` data-cu="${cu}" data-f="${f}"` : ''}>${v}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
     if (!calM) { const n = new Date(); calM = {y: n.getFullYear(), m: n.getMonth()}; }
     const dayTot = {}; t.forEach(x => { const d = new Date(x.closed_at).toDateString(); dayTot[d] = (dayTot[d] || 0) + x.profit; });
     const dv = Object.entries(dayTot), bestD = dv.length ? dv.reduce((a, b) => b[1] > a[1] ? b : a) : null, worstD = dv.length ? dv.reduce((a, b) => b[1] < a[1] ? b : a) : null;
     const dshort = d => new Date(d).toLocaleDateString([], {month: 'short', day: 'numeric'});
     const stk = s.streak > 0 ? s.streak + ' win' + (s.streak > 1 ? 's' : '') + ' in a row' : s.streak < 0 ? -s.streak + ' loss' + (s.streak < -1 ? 'es' : '') + ' in a row' : '-';
     return `<div class="panel"><div class="row sp"><div><h2>Results</h2><p class="sub" style="margin:0">Closed trades recorded by the EA on your account. Source: your own trade records. Times in your local time.</p></div>${rangeTabs()}</div>
-      <div class="tiles">${k('Net result', s.n ? R.sgn(s.net) : '-', s.n + ' closed trades' + R.spark(R.curve(t).map(p => p.c), s.net >= 0 ? '#3EE09A' : '#FF6B78', 26), R.col(s.net), s.n ? s.net : null, 'sgn')}${k('Win rate', s.win.toFixed(0) + '%', s.wins + ' wins · ' + s.losses + ' losses', '', s.win, 'pct')}${k('Profit factor', s.pf == null ? '-' : s.pf.toFixed(2), 'gross profit / gross loss', '', s.pf, 'dec')}${k('Largest drawdown', usd(s.maxDD, 2), 'below a result peak', 'var(--red)', s.maxDD, 'usd')}
-        ${k('Average win', R.sgn(s.avgWin), 'per winning trade', 'var(--mint)', s.avgWin, 'sgn')}${k('Average loss', R.sgn(s.avgLoss), 'per losing trade', 'var(--red)', s.avgLoss, 'sgn')}${k('Best trade', R.sgn(s.best), '', 'var(--mint)', s.best, 'sgn')}${k('Worst trade', R.sgn(s.worst), '', 'var(--red)', s.worst, 'sgn')}
-        ${k('Expectancy', R.sgn(s.expectancy), 'average result per trade', R.col(s.expectancy), s.expectancy, 'sgn')}${k('Payoff ratio', s.payoff == null ? '-' : s.payoff.toFixed(2), 'average win / average loss', '', s.payoff, 'dec')}
-        ${k('Best day', bestD ? R.sgn(bestD[1]) : '-', bestD ? dshort(bestD[0]) : '', 'var(--mint)', bestD ? bestD[1] : null, 'sgn')}${k('Worst day', worstD ? R.sgn(worstD[1]) : '-', worstD ? dshort(worstD[0]) : '', worstD && worstD[1] < 0 ? 'var(--red)' : '', worstD ? worstD[1] : null, 'sgn')}</div></div>
+      <div class="tiles">${k('Net result', s.n ? R.sgn(s.net) : '-', s.n + ' closed trades' + R.spark(R.curve(t).map(p => p.c), s.net >= 0 ? '#3EE09A' : '#FF6B78', 26), R.col(s.net), s.n ? s.net : null, 'sgn', 'net')}${k('Win rate', s.win.toFixed(0) + '%', s.wins + ' wins · ' + s.losses + ' losses', '', s.win, 'pct', 'win')}${k('Profit factor', s.pf == null ? '-' : s.pf.toFixed(2), 'gross profit / gross loss', '', s.pf, 'dec', 'pf')}${k('Largest drawdown', usd(s.maxDD, 2), 'below a result peak', 'var(--red)', s.maxDD, 'usd', 'dd')}
+        ${k('Average win', R.sgn(s.avgWin), 'per winning trade', 'var(--mint)', s.avgWin, 'sgn', 'avgwin')}${k('Average loss', R.sgn(s.avgLoss), 'per losing trade', 'var(--red)', s.avgLoss, 'sgn', 'avgloss')}${k('Best trade', R.sgn(s.best), '', 'var(--mint)', s.best, 'sgn', 'best')}${k('Worst trade', R.sgn(s.worst), '', 'var(--red)', s.worst, 'sgn', 'worst')}
+        ${k('Expectancy', R.sgn(s.expectancy), 'average result per trade', R.col(s.expectancy), s.expectancy, 'sgn', 'exp')}${k('Payoff ratio', s.payoff == null ? '-' : s.payoff.toFixed(2), 'average win / average loss', '', s.payoff, 'dec', 'payoff')}
+        ${k('Best day', bestD ? R.sgn(bestD[1]) : '-', bestD ? dshort(bestD[0]) : '', 'var(--mint)', bestD ? bestD[1] : null, 'sgn', 'bestday' + (bestD ? ':' + R.dk(new Date(bestD[0])) : ''))}${k('Worst day', worstD ? R.sgn(worstD[1]) : '-', worstD ? dshort(worstD[0]) : '', worstD && worstD[1] < 0 ? 'var(--red)' : '', worstD ? worstD[1] : null, 'sgn', 'worstday' + (worstD ? ':' + R.dk(new Date(worstD[0])) : ''))}</div></div>
       <div class="grid2"><div class="panel"><h3 class="rh" style="margin-top:0">Wins and losses</h3><div class="winbox">${R.donut(s.wins, s.losses)}
-          <div class="wfacts"><div class="kv"><span>Winning trades</span><b style="color:var(--mint)">${s.wins}</b></div><div class="kv"><span>Losing trades</span><b style="color:var(--red)">${s.losses}</b></div><div class="kv"><span>Longest win streak</span><b>${s.maxWinStreak}</b></div><div class="kv"><span>Longest loss streak</span><b>${s.maxLossStreak}</b></div><div class="kv"><span>Right now</span><b>${stk}</b></div><div class="kv"><span>Average time in a trade</span><b>${s.avgHold == null ? '-' : R.fmtMin(s.avgHold)}</b></div></div></div></div>
+          <div class="wfacts"><div class="kv" data-sel="wins" role="button" tabindex="0"><span>Winning trades</span><b style="color:var(--mint)">${s.wins}</b></div><div class="kv" data-sel="losses" role="button" tabindex="0"><span>Losing trades</span><b style="color:var(--red)">${s.losses}</b></div><div class="kv" data-sel="streakwin" role="button" tabindex="0"><span>Longest win streak</span><b>${s.maxWinStreak}</b></div><div class="kv" data-sel="streakloss" role="button" tabindex="0"><span>Longest loss streak</span><b>${s.maxLossStreak}</b></div><div class="kv" data-sel="streaknow" role="button" tabindex="0"><span>Right now</span><b>${stk}</b></div><div class="kv" data-sel="hold" role="button" tabindex="0"><span>Average time in a trade</span><b>${s.avgHold == null ? '-' : R.fmtMin(s.avgHold)}</b></div></div></div></div>
         <div class="panel"><h3 class="rh" style="margin-top:0">By engine</h3>${R.engineBars(t)}</div></div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">Equity curve <span class="hint">hover to read a point</span></h3><div id="rs-eq"></div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Equity curve <span class="hint">tap a point to see its trade</span></h3><div id="rs-eq"></div></div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Drawdown <span class="hint">distance below the highest result so far</span></h3><div id="rs-dd"></div></div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">Profit calendar <span class="hint">result of each day, by closing time</span></h3><div id="calhost">${R.calendar(all, calM.y, calM.m)}</div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Profit calendar <span class="hint">tap a day to see its trades</span></h3><div id="calhost">${R.calendar(all, calM.y, calM.m)}</div></div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Daily result <span class="hint">last 30 days, amounts in USD</span></h3>${R.bars(R.dayItems(all, 30), 210)}</div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">closing day</span></h3>${R.weekdayBars(t)}</div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">closing day, tap one</span></h3>${R.weekdayBars(t)}</div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 230, {full: true})}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
   }
   function tTrades(l, all) {
@@ -367,7 +367,7 @@
   function claimPanel() { return `<div class="panel"><h2>Add a license key</h2><p class="sub">If we gave you a key (a gift or a manual sale), add it to your account here.</p><div class="f"><input id="ck" placeholder="GTE-XXXX-XXXX-XXXX" autocapitalize="characters"><button class="btn" id="ckGo">Add key</button></div></div>`; }
   function ordersPanel() {
     if (!S.orders.length) return '';
-    return `<div class="panel"><h2>Orders</h2><div style="overflow-x:auto"><table class="tbl2"><tr><th>Reference</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr>${S.orders.map(o => `<tr><td class="key" style="font-size:.85rem;padding:2px 6px">${esc(o.ref)}</td><td>${esc(o.kind)}</td><td>${usd(o.amount_usd)}</td><td>${esc(o.status.replace('_', ' '))}</td><td>${date(o.created_at)}</td></tr>`).join('')}</table></div></div>`;
+    return `<div class="panel"><h2>Orders</h2><div style="overflow-x:auto"><table class="tbl2"><tr><th>Reference</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr>${S.orders.map(o => `<tr class="ct" data-ord="${o.id}" role="button" tabindex="0"><td class="key" style="font-size:.85rem;padding:2px 6px">${esc(o.ref)}</td><td>${esc(o.kind)}</td><td>${usd(o.amount_usd)}</td><td>${esc(o.status.replace('_', ' '))}</td><td>${date(o.created_at)}</td></tr>`).join('')}</table></div></div>`;
   }
   function addrHtml(d) {
     if (!d.address) return '';
