@@ -27,13 +27,15 @@
     var bar = $('#pd-bar'); if (!bar) return;
     $$('button[data-t]', bar).forEach(function (b) { if (!b.querySelector('.pdx-i')) b.insertAdjacentHTML('afterbegin', ic(b.dataset.t)); });
     var on = $('button.on', bar); if (!on) return;
+    var side = getComputedStyle(bar).flexDirection === 'column';
     var m = $('#pdx-mk', bar); if (!m) { m = document.createElement('i'); m.id = 'pdx-mk'; bar.appendChild(m); }
-    var l = on.offsetLeft + 12, w = Math.max(10, on.offsetWidth - 24);
-    if (last === null) { m.style.transition = 'none'; m.style.left = l + 'px'; m.style.width = w + 'px'; void m.offsetWidth; m.style.transition = ''; }
-    else requestAnimationFrame(function () { m.style.left = l + 'px'; m.style.width = w + 'px'; });
-    last = l;
-    if (bar.scrollWidth > bar.clientWidth) bar.scrollTo({left: Math.max(0, on.offsetLeft - bar.clientWidth / 2 + on.offsetWidth / 2), behavior: reduce ? 'auto' : 'smooth'});
+    var pos = side ? {left: '2px', width: '3px', top: (on.offsetTop + 9) + 'px', height: Math.max(10, on.offsetHeight - 18) + 'px', bottom: 'auto'} : {left: (on.offsetLeft + 12) + 'px', width: Math.max(10, on.offsetWidth - 24) + 'px', top: 'auto', height: '2px', bottom: '3px'};
+    function put() { for (var k in pos) m.style[k] = pos[k]; }
+    if (last === null) { m.style.transition = 'none'; put(); void m.offsetWidth; m.style.transition = ''; } else requestAnimationFrame(put);
+    last = pos;
+    if (!side && bar.scrollWidth > bar.clientWidth) bar.scrollTo({left: Math.max(0, on.offsetLeft - bar.clientWidth / 2 + on.offsetWidth / 2), behavior: reduce ? 'auto' : 'smooth'});
   }
+  window.__pdMark = tabs;
   function swipe() {
     var app = $('#pd-app'); if (!app || app.__sw) return; app.__sw = true;
     var x0 = 0, y0 = 0, t0 = 0, ok = false;
@@ -72,7 +74,7 @@
     var seen = {}; try { seen = JSON.parse(localStorage.getItem('gte_pd_ms') || '{}'); } catch (e) {}
     var fresh = items.filter(function (x) { return x.got && !seen[x.m.k]; });
     var nt = !next ? 'Every achievement unlocked. You are at the top.' : next.m.k === 'gold' || next.m.k === 'first' || next.m.k === 'five' ? (Math.ceil(next.goal - next.have) + ' more paid sale' + (Math.ceil(next.goal - next.have) === 1 ? '' : 's') + ' to ' + next.m.t.toLowerCase()) : next.m.k === 'pay' ? 'Request your first payout when you reach ' + money(d.minp) : (money(next.goal - next.have) + ' more commission to reach ' + next.m.t);
-    var html = '<div class="pd-card pdx-j pd-fadeup in" id="pdx-j"><div class="pdx-jh"><div><div class="pdx-k">' + esc(g).toUpperCase() + '</div><div class="pdx-t">' + esc(d.me.name || 'Partner') + '</div>' +
+    var html = '<div class="pd-card pdx-j pd-fadeup in" id="pdx-j"><div class="pdx-jh"><div><div class="pdx-k">YOUR JOURNEY</div><div class="pdx-t">' + esc(d.me.name || 'Partner') + '</div>' +
       '<div class="pdx-ch"><span class="pdx-c a">Your rate ' + Number(d.me.rateSale || 0) + '%</span><span class="pdx-c g">Fans get ' + Number(d.me.discountPct || 0) + '% off</span><span class="pdx-c ' + (gold ? 'y' : 'v') + '">' + (gold ? 'Gold level' : 'Level up at ' + d.goldAt + ' sales') + '</span></div></div>' +
       '<div class="pdx-lv" title="Progress to Gold level">' + ring(lvlP, 'url(#pdx-gr)') + '<svg width="0" height="0"><defs><linearGradient id="pdx-gr"><stop offset="0" stop-color="#F5C165"/><stop offset="1" stop-color="#FFE9A8"/></linearGradient></defs></svg><b>' + Math.round(lvlP * 100) + '%</b><small>to Gold</small></div></div>' +
       '<div class="pdx-next"><i></i><span>' + esc(nt) + '</span></div>' +
