@@ -10,7 +10,7 @@
 
   const css = document.createElement('style');
   css.textContent = `
-  .gc-fab{position:fixed;right:18px;bottom:var(--gcb,18px);z-index:90;display:flex;align-items:center;gap:8px;height:50px;padding:0 18px;border-radius:999px;border:1px solid rgba(62,224,154,.5);background:#0c1322;color:#fff;font:600 .95rem/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.5);transition:transform .2s}
+  .gc-fab{position:fixed;right:18px;bottom:calc(var(--gcb,18px) + var(--lift,0px));z-index:90;display:flex;align-items:center;gap:8px;height:50px;padding:0 18px;border-radius:999px;border:1px solid rgba(62,224,154,.5);background:#0c1322;color:#fff;font:600 .95rem/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.5);transition:transform .2s}
   .gc-fab:hover{transform:translateY(-2px)}.gc-fab i{width:9px;height:9px;border-radius:50%;background:#3EE09A;box-shadow:0 0 0 0 rgba(62,224,154,.6);animation:gcp 2s infinite}
   @keyframes gcp{to{box-shadow:0 0 0 10px rgba(62,224,154,0)}}
   .gc-box{position:fixed;right:18px;bottom:calc(var(--gcb,18px) + 60px);z-index:91;width:min(380px,calc(100vw - 24px));height:min(560px,calc(100vh - var(--gcb,18px) - 90px));display:none;flex-direction:column;border:1px solid rgba(255,255,255,.14);border-radius:18px;background:#0a0f1c;color:#e8edf8;box-shadow:0 20px 60px rgba(0,0,0,.6);overflow:hidden;font-size:.93rem}
@@ -45,7 +45,8 @@
   @media (max-width:600px){.gc-fab{right:14px;height:46px;width:46px;padding:0;justify-content:center;font-size:0;gap:0}.gc-fab i{display:none}.gc-fab::after{content:'\\1F4AC';font-size:21px;line-height:1}}
   @media (prefers-reduced-motion:reduce){.gc-fab i,.gc-box.on{animation:none}}`;
   document.head.appendChild(css);
-  if (document.querySelector('.fab')) document.documentElement.style.setProperty('--gcb', window.innerWidth <= 600 ? '82px' : '86px');   // sit above the Contact button, never on top of it
+  const stack = () => { const r = document.documentElement; if (document.querySelector('.fab')) r.style.setProperty('--gcb', window.innerWidth <= 600 ? '82px' : '86px'); else r.style.removeProperty('--gcb'); };   // sit above the Contact button, never on top of it
+  stack(); addEventListener('scroll', stack, {passive: true}); addEventListener('resize', stack); try { new MutationObserver(stack).observe(document.body, {childList: true}); } catch (e) {}
 
   const fab = document.createElement('button'); fab.className = 'gc-fab'; fab.setAttribute('aria-label', 'Open support chat'); fab.innerHTML = '<i></i>Ask us';
   const box = document.createElement('div'); box.className = 'gc-box'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', 'Support assistant');

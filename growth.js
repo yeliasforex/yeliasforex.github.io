@@ -43,9 +43,9 @@
   if (!get('gte_consent') && !/\/admin/.test(path)) {
     var ck = el('div', 'gx-cookie', '<div>We keep a small amount of data in your browser to make the site work, and count visits anonymously (no cookies, no ads, no trackers). Details, and how to stop the count, are in the <a href="' + (path.indexOf('/blog/') === 0 ? '../' : '') + 'privacy.html#stats">privacy policy</a>.</div><div class="gx-row"><button class="gx-btn p" type="button" data-ok>OK</button></div>');
     ck.setAttribute('role', 'dialog'); ck.setAttribute('aria-label', 'Privacy notice');
-    var lift = function (on) { try { document.documentElement.style.setProperty('--gcb', on ? (ck.offsetHeight + 12) + 'px' : '18px'); } catch (e) {} };
+    var lift = function (on) { try { if (on) document.documentElement.style.setProperty('--lift', (ck.offsetHeight + 8) + 'px'); else document.documentElement.style.removeProperty('--lift'); } catch (e) {} };
     ck.querySelector('[data-ok]').onclick = function () { set('gte_consent', 'ok'); ck.remove(); lift(false); };
-    document.body.appendChild(ck); if (innerWidth <= 600) setTimeout(function () { lift(true); }, 60);
+    document.body.appendChild(ck); if (innerWidth <= 600) { setTimeout(function () { lift(true); }, 60); try { new ResizeObserver(function () { if (ck.isConnected) lift(true); }).observe(ck); } catch (e) {} }
   }
 
   /* 3. newsletter box on the blog and the main reading pages */
