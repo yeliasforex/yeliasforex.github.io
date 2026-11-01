@@ -17,7 +17,7 @@
   }
   function toggle() {
     var h = $('header'); if (!h || $('#navtog')) return;
-    var b = document.createElement('button'); b.type = 'button'; b.id = 'navtog'; b.className = 'thm'; b.setAttribute('aria-label', 'Collapse or expand the menu'); b.title = 'Menu';
+    var b = document.createElement('button'); b.type = 'button'; b.id = 'navtog'; b.className = 'ntg'; b.setAttribute('aria-label', 'Collapse or expand the menu'); b.title = 'Menu';
     b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h16"/></svg>';
     h.insertBefore(b, h.firstChild);
     try { if (localStorage.getItem('gte_admin_nav') === 'c') document.body.classList.add('nc'); } catch (e) {}
