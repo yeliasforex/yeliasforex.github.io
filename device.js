@@ -3,6 +3,7 @@
   var PUSH_OK = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
   function b64u(buf) { var s = ''; new Uint8Array(buf).forEach(function (b) { s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
   function u8(b64) { b64 = b64.replace(/-/g, '+').replace(/_/g, '/'); var s = atob(b64 + '==='.slice((b64.length + 3) % 4)), a = new Uint8Array(s.length); for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+  var state;
   var isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
   window.gteDevice = {
@@ -21,6 +22,39 @@
         + '<div class="row" style="margin:2px 0 8px"><button class="btn sm" id="pa-test" type="button" hidden>Send a test alert</button></div>'
         + '<div class="tog"><span><b>Animations</b><br><span class="hint" id="mo-h">Auto follows your phone. If animations look switched off, choose On.</span></span><span class="seg3" id="mo"><button type="button" data-m="auto">Auto</button><button type="button" data-m="on">On</button><button type="button" data-m="off">Off</button></span></div>'
         + '<div class="tog"><span><b>Quick unlock</b><br><span class="hint" id="ql-h">Checking...</span></span><label class="sw"><input type="checkbox" id="ql" disabled><span></span></label></div></div>';
+    },
+    /* One-tap invitation on My account for people who have not switched phone alerts on. Hidden for 14 days after "Not now". */
+    prompt: function (host, rpc, toast, guard) {
+      var KEY = 'gte_alertp';
+      if (!PUSH_OK || !host || host.querySelector('#alertp')) return;
+      if (state === 'hide') return;
+      function snoozed() { try { var t = +localStorage.getItem(KEY) || 0; return Date.now() - t < 14 * 864e5; } catch (e) { return false; } }
+      function put() {
+        if (host.querySelector('#alertp')) return;
+        var d = document.createElement('div'); d.className = 'alertp'; d.id = 'alertp';
+        d.innerHTML = '<div class="alertp-t"><b>Get alerts on this phone</b><span>Know when a trade closes, your EA goes offline, or support replies. You can switch it off any time in Settings.</span></div>'
+          + '<div class="alertp-b"><button class="btn sm mint" type="button" id="alertp-on">Turn on alerts</button><button class="btn sm" type="button" id="alertp-no">Not now</button></div>';
+        host.insertBefore(d, host.firstChild);
+        d.querySelector('#alertp-no').onclick = function () { try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {} state = 'hide'; d.remove(); };
+        d.querySelector('#alertp-on').onclick = guard(async function () {
+          var perm = await Notification.requestPermission();
+          if (perm !== 'granted') throw new Error('Notifications were not allowed. You can allow them in your phone settings for this app.');
+          var reg = await navigator.serviceWorker.ready, key = await rpc('push_public_key');
+          var sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: u8(key) }), j = sub.toJSON();
+          await rpc('push_subscribe', { p_endpoint: sub.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_ua: navigator.userAgent });
+          await rpc('push_test'); try { gteEvent('push_on'); } catch (x) {}
+          state = 'hide'; d.remove(); toast('Phone alerts are on');
+        });
+      }
+      if (state === 'show') return put();
+      (async function () {
+        try {
+          if (snoozed() || Notification.permission === 'denied' || !(await rpc('push_public_key'))) { state = 'hide'; return; }
+          var reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+          if (sub && Notification.permission === 'granted') { state = 'hide'; return; }
+          state = 'show'; put();
+        } catch (e) { state = 'hide'; }
+      })();
     },
     wire: function (rpc, toast, guard) {
       var pa = document.getElementById('pa'), ph = document.getElementById('pa-h'), pt = document.getElementById('pa-test');

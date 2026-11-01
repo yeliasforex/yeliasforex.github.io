@@ -189,7 +189,7 @@
     const updAvail = !!(lv && cv && lic.status === 'active' && vc(lv, cv) > 0);
     parts.push(hero(lic, trades));
     parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}${k === 'inbox' && unread() ? `<span class="nb">${unread()}</span>` : ''}</a>`).join('')}</div><div id="tabbody"></div>`);
-    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount(); paintBell(); if (stOpen && !quiet) renderSettings();
+    A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount(); paintBell(); if (window.gteDevice && !AS && !DEMO) gteDevice.prompt(A, rpc, toast, guard); if (stOpen && !quiet) renderSettings();
     const sel = $('#licSel'); if (sel) sel.onchange = e => { cur = e.target.value; render(); };
     A.querySelectorAll('#subnav a').forEach(a => a.onclick = e => { e.preventDefault(); tab = a.dataset.tab; history.replaceState(null, '', '#tab=' + tab); A.querySelectorAll('#subnav a').forEach(x => x.classList.toggle('on', x === a)); drawTab(lic, trades); });
     drawTab(lic, trades);

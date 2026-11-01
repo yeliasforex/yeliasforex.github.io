@@ -251,3 +251,8 @@ body.inject .subnav{top:0}
   .tbl2.rec td,.tbl2.rec th{white-space:nowrap}
   .tbl2.rec th:nth-child(n+5):nth-child(-n+7),.tbl2.rec td:nth-child(n+5):nth-child(-n+7){display:none}
 }
+
+/* invitation to switch phone alerts on */
+.alertp{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;background:var(--panel);border:1px solid var(--line-2);border-radius:16px;padding:14px 16px;margin-bottom:14px}
+.alertp-t{display:flex;flex-direction:column;gap:3px;min-width:200px;flex:1}.alertp-t span{color:var(--muted);font-size:.88rem;line-height:1.45}
+.alertp-b{display:flex;gap:8px}
