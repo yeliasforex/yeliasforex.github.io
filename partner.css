@@ -290,3 +290,10 @@ span.pdx-hc{cursor:default}button.pdx-hc:hover{transform:translateY(-2px)}
   .pd.pdnc .png{font-size:0;padding:8px 0 4px}.pd.pdnc .png:before{content:"";display:block;height:1px;margin:0 12px;background:var(--line)}
 }
 @media (prefers-reduced-motion:reduce){.pdx-pl,.pdx-it,#pdx-sw.go{animation:none}.pdx-pls .l{animation:none;stroke-dashoffset:0}}
+
+/* no duplicates: the overview already shows these numbers, so the live tiles appear only on the other sections */
+#pdx-hero[data-tab="overview"] #pdx-pulse{display:none}
+.pdx-bd{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:640px){.pdx-bd{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.pdx-b{padding:8px 2px 6px}.pdx-b .pdx-rg{width:34px;height:34px}.pdx-bi{top:8px;height:34px;font-size:.62rem}.pdx-b.got .pdx-bi{font-size:.85rem}.pdx-b em{font-size:.58rem}}
+#pdx-hc{display:none}
+#pdx-hero[data-tab="payouts"] #pdx-pulse{display:none}

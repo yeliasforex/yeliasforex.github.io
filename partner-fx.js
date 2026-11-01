@@ -55,7 +55,6 @@
   var MS = [
     {k: 'first', t: 'First sale', d: 'Your first paying customer', f: function (d) { return d.sales; }, g: 1},
     {k: 'five', t: '5 sales', d: 'Five paying customers', f: function (d) { return d.sales; }, g: 5},
-    {k: 'gold', t: 'Gold level', d: 'Top rate on every sale', f: function (d) { return d.sales; }, g: function (d) { return d.goldAt; }},
     {k: 'c100', t: '$100 earned', d: 'Total commission so far', f: function (d) { return d.life; }, g: 100},
     {k: 'c500', t: '$500 earned', d: 'Total commission so far', f: function (d) { return d.life; }, g: 500},
     {k: 'pay', t: 'First payout', d: 'Money sent to your wallet', f: function (d) { return d.paidOut; }, g: 0.01}
@@ -73,10 +72,8 @@
     var next = items.filter(function (x) { return !x.got; })[0];
     var seen = {}; try { seen = JSON.parse(localStorage.getItem('gte_pd_ms') || '{}'); } catch (e) {}
     var fresh = items.filter(function (x) { return x.got && !seen[x.m.k]; });
-    var nt = !next ? 'Every achievement unlocked. You are at the top.' : next.m.k === 'gold' || next.m.k === 'first' || next.m.k === 'five' ? (Math.ceil(next.goal - next.have) + ' more paid sale' + (Math.ceil(next.goal - next.have) === 1 ? '' : 's') + ' to ' + next.m.t.toLowerCase()) : next.m.k === 'pay' ? 'Request your first payout when you reach ' + money(d.minp) : (money(next.goal - next.have) + ' more commission to reach ' + next.m.t);
-    var html = '<div class="pd-card pdx-j pd-fadeup in" id="pdx-j"><div class="pdx-jh"><div><div class="pdx-k">YOUR JOURNEY</div><div class="pdx-t">' + esc(d.me.name || 'Partner') + '</div>' +
-      '<div class="pdx-ch"><span class="pdx-c a">Your rate ' + Number(d.me.rateSale || 0) + '%</span><span class="pdx-c g">Fans get ' + Number(d.me.discountPct || 0) + '% off</span><span class="pdx-c ' + (gold ? 'y' : 'v') + '">' + (gold ? 'Gold level' : 'Level up at ' + d.goldAt + ' sales') + '</span></div></div>' +
-      '<div class="pdx-lv" title="Progress to Gold level">' + ring(lvlP, 'url(#pdx-gr)') + '<svg width="0" height="0"><defs><linearGradient id="pdx-gr"><stop offset="0" stop-color="#F5C165"/><stop offset="1" stop-color="#FFE9A8"/></linearGradient></defs></svg><b>' + Math.round(lvlP * 100) + '%</b><small>to Gold</small></div></div>' +
+    var nt = !next ? 'Every achievement unlocked. You are at the top.' : next.m.k === 'first' || next.m.k === 'five' ? (Math.ceil(next.goal - next.have) + ' more paid sale' + (Math.ceil(next.goal - next.have) === 1 ? '' : 's') + ' to ' + next.m.t.toLowerCase()) : next.m.k === 'pay' ? 'Request your first payout when you reach ' + money(d.minp) : (money(next.goal - next.have) + ' more commission to reach ' + next.m.t);
+    var html = '<div class="pd-card pdx-j pd-fadeup in" id="pdx-j"><div class="pdx-jh"><div><div class="pdx-k">YOUR JOURNEY</div><div class="pdx-t">' + esc(d.me.name || 'Partner') + '</div></div></div>' +
       '<div class="pdx-next"><i></i><span>' + esc(nt) + '</span></div>' +
       '<div class="pdx-bd">' + items.map(function (x) { return '<button type="button" class="pdx-b' + (x.got ? ' got' : '') + '" data-k="' + x.m.k + '" title="' + esc(x.m.d) + '">' + ring(x.got ? 1 : x.p, x.got ? '#F5C165' : cv('--cyan', '#3CD2FF')) + '<span class="pdx-bi">' + (x.got ? '&#10003;' : Math.round(x.p * 100) + '%') + '</span><em>' + esc(x.m.t) + '</em></button>'; }).join('') + '</div></div>';
     return {html: html, fresh: fresh, seen: seen};

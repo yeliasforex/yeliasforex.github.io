@@ -58,6 +58,7 @@
         '<div class="pdx-hr"><button type="button" id="pdx-q"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Jump to...</span><kbd>Ctrl K</kbd></button><div class="pdx-clk" id="pdx-clk"></div></div><div id="pdx-pulse"></div>';
       ov.parentNode.insertBefore(box, ov); $('#pdx-q').onclick = openPalette;
     }
+    box.dataset.tab = tabKey();
     var d = new Date(), h = d.getHours(), g = h < 5 ? 'Working late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
     setT($('#pdx-hk'), (g + ' · ' + d.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'})).toUpperCase());
     setT($('#pdx-ht'), tabName()); setT($('#pdx-hs'), DESC[tabKey()] || '');
@@ -94,13 +95,8 @@
     var wd = [0, 0, 0, 0, 0, 0, 0], names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     (st.series || []).forEach(function (x) { var dt = new Date(String(x.day) + 'T12:00:00Z'); if (!isNaN(dt)) wd[dt.getUTCDay()] += Number(x.clicks || 0); });
     var wm = Math.max.apply(null, wd); if (wm > 0 && (st.series || []).length >= 14) out.push({t: 'v', h: 'Your strongest day is ' + names[wd.indexOf(wm)], d: 'More of your fans click on this day than any other in the last ' + (s.days || 30) + ' days.'});
-    if (prev.earned > 0) { var de = Math.round((cur.earned - prev.earned) / prev.earned * 100); out.push(de >= 0 ? {t: 'g', h: 'Earnings are up ' + de + '%', d: 'You earned ' + money(cur.earned) + ' against ' + money(prev.earned) + ' in the period before. Keep doing what works.'} : {t: 'y', h: 'Earnings dipped ' + Math.abs(de) + '%', d: 'You earned ' + money(cur.earned) + ' against ' + money(prev.earned) + ' before. Try a fresh post or a new link name on your best channel.'}); }
     var conv = cur.clicks > 0 ? cur.paid / cur.clicks * 100 : 0;
     if (cur.clicks >= 100) out.push(conv < 1 ? {t: 'y', h: 'Many clicks, few sales', d: 'Only ' + conv.toFixed(1) + '% of clicks become sales. Send fans to your personal page and mention the discount code in the first line.'} : conv >= 3 ? {t: 'g', h: 'Your audience converts very well', d: conv.toFixed(1) + '% of clicks become sales. More traffic is your fastest way to earn more.'} : {t: 'a', h: 'Healthy click-to-sale rate', d: conv.toFixed(1) + '% of clicks become sales. Use the planner below to see what more traffic is worth.'});
-    var camps = (s.camps || []).filter(function (c) { return c.label || c.slug; }).slice().sort(function (a, b) { return Number(b.earned) - Number(a.earned); });
-    if (camps.length && Number(camps[0].earned) > 0) out.push({t: 'a', h: 'Your best link: ' + (camps[0].label || camps[0].slug), d: 'It earned ' + money(camps[0].earned) + ' from ' + Number(camps[0].clicks).toLocaleString('en-US') + ' clicks. Make another link like it for a new place.'});
-    var z = (st.zones || [])[0]; if (z && z.tz && z.tz !== 'unknown') out.push({t: 'v', h: 'Most fans are in ' + String(z.tz).split('/').pop().replace(/_/g, ' '), d: 'Estimated from time zone. Write your captions in their language (the marketing kit has four).'});
-    if (Number(B.ready) >= Number(me.minPayout || 50)) out.unshift({t: 'g', h: 'You have ' + money(B.ready) + ' ready', d: 'It passed the refund wait. Open Payouts to request it in USDT.'});
     return out.slice(0, 5);
   }
   function renderInsights() {

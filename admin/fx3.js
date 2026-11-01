@@ -50,6 +50,7 @@
     var hero = $('#hero'); if (!hero) return;
     var D; try { D = data; } catch (e) { return; }
     if (!D || !D.orders) return;
+    var on = $('#tabs button.on'); hero.dataset.tab = on ? on.dataset.t : '';
     var box = $('#pulse'); if (!box) { box = document.createElement('div'); box.id = 'pulse'; hero.appendChild(box); }
     var now = Date.now(), O = D.orders || [], L = D.licenses || [], C = D.customers || [];
     var paid = O.filter(function (o) { return o.status === 'paid'; });
@@ -112,7 +113,7 @@
   function boot() {
     var nav = $('#tabs'), view = $('#view');
     groups(); toggle();
-    if (nav) new MutationObserver(function () { groups(); if (window.__fxClock) window.__fxClock(); }).observe(nav, {childList: true});
+    if (nav) new MutationObserver(function () { groups(); if (window.__fxClock) window.__fxClock(); var h = $('#hero'), o = $('#tabs button.on'); if (h && o) h.dataset.tab = o.dataset.t; }).observe(nav, {childList: true});
     var tm; if (view) { new MutationObserver(function () { clearTimeout(tm); tm = setTimeout(function () { pulse(); tools(view); }, 80); }).observe(view, {childList: true, subtree: true}); }
     setTimeout(function () { pulse(); if (view) tools(view); }, 400);
     new MutationObserver(function () { setTimeout(function () { if (window.__fxMark) window.__fxMark(); }, 480); }).observe(document.body, {attributes: true, attributeFilter: ['class']});
