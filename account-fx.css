@@ -244,3 +244,12 @@ body.acsw-go main{opacity:.6;transition:opacity .2s}
 body.mzfx #subnav .acsw a{padding:9px 6px;font:600 .8rem/1 var(--sans);text-transform:none;letter-spacing:0;border:0;background:none!important;box-shadow:none!important;transform:none!important;gap:6px;justify-content:center;border-radius:12px}
 body.mzfx #subnav .acsw a svg{width:15px;height:15px;margin:0}
 body.mznc #subnav .acsw.side a{padding:10px 0}
+
+/* tidy header: text on the left, actions on the right, licence picker as a neat chip */
+#macc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px;align-items:start;margin:2px 0 0}
+#macc .mc-r{display:flex;gap:8px;align-items:center;justify-self:end}
+#macc .acsw.mob{grid-column:1/-1}
+@media (max-width:900px){#mcsh span,#mcq span,#mcq kbd{display:none}#mcsh,#mcq{padding:10px 12px;border-radius:13px}}
+#acct>.row:has(#licSel){display:flex;align-items:center;gap:10px;width:fit-content;max-width:100%;padding:8px 8px 8px 14px;border:1px solid var(--line-2);border-radius:16px;background:color-mix(in srgb,var(--panel-2) 75%,transparent)}
+#acct>.row:has(#licSel) .hint{margin:0;font:500 .7rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+#acct>.row:has(#licSel) select{margin:0;border-radius:11px}
