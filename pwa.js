@@ -7,7 +7,7 @@
   try { if ((document.referrer || '').indexOf('android-app://') === 0) sessionStorage.setItem('gte_twa', '1'); twa = sessionStorage.getItem('gte_twa') === '1'; } catch (e) {}
   var standalone = mq('(display-mode: standalone)') || mq('(display-mode: fullscreen)') || mq('(display-mode: minimal-ui)') || navigator.standalone === true || twa;
   document.documentElement.classList.toggle('is-app', standalone);
-  function appCss() { if (document.getElementById('gte-appcss')) return; var st = document.createElement('style'); st.id = 'gte-appcss'; st.textContent = '.is-app footer{display:none!important}.app-legal{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;margin:28px auto 0;max-width:640px;padding:0 16px 96px;font-size:.78rem;opacity:.75}.app-legal a{color:inherit!important;text-decoration:none!important}.app-legal a:hover{text-decoration:underline!important}'; document.head.appendChild(st); }
+  function appCss() { if (document.getElementById('gte-appcss')) return; var st = document.createElement('style'); st.id = 'gte-appcss'; st.textContent = '.is-app footer{display:none!important}.app-legal{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;max-width:720px;margin:44px auto 0;padding:16px 16px 120px;border-top:1px solid rgba(128,140,160,.22);font-size:.76rem;line-height:1.8;opacity:.78}.app-legal a{color:inherit!important;text-decoration:none!important}.app-legal a+a:before{content:"\00b7";margin:0 12px;opacity:.6}.app-legal a:hover{text-decoration:underline!important}'; document.head.appendChild(st); }
   if (standalone) appCss();
   var ua = navigator.userAgent || '';
   var os = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios'
