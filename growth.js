@@ -40,10 +40,9 @@
 
   /* 2. privacy notice: says what is used and lets the visitor switch the anonymous visit counter off */
   if (!get('gte_consent') && !/\/admin/.test(path)) {
-    var ck = el('div', 'gx-cookie', '<div>We keep a small amount of data in your browser to make the site work, and count visits anonymously (no ads, no third-party trackers). See the <a href="' + (path.indexOf('/blog/') === 0 ? '../' : '') + 'privacy.html">privacy policy</a>.</div><div class="gx-row"><button class="gx-btn p" type="button" data-ok>OK</button><button class="gx-btn" type="button" data-no>Do not count my visits</button></div>');
+    var ck = el('div', 'gx-cookie', '<div>We keep a small amount of data in your browser to make the site work, and count visits anonymously (no cookies, no ads, no trackers). Details, and how to stop the count, are in the <a href="' + (path.indexOf('/blog/') === 0 ? '../' : '') + 'privacy.html#stats">privacy policy</a>.</div><div class="gx-row"><button class="gx-btn p" type="button" data-ok>OK</button></div>');
     ck.setAttribute('role', 'dialog'); ck.setAttribute('aria-label', 'Privacy notice');
     ck.querySelector('[data-ok]').onclick = function () { set('gte_consent', 'ok'); ck.remove(); };
-    ck.querySelector('[data-no]').onclick = function () { set('gte_consent', 'no'); set('gte_notrack', '1'); ck.remove(); };
     document.body.appendChild(ck);
   }
 
