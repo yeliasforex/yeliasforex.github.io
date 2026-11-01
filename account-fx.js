@@ -172,12 +172,17 @@
     }, true);
   }
 
+  var rio = window.IntersectionObserver && !reduce ? new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('mzin'); rio.unobserve(e.target); } }); }, {rootMargin: '0px 0px -6% 0px'}) : null;
+  function reveal() {
+    if (!rio) return;
+    $$('#acct .panel:not([data-rv])').forEach(function (el) { el.dataset.rv = '1'; var r = el.getBoundingClientRect(); if (r.top < innerHeight * .92) return; el.classList.add('mzr'); rio.observe(el); });
+  }
   /* ---------- wire up ---------- */
   var lastTab = null, booted = false;
   function boot() {
     var A = $('#acct'); if (!A || !$('#subnav')) return;
     if (!booted) { booted = true; document.body.classList.add('mzfx'); if (document.documentElement.classList.contains('mznc-pre')) document.body.classList.add('mznc'); net(); glow(); wipe(); chip(); setInterval(header, 20000); }
-    menu(); header(); checklist(); tools();
+    menu(); header(); checklist(); tools(); reveal();
     var k = tabKey(); A.dataset.tab = k; if (k !== lastTab) { if (lastTab !== null) { sweep(); var hh = $('#macc'); if (hh) setTimeout(function () { window.scrollTo({top: Math.max(0, hh.getBoundingClientRect().top + window.scrollY - 84), behavior: reduce ? 'auto' : 'smooth'}); }, 60); } lastTab = k; }
   }
   function start() {
