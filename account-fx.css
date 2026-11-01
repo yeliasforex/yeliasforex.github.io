@@ -1,9 +1,8 @@
 /* My account polish. Uses the site's own colour tokens (brand blue, mint, gold) so it works in day and night. */
 body.mzfx .pg>.wrap{width:min(1320px,100% - 32px)}
-#mz-net{position:fixed;left:0;top:0;z-index:0;pointer-events:none;opacity:.9}
-#mz-glow{position:fixed;left:0;top:0;width:520px;height:520px;z-index:0;pointer-events:none;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--blue-hi) 16%,transparent),transparent 68%);mix-blend-mode:screen;will-change:transform}
+#mz-net{position:fixed;left:0;top:0;z-index:-1;pointer-events:none;opacity:.9}
+#mz-glow{position:fixed;left:0;top:0;width:520px;height:520px;z-index:-1;pointer-events:none;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--blue-hi) 16%,transparent),transparent 68%);mix-blend-mode:screen;will-change:transform}
 :root[data-theme="light"] #mz-glow{mix-blend-mode:multiply;opacity:.45}
-body.mzfx main{position:relative;z-index:1}
 /* panels: soft light that follows the pointer */
 #acct .panel,#acct .hero,#acct .tile,#acct .lv{position:relative}
 #acct .panel:after,#acct .hero:after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(300px circle at var(--mx,-400px) var(--my,-400px),color-mix(in srgb,var(--blue-hi) 12%,transparent),transparent 62%)}
@@ -205,7 +204,7 @@ body.gs-lock{overflow:hidden}
 /* hero + bar */
 #acct .hero{border-radius:26px;box-shadow:0 30px 70px -34px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.07)}
 #acct .eqbig{background:linear-gradient(100deg,var(--fg) 30%,color-mix(in srgb,var(--blue-hi) 70%,var(--fg)) 120%);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-.03em}
-.ma-bar{border-radius:24px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue-hi) 12%,var(--panel)),color-mix(in srgb,var(--panel) 92%,transparent) 55%,color-mix(in srgb,var(--gold) 8%,var(--panel)));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 24px 50px -30px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)}
+.ma-bar{border-radius:24px;background:linear-gradient(135deg,color-mix(in srgb,var(--blue-hi) 12%,var(--panel)),color-mix(in srgb,var(--panel) 96%,transparent) 55%,color-mix(in srgb,var(--gold) 8%,var(--panel)));box-shadow:0 24px 50px -30px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06)}
 .ma-av{box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 28%,transparent),0 8px 20px -8px var(--gold)}
 .ma-quick a{border-radius:14px;transition:transform .2s,background .2s}.ma-quick a:hover{transform:translateY(-3px);background:color-mix(in srgb,var(--blue-hi) 12%,transparent)}
 /* buttons and pills */
@@ -223,3 +222,7 @@ body.gs-lock{overflow:hidden}
 /* scroll reveal */
 .mzr{opacity:0;transform:translateY(28px)}.mzr.mzin{opacity:1;transform:none;transition:opacity .7s cubic-bezier(.2,.8,.2,1),transform .7s cubic-bezier(.2,.8,.2,1)}
 @media (prefers-reduced-motion:reduce){.mzr{opacity:1;transform:none}#acct .tiles .tile,#acct .hero-r .tile{animation:none}}
+
+/* the settings and notification panels are fixed-position children of the top card: it must not create a filter or backdrop context */
+.ma-bar,.ma-bar *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.np,.st{backdrop-filter:none!important}
