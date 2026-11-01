@@ -265,70 +265,90 @@
     ar: { n: 'العربية', risk: 'التداول في الذهب قد يسبب خسائر.', disc: 'أحصل على عمولة إذا اشتريت عبر رابطي.', p: ['خبير ذهب آلي على MT5 وسجله المباشر متاح للجميع. شاهد: {link}\n{off}', 'معظم خبراء الذهب يخفون نتائجهم. هذا يعرض حسابه المباشر على يوتيوب. احكم بنفسك: {link}', 'ثلاثة محركات وحساب MT5 واحد ولا حاجة للتداول يدويا. مساعدة الإعداد مشمولة. {link}\n{off}', 'تفكر في خبير ذهب آلي؟ شاهد السجل المباشر أولا ثم قرر: {link}', 'قبل شراء أي خبير اطلب حسابا حيا لا اختبارا تاريخيا فقط. GoldTriEngine يعرض الاثنين: {link}'], offT: 'خصم {disc}% عبر رابطي أو الكود {code}.' }
   };
   var SIZES = [['Leaderboard', 728, 90], ['Medium rectangle', 300, 250], ['Skyscraper', 160, 600], ['Billboard', 970, 250], ['Mobile banner', 320, 100], ['Square post', 1080, 1080], ['Story or reel cover', 1080, 1920], ['YouTube thumbnail', 1280, 720]];
+  /* Banners follow the site's own look: Geist headline with one gold Instrument Serif word, mono kicker, real logo, gold pill, no decoration lines. */
   var PAL = {
-    brand: { n: 'Brand', bg: [[0, '#0a1a5c'], [.55, '#1747C8'], [1, '#0d2c8f']], g1: 'rgba(63,226,155,.35)', g2: 'rgba(120,160,255,.35)', grid: 'rgba(255,255,255,.06)', h: '#ffffff', sub: '#d3dcff', acc: '#3FE29B', accT: '#04230f', gold: '#FFE9A8', n1: '#3FE29B', n2: '#ffffff', line: 'rgba(255,255,255,.45)' },
-    night: { n: 'Night', bg: [[0, '#060b18'], [.55, '#0d2147'], [1, '#0a4f7a']], g1: 'rgba(60,210,255,.40)', g2: 'rgba(245,193,101,.30)', grid: 'rgba(255,255,255,.045)', h: '#ffffff', sub: '#b9c6da', acc: '#3CD2FF', accT: '#04111f', gold: '#FFE29A', n1: '#3CD2FF', n2: '#F5C165', line: 'rgba(160,220,255,.55)' },
-    gold: { n: 'Gold', bg: [[0, '#0b0905'], [.6, '#1d1708'], [1, '#3a2a08']], g1: 'rgba(245,193,101,.38)', g2: 'rgba(255,233,168,.18)', grid: 'rgba(255,225,150,.05)', h: '#FFF4D6', sub: '#d9c9a0', acc: '#F5C165', accT: '#1a1203', gold: '#FFE29A', n1: '#F5C165', n2: '#FFE9A8', line: 'rgba(255,225,150,.5)' },
-    day: { n: 'Day', bg: [[0, '#f7f9fd'], [.6, '#e8f0fb'], [1, '#d5e6f7']], g1: 'rgba(60,170,230,.28)', g2: 'rgba(245,193,101,.30)', grid: 'rgba(20,50,90,.06)', h: '#0d1b33', sub: '#4a5b75', acc: '#0a8fc2', accT: '#ffffff', gold: '#9a6200', n1: '#0a8fc2', n2: '#d99a1f', line: 'rgba(10,100,160,.45)' }
+    night: { n: 'Night', a: '#05080f', b: '#0e1830', g1: 'rgba(227,185,95,.20)', g2: 'rgba(40,90,220,.22)', h: '#F4F6FB', sub: '#aab6cc', mono: '#8d9bb4', gold: '#F0C96F', ring: 'rgba(255,255,255,.10)', fine: 'rgba(200,212,232,.62)' },
+    day: { n: 'Day', a: '#fbfcff', b: '#e6edf9', g1: 'rgba(227,185,95,.34)', g2: 'rgba(60,110,230,.16)', h: '#0b1222', sub: '#4a5870', mono: '#5c6b85', gold: '#9a6a0a', ring: 'rgba(11,18,34,.10)', fine: 'rgba(40,55,80,.62)' },
+    brand: { n: 'Brand', a: '#0a1c63', b: '#1747C8', g1: 'rgba(255,214,120,.26)', g2: 'rgba(80,140,255,.30)', h: '#ffffff', sub: '#d3dcff', mono: '#b9c8ff', gold: '#FFE19A', ring: 'rgba(255,255,255,.16)', fine: 'rgba(220,230,255,.7)' }
   };
+  var SANS = 'Geist,ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif', MONO = '"Geist Mono",ui-monospace,Consolas,monospace', SERIF = '"Instrument Serif",ui-serif,Georgia,serif';
   var kitLink = function () { return linkOf(S.kitLink || ''); };
   function ensureQr(cb) { if (window.qrcode) return cb && cb(); if (S._qrLoading) return; S._qrLoading = true; var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js'; s.onload = function () { if (cb) cb(); }; document.head.appendChild(s); }
+  function ensureFonts() { if (S._fonts || !document.fonts) return true; var ok = document.fonts.check('600 20px Geist') && document.fonts.check('italic 400 20px "Instrument Serif"') && document.fonts.check('500 20px "Geist Mono"'); if (ok) { S._fonts = true; return true; } if (!S._fontsLoading) { S._fontsLoading = true; Promise.all(['600 20px Geist', '500 20px Geist', '500 20px "Geist Mono"', 'italic 400 20px "Instrument Serif"'].map(function (f) { return document.fonts.load(f); })).then(function () { S._fonts = true; redrawBanners(); }, function () { S._fonts = true; }); } return false; }
   function glowAt(g, x, y, r, col) { var a = g.createRadialGradient(x, y, 0, x, y, r); a.addColorStop(0, col); a.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = a; g.fillRect(0, 0, 4000, 4000); }
-  function wrapY(g, t, x, y, mw, lh) { var words = t.split(' '), line = ''; words.forEach(function (w) { var test = line + w + ' '; if (g.measureText(test).width > mw && line) { g.fillText(line.trim(), x, y); line = w + ' '; y += lh; } else line = test; }); g.fillText(line.trim(), x, y); return y + lh; }
-  function fitFont(g, text, wt, size, mw, F) { g.font = wt + ' ' + size + 'px ' + F; var m = g.measureText(text).width; return m > mw ? size * mw / m : size; }
   var LOGO = new Image(); LOGO.onload = function () { if (S.me && $('#pd-kit canvas')) redrawBanners(); }; LOGO.src = 'icon-512.png';
-  function mark(g, x, y, s, P) {
+  function mark(g, x, y, s) {
     if (LOGO.complete && LOGO.naturalWidth) { g.save(); g.beginPath(); g.moveTo(x + s * .24, y); g.arcTo(x + s, y, x + s, y + s, s * .24); g.arcTo(x + s, y + s, x, y + s, s * .24); g.arcTo(x, y + s, x, y, s * .24); g.arcTo(x, y, x + s, y, s * .24); g.closePath(); g.clip(); g.drawImage(LOGO, x, y, s, s); g.restore(); return; }
     g.fillStyle = '#1747C8'; rr(g, x, y, s, s, s * .24);
   }
-  function tri(g, cx, cy, r, P) {
-    var gl = g.createRadialGradient(cx, cy, r * .2, cx, cy, r * 1.5); gl.addColorStop(0, P.n1); gl.addColorStop(1, 'rgba(0,0,0,0)'); g.globalAlpha = .45; g.fillStyle = gl; g.beginPath(); g.arc(cx, cy, r * 1.5, 0, 6.2832); g.fill(); g.globalAlpha = 1;
-    g.lineWidth = Math.max(1, r * .03); g.strokeStyle = P.line; g.beginPath(); g.arc(cx, cy, r * 1.22, 0, 6.2832); g.stroke(); g.globalAlpha = .45; g.beginPath(); g.arc(cx, cy, r * 1.5, 0, 6.2832); g.stroke(); g.globalAlpha = 1;
-    g.shadowColor = 'rgba(0,0,0,.45)'; g.shadowBlur = r * .35; g.shadowOffsetY = r * .12; mark(g, cx - r * .85, cy - r * .85, r * 1.7, P); g.shadowColor = 'transparent'; g.shadowBlur = 0; g.shadowOffsetY = 0;
-  }
   function qrTile(g, text, x, y, s) {
     if (!window.qrcode) return false;
-    try { var q = window.qrcode(0, 'M'); q.addData(text); q.make(); var n = q.getModuleCount(), pad = s * .08, m = (s - pad * 2) / n;
-      g.fillStyle = '#fff'; rr(g, x, y, s, s, s * .08); g.fillStyle = '#0b1424'; for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(x + pad + c * m, y + pad + r * m, Math.ceil(m), Math.ceil(m)); return true; } catch (e) { return false; }
+    try { var q = window.qrcode(0, 'M'); q.addData(text); q.make(); var n = q.getModuleCount(), pad = s * .09, m = (s - pad * 2) / n;
+      g.fillStyle = '#fff'; rr(g, x, y, s, s, s * .09); g.fillStyle = '#0b1424'; for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) g.fillRect(x + pad + c * m, y + pad + r * m, Math.ceil(m), Math.ceil(m)); return true; } catch (e) { return false; }
   }
+  /* headline made of words in two fonts: plain words in Geist, "watch" in gold serif italic */
+  function words(segs, size) { var out = []; segs.forEach(function (s) { s[0].split(/(\s+)/).forEach(function (t) { if (t !== '') out.push({ t: t, k: s[1], sz: size }); }); }); return out; }
+  function fontOf(w, size, P) { return w.k === 'i' ? 'italic 400 ' + size * 1.14 + 'px ' + SERIF : '600 ' + size + 'px ' + SANS; }
+  function richWidth(g, segs, size) { var tot = 0; words(segs, size).forEach(function (w) { g.font = fontOf(w, size); tot += g.measureText(w.t).width; }); return tot; }
+  function rich(g, segs, x, y, mw, size, lh, P) {
+    var ws = words(segs, size), line = [], lw = 0, yy = y;
+    function flush() { var cx = x; line.forEach(function (w) { g.font = fontOf(w, size); g.fillStyle = w.k === 'i' ? P.gold : P.h; g.fillText(w.t, cx, yy); cx += w.w; }); line = []; lw = 0; yy += lh; }
+    ws.forEach(function (w) { g.font = fontOf(w, size); w.w = g.measureText(w.t).width; if (/^\s+$/.test(w.t)) { if (line.length) { line.push(w); lw += w.w; } return; } if (lw + w.w > mw && line.length) { while (line.length && /^\s+$/.test(line[line.length - 1].t)) line.pop(); flush(); } line.push(w); lw += w.w; });
+    if (line.length) flush(); return yy;
+  }
+  function pill(g, x, y, text, size, P, alignRight) {
+    g.font = '600 ' + size + 'px ' + SANS; var tw = g.measureText(text).width, ph = size * 1.9, pw = tw + size * 1.6; if (alignRight) x -= pw;
+    var gr = g.createLinearGradient(x, y, x + pw, y + ph); gr.addColorStop(0, '#F6DC9B'); gr.addColorStop(1, '#E3B95F'); g.fillStyle = gr; rr(g, x, y, pw, ph, ph / 2);
+    g.fillStyle = '#2a1d03'; g.textBaseline = 'middle'; g.fillText(text, x + size * .8, y + ph / 2 + size * .04); g.textBaseline = 'top'; return [x, y, pw, ph];
+  }
+  function spaced(g, text, x, y, size, px) { if (g.letterSpacing !== undefined) { g.letterSpacing = px + 'px'; g.fillText(text, x, y); g.letterSpacing = '0px'; } else g.fillText(text, x, y); }
   function drawBanner(c, w, h) {
-    var me = S.me, g = c.getContext('2d'), d = Number(me.discountPct) || 0, P = PAL[S.kitStyle || 'brand'], link = kitLink(), url = link.replace(/^https?:\/\//, '');
+    var me = S.me, g = c.getContext('2d'), d = Number(me.discountPct) || 0, P = PAL[S.kitStyle || 'night'], link = kitLink(), url = link.replace(/^https?:\/\//, ''), fonts = ensureFonts();
     c.width = w; c.height = h; g.textBaseline = 'top'; g.textAlign = 'left';
-    var F = 'system-ui,-apple-system,"Segoe UI",Roboto,sans-serif', bg = g.createLinearGradient(0, 0, w, h); P.bg.forEach(function (s) { bg.addColorStop(s[0], s[1]); }); g.fillStyle = bg; g.fillRect(0, 0, w, h);
-    glowAt(g, w * .92, h * .02, Math.max(w, h) * .75, P.g1); glowAt(g, w * .04, h * .98, Math.max(w, h) * .6, P.g2);
-    var st = Math.max(16, Math.min(w, h) / 12); g.strokeStyle = P.grid; g.lineWidth = 1; for (var gx = 0; gx < w; gx += st) { g.beginPath(); g.moveTo(gx, 0); g.lineTo(gx, h); g.stroke(); } for (var gy = 0; gy < h; gy += st) { g.beginPath(); g.moveTo(0, gy); g.lineTo(w, gy); g.stroke(); }
-    var wide = w / h > 2.2, tall = h / w > 1.4, offt = d ? d + '% OFF' : 'LIVE RECORD', codeT = d ? 'Code ' + me.code : 'Use my link';
-    function chip(x, y, u, size) { g.font = '800 ' + size + 'px ' + F; var tw = g.measureText(offt).width + size * 1.1, hh = size * 1.7; g.fillStyle = P.acc; rr(g, x, y, tw, hh, hh / 2); g.fillStyle = P.accT; g.fillText(offt, x + size * .55, y + size * .36); return [tw, hh]; }
+    var bg = g.createLinearGradient(0, 0, w * .7, h); bg.addColorStop(0, P.a); bg.addColorStop(1, P.b); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    glowAt(g, w * .96, h * .02, Math.max(w, h) * .8, P.g1); glowAt(g, w * .02, h * 1.0, Math.max(w, h) * .7, P.g2);
+    var wide = w / h > 2.2, tall = h / w > 1.4, offt = d ? d + '% off' : 'Live record', codeT = d ? 'CODE ' + me.code : 'MY LINK';
+    var LONG = [['A gold trading robot you can ', 's'], ['watch', 'i'], [' trade.', 's']], SHORT = [['Gold EA you can ', 's'], ['watch', 'i'], [' trade.', 's']];
     if (wide) {
-      var u = h, pad = u * .12, small = w < 500, big = w > 900, mk = u * .2, f1 = u * .13;
-      mark(g, pad, pad, mk, P); g.fillStyle = P.gold; g.font = '800 ' + f1 + 'px ' + F; if (g.letterSpacing !== undefined) g.letterSpacing = (f1 * .12) + 'px'; g.fillText('GOLDTRIENGINE', pad + mk * 1.35, pad + (mk - f1) / 2); if (g.letterSpacing !== undefined) g.letterSpacing = '0px';
-      var triW = small ? 0 : u * (big ? 1.05 : 1.25), cs = u * (small ? .13 : big ? .14 : .17), hh = cs * 1.7; g.font = '800 ' + cs + 'px ' + F; var chW = g.measureText(offt).width + cs * 1.1, chX = small ? w - pad - chW : w - pad - triW - chW - u * .15, chY = small ? pad : pad + u * .04;
-      g.fillStyle = P.acc; rr(g, chX, chY, chW, hh, hh / 2); g.fillStyle = P.accT; g.font = '800 ' + cs + 'px ' + F; g.fillText(offt, chX + cs * .55, chY + cs * .36);
-      if (!small) { g.fillStyle = P.gold; g.font = '700 ' + cs * .9 + 'px ' + F; g.fillText(codeT, chX, chY + hh + cs * .3); }
-      var maxW = small ? w - pad * 2 : chX - pad - u * .2, H = 'Automatic gold EA for MT5', hy = pad + u * .34, hs, hEnd;
-      g.fillStyle = P.h;
-      if (big) { hs = Math.min(u * .21, fitFont(g, 'Automatic gold EA', '800', u * .21, maxW, F)); g.font = '800 ' + hs + 'px ' + F; g.fillText('Automatic gold EA', pad, pad + u * .3); g.fillText('for MT5', pad, pad + u * .3 + hs * 1.12); hEnd = pad + u * .3 + hs * 2.2;
-        g.fillStyle = P.sub; g.font = '500 ' + u * .075 + 'px ' + F; g.fillText('Public live record', chX, chY + hh + cs * 1.55); }
-      else { hs = fitFont(g, H, '800', u * .3, maxW, F); g.font = '800 ' + hs + 'px ' + F; g.fillText(H, pad, hy); hEnd = hy + hs * 1.1; }
-      var uy = h - pad - u * .16;
-      if (!big && uy >= hEnd) { g.fillStyle = P.sub; g.font = '500 ' + u * .14 + 'px ' + F; g.fillText(url.length * u * .075 < maxW ? url : 'goldtriengine.com', pad, uy); }
-      if (!small) tri(g, w - pad - u * (big ? .5 : .62), h / 2, u * (big ? .27 : .3), P);
+      var u = h, pad = u * (h < 120 ? .17 : .14), small = w < 500, big = h >= 200, lg = u * (big ? .3 : .4);
+      if (!big) mark(g, pad, (h - lg) / 2, lg, P);
+      var tx = pad + lg + u * (big ? .16 : .2), ps = u * (big ? .15 : small ? .15 : .17), rightW = (function () { g.font = '600 ' + ps + 'px ' + SANS; return g.measureText(offt).width + ps * 1.6; })();
+      var maxW = w - tx - pad - rightW - u * .25, hs;
+      if (big) {
+        lg = u * .5; mark(g, pad, (h - lg) / 2, lg, P); tx = pad + lg + u * .22;
+        var availW = w - tx - pad - rightW - u * .35; hs = Math.min(u * .2, availW / richWidth(g, [['A gold trading robot', 's']], 100) * 100);
+        g.fillStyle = P.mono; g.font = '500 ' + u * .06 + 'px ' + MONO; spaced(g, 'GOLD EA FOR MT5 · LIVE 24/5', tx, h * .5 - hs * 1.12 - u * .1, u * .06, u * .008);
+        rich(g, LONG, tx, h * .5 - hs * 1.12 + u * .0, availW + 4, hs, hs * 1.12, P);
+        var pb = pill(g, w - pad, h * .5 - ps * 1.9, offt, ps, P, true); g.fillStyle = P.gold; g.font = '500 ' + ps * .62 + 'px ' + MONO; if (d) { var ct = g.measureText(codeT).width; spaced(g, codeT, pb[0] + (pb[2] - ct) / 2, pb[1] + pb[3] + ps * .4, ps, ps * .05); }
+        g.fillStyle = P.fine; g.font = '500 ' + ps * .55 + 'px ' + MONO; var uu = url.length < 28 ? url : 'goldtriengine.com'; g.fillText(uu, w - pad - g.measureText(uu).width, h - pad - ps * .55);
+        return;
+      }
+      var segs = small ? SHORT : (w > 600 ? LONG : SHORT);
+      if (small) { hs = u * .17; var hy0 = (h - hs * 2.2) / 2; rich(g, segs, tx, hy0, maxW + 2, hs, hs * 1.1, P); }
+      else { hs = Math.min(u * .27, maxW / richWidth(g, segs, 100) * 100); var hy = (h - hs * 1.14) / 2 - u * .08; rich(g, segs, tx, hy, maxW + 2, hs, hs * 1.14, P); }
+      if (!small) { g.fillStyle = P.mono; g.font = '500 ' + u * .1 + 'px ' + MONO; spaced(g, 'GOLD EA FOR MT5 · LIVE 24/5', tx, (h - hs * 1.14) / 2 - u * .08 + hs * 1.25, u * .1, u * .01); }
+      var pr = pill(g, w - pad, (h - ps * 1.9) / 2 - (d && !small ? u * .08 : 0), offt, ps, P, true);
+      if (d && !small) { g.fillStyle = P.gold; g.font = '500 ' + ps * .6 + 'px ' + MONO; var ct = g.measureText(codeT).width; spaced(g, codeT, pr[0] + (pr[2] - ct) / 2, pr[1] + pr[3] + ps * .4, ps, ps * .05); }
       return;
     }
-    var u2 = tall ? w : Math.min(w, h * .8), pd = u2 * .075, y = pd, big = u2 > 600;
-    mark(g, pd, y, u2 * .1, P); g.fillStyle = P.gold; var f2 = u2 * (tall && w < 300 ? .075 : .05); g.font = '800 ' + f2 + 'px ' + F; if (g.letterSpacing !== undefined) g.letterSpacing = (f2 * .12) + 'px'; g.fillText('GOLDTRIENGINE', pd + u2 * .13, y + (u2 * .1 - f2) / 2); if (g.letterSpacing !== undefined) g.letterSpacing = '0px';
-    y += u2 * .1 + pd;
-    if (tall) { tri(g, w / 2, y + u2 * (big ? .38 : .3), u2 * (big ? .26 : .24), P); y += u2 * (big ? .85 : .72); }
-    else tri(g, w - pd - u2 * .2, pd + u2 * .2, u2 * .17, P);
-    var hs2 = tall ? u2 * (big ? .125 : .105) : u2 * .105, mw = tall ? w - pd * 2 : w * .6;
-    g.fillStyle = P.h; g.font = '800 ' + hs2 + 'px ' + F; y = wrapY(g, 'Automatic gold EA for MT5', pd, tall ? y : y + u2 * .02, mw, hs2 * 1.12) + u2 * .02;
-    g.fillStyle = P.sub; g.font = '500 ' + u2 * (tall && !big ? .075 : .045) + 'px ' + F; y = wrapY(g, 'A public live record you can check', pd, y, w - pd * 2 - (tall ? 0 : u2 * .3), u2 * (tall && !big ? .09 : .058)) + u2 * .035;
-    var cs3 = u2 * (tall && !big ? .08 : .055), cr = chip(pd, y, u2, cs3); g.fillStyle = P.gold; g.font = '700 ' + cs3 * .95 + 'px ' + F; if (!tall || big) g.fillText(codeT, pd + cr[0] + cs3 * .7, y + cr[1] * .2); else g.fillText(codeT, pd, y + cr[1] + cs3 * .4);
-    var fu = u2 * (tall && !big ? .06 : .04), bottom = h - pd;
-    g.fillStyle = 'rgba(' + (S.kitStyle === 'day' ? '40,55,80' : '200,215,235') + ',.7)'; g.font = '400 ' + u2 * (tall && !big ? .045 : .027) + 'px ' + F; var dh = u2 * (tall && !big ? .05 : .03);
-    wrapY(g, 'Trading gold can lose money. I earn a commission.', pd, bottom - dh * (tall && !big ? 2.2 : 1), w - pd * 2, dh * 1.1);
-    g.fillStyle = P.sub; g.font = '600 ' + fu + 'px ' + F; var uy = bottom - dh * (tall && !big ? 2.2 : 1) - fu * 1.5; if (g.measureText(url).width < w - pd * 2 - (big ? u2 * .3 : 0)) g.fillText(url, pd, uy); else g.fillText('goldtriengine.com', pd, uy);
-    if (w >= 1000) { var qs = u2 * (tall ? .3 : .24); if (!qrTile(g, link, w - pd - qs, h - pd - qs, qs)) ensureQr(function () { redrawBanners(); }); }
+    var u2 = tall ? w : Math.min(w, h * .8), pd = u2 * .09, y = pd, bigF = u2 > 600, narrow = tall && w < 300;
+    var lg2 = u2 * (narrow ? .22 : .105); mark(g, pd, y, lg2, P); g.fillStyle = P.h;
+    if (!narrow) { g.font = '600 ' + u2 * .052 + 'px ' + SANS; g.fillText('GoldTriEngine', pd + lg2 * 1.3, y + (lg2 - u2 * .052) / 2 - u2 * .004); }
+    y += lg2 + (narrow ? pd * .8 : u2 * .09);
+    if (!narrow) { g.fillStyle = P.mono; g.font = '500 ' + u2 * .032 + 'px ' + MONO; spaced(g, 'GOLD EA FOR MT5 · LIVE 24/5', pd, y, u2 * .032, u2 * .006); y += u2 * .07; }
+    var hs2 = narrow ? u2 * .135 : tall ? u2 * (bigF ? .135 : .12) : u2 * .115;
+    y = rich(g, LONG, pd, y, w - pd * 2, hs2, hs2 * 1.1, P) + u2 * .02;
+    g.fillStyle = P.sub; g.font = '400 ' + u2 * (narrow ? .08 : .046) + 'px ' + SANS;
+    var sy = y; (function () { var t = 'A public live record you can check.', words_ = t.split(' '), line = '', lh = u2 * (narrow ? .1 : .062); words_.forEach(function (wd) { var test = line + wd + ' '; if (g.measureText(test).width > w - pd * 2 && line) { g.fillText(line.trim(), pd, sy); line = wd + ' '; sy += lh; } else line = test; }); g.fillText(line.trim(), pd, sy); y = sy + lh + u2 * .035; })();
+    var ps2 = u2 * (narrow ? .085 : .055), pb2 = pill(g, pd, y, offt, ps2, P, false);
+    if (d) { g.fillStyle = P.gold; g.font = '500 ' + ps2 * .62 + 'px ' + MONO; if (narrow) spaced(g, codeT, pd, pb2[1] + pb2[3] + ps2 * .5, ps2, ps2 * .05); else spaced(g, codeT, pb2[0] + pb2[2] + ps2 * .6, pb2[1] + pb2[3] / 2 - ps2 * .3, ps2, ps2 * .05); }
+    var fs = u2 * (narrow ? .06 : .031), dh = u2 * (narrow ? .05 : .026), bottom = h - pd;
+    g.fillStyle = P.fine; g.font = '400 ' + dh + 'px ' + SANS; var dis = 'Trading gold can lose money. I earn a commission.', dl = narrow ? 3 : 1;
+    if (narrow) { var dy = bottom - dh * 3.4; ['Trading gold can', 'lose money. I earn a', 'commission.'].forEach(function (t, i) { g.fillText(t, pd, dy + i * dh * 1.2); }); }
+    else g.fillText(dis, pd, bottom - dh);
+    g.fillStyle = P.h; g.font = '500 ' + fs + 'px ' + MONO; var shortUrl = g.measureText(url).width < w - pd * 2 - (w >= 1000 ? u2 * .3 : 0) ? url : 'goldtriengine.com'; g.fillText(shortUrl, pd, bottom - dh * (narrow ? 4.2 : 1) - fs * 1.7);
+    if (w >= 1000) { var qs = u2 * (tall ? .3 : .22); if (!qrTile(g, link, w - pd - qs, h - pd - qs, qs)) ensureQr(function () { redrawBanners(); }); }
+    if (!fonts) { /* redrawn as soon as the fonts arrive */ }
   }
   function rr(g, x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); g.fill(); }
   function wrap(g, t, x, y, mw, lh) { var words = t.split(' '), line = ''; words.forEach(function (w) { var test = line + w + ' '; if (g.measureText(test).width > mw && line) { g.fillText(line, x, y); line = w + ' '; y += lh; } else line = test; }); g.fillText(line, x, y); }
@@ -345,7 +365,7 @@
   function drawQuick() { var c = $('#pd-qpv'); if (!c) return; var s = SIZES[+c.dataset.i]; drawBanner(c, s[1], s[2]); }
   function bannerFile(i) { var s = SIZES[i], cv = document.createElement('canvas'); drawBanner(cv, s[1], s[2]); var a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = 'goldtriengine-' + s[0].toLowerCase().replace(/[^a-z]+/g, '-') + '-' + S.kitStyle + '-' + S.me.code + '.png'; document.body.appendChild(a); a.click(); a.remove(); toast('Downloaded'); api('partner_kit_log', { p_item: s[0] + ' ' + S.kitStyle }).catch(function () {}); }
   function renderKit() {
-    var me = S.me, d = Number(me.discountPct) || 0, lang = S.lang || 'en', L = CAPS[lang], link = kitLink(), el = $('#pd-kit'); S.kitStyle = S.kitStyle || 'brand'; S.qp = S.qp == null ? 0 : S.qp; S.qdone = S.qdone || {};
+    var me = S.me, d = Number(me.discountPct) || 0, lang = S.lang || 'en', L = CAPS[lang], link = kitLink(), el = $('#pd-kit'); S.kitStyle = S.kitStyle || 'night'; S.qp = S.qp == null ? 0 : S.qp; S.qdone = S.qdone || {};
     var fillT = function (t) { return t.replace(/\{link\}/g, link).replace(/\{code\}/g, me.code).replace(/\{disc\}/g, d).replace(/\{off\}/g, d ? L.offT.replace(/\{code\}/g, me.code).replace(/\{disc\}/g, d) : ''); };
     var caps = L.p.map(function (t) { return fillT(t).trim() + '\n' + L.risk + ' ' + L.disc; });
     var camps = (S.camps || []).filter(function (c) { return c.slug; }), pl = PLAT[S.qp];
