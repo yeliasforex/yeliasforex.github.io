@@ -46,13 +46,12 @@
     var A = $('#acct'); if (!A || !A.children.length) return;
     var h = $('#macc'); if (!h) {
       h = document.createElement('div'); h.id = 'macc';
-      h.innerHTML = '<div class="mc-l"><div class="mc-k"><i></i><span id="mck"></span></div><div class="mc-t" id="mct"></div><div class="mc-s" id="mcs"></div></div><div class="mc-r"><button type="button" id="mcq"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Jump to...</span><kbd>Ctrl K</kbd></button><div class="mc-c" id="mcc"></div></div>';
+      h.innerHTML = '<div class="mc-l"><div class="mc-k"><i></i><span id="mck"></span></div><div class="mc-t" id="mct"></div><div class="mc-s" id="mcs"></div></div><div class="mc-r"><button type="button" id="mcq"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Jump to...</span><kbd>Ctrl K</kbd></button></div>';
       A.insertBefore(h, A.firstChild); $('#mcq').onclick = openPalette;
     } else if (h !== A.firstChild) A.insertBefore(h, A.firstChild);
     var d = new Date(), hr = d.getHours(), g = hr < 5 ? 'Working late' : hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening', nm = (($('#manm') || {}).textContent || '').trim().split(/\s+/)[0];
     setT($('#mck'), (g + (nm && nm !== '·' ? ', ' + nm : '') + ' · ' + d.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'})).toUpperCase());
     setT($('#mct'), tabName()); setT($('#mcs'), DESC[tabKey()] || '');
-    setT($('#mcc'), d.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'}));
   }
 
   /* ---------- get-started checklist: only until the account is fully connected ---------- */

@@ -9,7 +9,7 @@
   var pct = function (a, b) { return b > 0 ? Math.round(a / b * 1000) / 10 : 0; };
   var ORIGIN = 'https://goldtriengine.com';
   var S = { me: null, stats: null, camps: [], custs: [], ledger: [], payouts: [], days: 30, compare: false, tab: 'overview', cfilter: 'latest', report: null, plans: [] };
-  window.GTE_PD = S;
+  window.GTE_PD = S; window.GTE_PD_API = function () { return api.apply(null, arguments); };
   var tzo = -new Date().getTimezoneOffset();
 
   // ---------- data ----------

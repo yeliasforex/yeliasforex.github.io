@@ -57,7 +57,7 @@
   }
   function tile(go, cls, label, val, sub, a, tone) {
     var p = a && a.some(function (v) { return v > 0; }) ? path(a) : null;
-    return '<button type="button" class="pdx-pl ' + cls + '" data-go="' + go + '"><span class="pdx-pll">' + label + '</span><b class="pdx-plv" data-v="' + val.n + '" data-f="' + val.f + '" data-s="' + (val.s || '') + '">' + val.t + '</b><span class="pdx-pld ' + (tone || '') + '">' + sub + '</span>' +
+    return '<button type="button" class="pdx-pl ' + cls + '" data-ps="' + go + '"><span class="pdx-pll">' + label + '</span><b class="pdx-plv" data-v="' + val.n + '" data-f="' + val.f + '" data-s="' + (val.s || '') + '">' + val.t + '</b><span class="pdx-pld ' + (tone || '') + '">' + sub + '</span>' +
       (p ? '<svg class="pdx-pls" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><path class="a" d="' + p.area + '"/><path class="l" pathLength="1" d="' + p.line + '"/></svg>' : '') + '</button>';
   }
   var sig = '';
@@ -67,14 +67,13 @@
     if (!box) {
       box = document.createElement('div'); box.id = 'pdx-hero';
       box.innerHTML = '<div class="pdx-hl"><div class="pdx-hk"><i></i><span id="pdx-hk"></span></div><div class="pdx-ht" id="pdx-ht"></div><div class="pdx-hs" id="pdx-hs"></div><div id="pdx-hc"></div></div>' +
-        '<div class="pdx-hr"><button type="button" id="pdx-q"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Jump to...</span><kbd>Ctrl K</kbd></button><div class="pdx-clk" id="pdx-clk"></div></div><div id="pdx-pulse"></div>';
+        '<div class="pdx-hr"><button type="button" id="pdx-q"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><span>Jump to...</span><kbd>Ctrl K</kbd></button></div><div id="pdx-pulse"></div>';
       ov.parentNode.insertBefore(box, ov); $('#pdx-q').onclick = openPalette;
     }
     box.dataset.tab = tabKey();
     var d = new Date(), h = d.getHours(), g = h < 5 ? 'Working late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
     setT($('#pdx-hk'), (g + ' · ' + d.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'})).toUpperCase());
     setT($('#pdx-ht'), tabName()); setT($('#pdx-hs'), DESC[tabKey()] || '');
-    setT($('#pdx-clk'), d.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'}));
     var st = s.stats, B = st.balances || {}, cur = st.cur || {}, prev = st.prev || {}, me = s.me, minp = Number(me.minPayout || 50);
     var ser = function (k) { return (st.series || []).map(function (x) { return Number(x[k] || 0); }); };
     var de = prev.earned > 0 ? Math.round((cur.earned - prev.earned) / prev.earned * 100) : null, dc = prev.clicks > 0 ? Math.round((cur.clicks - prev.clicks) / prev.clicks * 100) : null;
@@ -85,10 +84,10 @@
     if (Number(cur.signups) > 0) chips.push('<button type="button" class="pdx-hc info" data-go="customers"><i></i><b>' + Number(cur.signups).toLocaleString('en-US') + '</b> sign-ups this period</button>');
     if (!chips.length) chips.push('<span class="pdx-hc ok"><i></i>All set</span>');
     setH($('#pdx-hc'), chips.join(''));
-    var html = tile('payouts', 'k1', 'Ready to pay out', {n: ready_, f: '$', t: money(ready_)}, ready_ >= minp ? 'tap to request it' : money(Math.max(0, minp - ready_)) + ' more to the minimum', ser('earned'), ready_ >= minp ? 'up' : '') +
-      tile('overview', 'k2', 'Earned, ' + (s.days || 30) + ' days', {n: Math.round(cur.earned || 0), f: '$', t: money(cur.earned)}, de === null ? 'first period' : (de >= 0 ? '&#9650; ' : '&#9660; ') + Math.abs(de) + '% vs before', ser('earned'), de === null ? '' : de >= 0 ? 'up' : 'dn') +
-      tile('campaigns', 'k3', 'Clicks', {n: Number(cur.clicks || 0), f: '', t: Number(cur.clicks || 0).toLocaleString('en-US')}, dc === null ? 'first period' : (dc >= 0 ? '&#9650; ' : '&#9660; ') + Math.abs(dc) + '% vs before', ser('clicks'), dc === null ? '' : dc >= 0 ? 'up' : 'dn') +
-      tile('reports', 'k4', 'Click to sale', {n: conv, f: '', s: '%', t: conv + '%'}, Number(cur.paid || 0) + ' paid sale' + (Number(cur.paid) === 1 ? '' : 's'), null, '');
+    var html = tile('bal:ready', 'k1', 'Ready to pay out', {n: ready_, f: '$', t: money(ready_)}, ready_ >= minp ? 'tap to request it' : money(Math.max(0, minp - ready_)) + ' more to the minimum', ser('earned'), ready_ >= minp ? 'up' : '') +
+      tile('earned', 'k2', 'Earned, ' + (s.days || 30) + ' days', {n: Math.round(cur.earned || 0), f: '$', t: money(cur.earned)}, de === null ? 'first period' : (de >= 0 ? '&#9650; ' : '&#9660; ') + Math.abs(de) + '% vs before', ser('earned'), de === null ? '' : de >= 0 ? 'up' : 'dn') +
+      tile('clicks', 'k3', 'Clicks', {n: Number(cur.clicks || 0), f: '', t: Number(cur.clicks || 0).toLocaleString('en-US')}, dc === null ? 'first period' : (dc >= 0 ? '&#9650; ' : '&#9660; ') + Math.abs(dc) + '% vs before', ser('clicks'), dc === null ? '' : dc >= 0 ? 'up' : 'dn') +
+      tile('conv', 'k4', 'Click to sale', {n: conv, f: '', s: '%', t: conv + '%'}, Number(cur.paid || 0) + ' paid sale' + (Number(cur.paid) === 1 ? '' : 's'), null, '');
     if (html !== sig) { var first = !sig; sig = html; $('#pdx-pulse').innerHTML = html; if (first && !reduce) $$('#pdx-pulse .pdx-plv').forEach(count); }
   }
   function count(el) {
@@ -103,12 +102,12 @@
   function insights() {
     var s = S(), st = s.stats, me = s.me, B = st.balances || {}, cur = st.cur || {}, prev = st.prev || {}, out = [];
     var hrs = st.hours || [], hmax = Math.max.apply(null, hrs.concat([0]));
-    if (hmax > 0) { var hi = hrs.indexOf(hmax), tot = hrs.reduce(function (a, b) { return a + b; }, 0); out.push({t: 'g', h: 'Best time to post: ' + hourName(hi), d: 'About ' + Math.round(hmax / tot * 100) + '% of your clicks arrive in that hour (your local time). Post 15 to 30 minutes before it.'}); }
+    if (hmax > 0) { var hi = hrs.indexOf(hmax), tot = hrs.reduce(function (a, b) { return a + b; }, 0); out.push({k: 'hour', t: 'g', h: 'Best time to post: ' + hourName(hi), d: 'About ' + Math.round(hmax / tot * 100) + '% of your clicks arrive in that hour (your local time). Post 15 to 30 minutes before it.'}); }
     var wd = [0, 0, 0, 0, 0, 0, 0], names = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     (st.series || []).forEach(function (x) { var dt = new Date(String(x.day) + 'T12:00:00Z'); if (!isNaN(dt)) wd[dt.getUTCDay()] += Number(x.clicks || 0); });
-    var wm = Math.max.apply(null, wd); if (wm > 0 && (st.series || []).length >= 14) out.push({t: 'v', h: 'Your strongest day is ' + names[wd.indexOf(wm)], d: 'More of your fans click on this day than any other in the last ' + (s.days || 30) + ' days.'});
+    var wm = Math.max.apply(null, wd); if (wm > 0 && (st.series || []).length >= 14) out.push({k: 'wd', t: 'v', h: 'Your strongest day is ' + names[wd.indexOf(wm)], d: 'More of your fans click on this day than any other in the last ' + (s.days || 30) + ' days.'});
     var conv = cur.clicks > 0 ? cur.paid / cur.clicks * 100 : 0;
-    if (cur.clicks >= 100) out.push(conv < 1 ? {t: 'y', h: 'Many clicks, few sales', d: 'Only ' + conv.toFixed(1) + '% of clicks become sales. Send fans to your personal page and mention the discount code in the first line.'} : conv >= 3 ? {t: 'g', h: 'Your audience converts very well', d: conv.toFixed(1) + '% of clicks become sales. More traffic is your fastest way to earn more.'} : {t: 'a', h: 'Healthy click-to-sale rate', d: conv.toFixed(1) + '% of clicks become sales. Use the planner below to see what more traffic is worth.'});
+    if (cur.clicks >= 100) out.push(conv < 1 ? {k: 'conv', t: 'y', h: 'Many clicks, few sales', d: 'Only ' + conv.toFixed(1) + '% of clicks become sales. Send fans to your personal page and mention the discount code in the first line.'} : conv >= 3 ? {k: 'conv', t: 'g', h: 'Your audience converts very well', d: conv.toFixed(1) + '% of clicks become sales. More traffic is your fastest way to earn more.'} : {k: 'conv', t: 'a', h: 'Healthy click-to-sale rate', d: conv.toFixed(1) + '% of clicks become sales. Use the planner below to see what more traffic is worth.'});
     return out.slice(0, 5);
   }
   function renderInsights() {
@@ -117,7 +116,7 @@
     var old = $('#pdx-in', ov); if (old && old.dataset.k === key) return; if (old) old.remove();
     var L = insights(); if (!L.length) return;
     var c = document.createElement('div'); c.className = 'pd-card pdx-in pd-fadeup in'; c.id = 'pdx-in'; c.dataset.k = key;
-    c.innerHTML = '<div class="pd-row"><h3>Smart insights</h3><span class="pd-pill c">written from your numbers</span></div><div class="pdx-il">' + L.map(function (x, i) { return '<div class="pdx-it ' + x.t + '" style="animation-delay:' + (i * 70) + 'ms"><i></i><div><b>' + esc(x.h) + '</b><span>' + esc(x.d) + '</span></div></div>'; }).join('') + '</div>';
+    c.innerHTML = '<div class="pd-row"><h3>Smart insights</h3><span class="pd-pill c">written from your numbers</span></div><div class="pdx-il">' + L.map(function (x, i) { return '<div class="pdx-it ' + x.t + '"' + (x.k ? ' data-ps="ins:' + x.k + '" role="button" tabindex="0"' : '') + ' style="animation-delay:' + (i * 70) + 'ms"><i></i><div><b>' + esc(x.h) + '</b><span>' + esc(x.d) + '</span></div></div>'; }).join('') + '</div>';
     var ech = $('#pd-ech', ov), g = ech && ech.closest('.pd-grid'); (g || j).insertAdjacentElement('afterend', c);
   }
 
@@ -208,6 +207,10 @@
     if (!$('.acsw.mob', app)) app.insertAdjacentHTML('afterbegin', swHtml('p', 'mob'));
   }
   document.addEventListener('click', function (e) { var a = e.target.closest && e.target.closest('a[data-sw]'); if (a && a.closest('.acsw').dataset.v === a.dataset.sw) e.preventDefault(); });
+  function mark() {
+    ['clicks', 'signups', 'paid', 'earned'].forEach(function (key, i) { var el = $$('#pd-reports .pd-grid .pd-kpi')[i]; if (el && !el.dataset.ps) { el.dataset.ps = key; el.setAttribute('role', 'button'); el.tabIndex = 0; } });
+    var o = $('#pdx-p .pdx-out'); if (o && !o.dataset.ps) { o.dataset.ps = 'calc'; o.setAttribute('role', 'button'); o.tabIndex = 0; }
+  }
   var booted = false, lastTab = null;
   function boot() {
     if (!ready()) return;
@@ -216,7 +219,7 @@
       setInterval(function () { if (ready()) hero(); }, 20000);
     }
     var k = tabKey(); if (k !== lastTab) { if (lastTab !== null) sweep(); lastTab = k; }
-    groups(); switcher(); hero(); renderInsights(); tools();
+    groups(); switcher(); hero(); renderInsights(); tools(); mark();
     if (window.__pdMark) window.__pdMark();
   }
   function start() {

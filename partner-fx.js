@@ -75,7 +75,7 @@
     var nt = !next ? 'Every achievement unlocked. You are at the top.' : next.m.k === 'first' || next.m.k === 'five' ? (Math.ceil(next.goal - next.have) + ' more paid sale' + (Math.ceil(next.goal - next.have) === 1 ? '' : 's') + ' to ' + next.m.t.toLowerCase()) : next.m.k === 'pay' ? 'Request your first payout when you reach ' + money(d.minp) : (money(next.goal - next.have) + ' more commission to reach ' + next.m.t);
     var html = '<div class="pd-card pdx-j pd-fadeup in" id="pdx-j"><div class="pdx-jh"><div><div class="pdx-k">YOUR JOURNEY</div><div class="pdx-t">' + esc(d.me.name || 'Partner') + '</div></div></div>' +
       '<div class="pdx-next"><i></i><span>' + esc(nt) + '</span></div>' +
-      '<div class="pdx-bd">' + items.map(function (x) { return '<button type="button" class="pdx-b' + (x.got ? ' got' : '') + '" data-k="' + x.m.k + '" title="' + esc(x.m.d) + '">' + ring(x.got ? 1 : x.p, x.got ? '#F5C165' : cv('--cyan', '#3CD2FF')) + '<span class="pdx-bi">' + (x.got ? '&#10003;' : Math.round(x.p * 100) + '%') + '</span><em>' + esc(x.m.t) + '</em></button>'; }).join('') + '</div></div>';
+      '<div class="pdx-bd">' + items.map(function (x) { return '<button type="button" class="pdx-b' + (x.got ? ' got' : '') + '" data-k="' + x.m.k + '" data-ps="badge:' + x.m.k + '" title="' + esc(x.m.d) + '">' + ring(x.got ? 1 : x.p, x.got ? '#F5C165' : cv('--cyan', '#3CD2FF')) + '<span class="pdx-bi">' + (x.got ? '&#10003;' : Math.round(x.p * 100) + '%') + '</span><em>' + esc(x.m.t) + '</em></button>'; }).join('') + '</div></div>';
     return {html: html, fresh: fresh, seen: seen};
   }
   function planner(d) {
