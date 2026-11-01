@@ -23,6 +23,16 @@
 <script src="pwa.js?v=20261102app8" defer></script><script src="track.js?v=20261021app5" defer></script>
 
 <style>
+/* the interactive host robot */
+.si-bot{position:relative;height:440px;margin-top:34px;animation:siup .8s .5s both}
+.si-bot iframe{position:absolute;left:0;bottom:0;width:100%;height:100%;border:0;background:transparent;color-scheme:light;transform:scale(1.14);transform-origin:36% 95%;pointer-events:none;filter:drop-shadow(0 30px 40px rgba(0,0,0,.35))}
+.si-hit{position:absolute;left:12%;right:30%;top:6%;bottom:2%;background:none;border:0;cursor:pointer;border-radius:30px}
+.si-hit:focus-visible{outline:2px solid var(--blue-hi);outline-offset:2px}
+.si-say{position:absolute;right:0;top:14%;max-width:230px;padding:12px 16px 13px;border-radius:18px 18px 18px 4px;border:1px solid var(--line-2);background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(12px);box-shadow:0 18px 40px -18px rgba(0,0,0,.55);font-size:.86rem;line-height:1.45;transition:opacity .3s,transform .3s}
+.si-say b{display:block;font:600 .64rem/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.si-say.sw{opacity:0;transform:translateY(8px)}
+.si-say:after{content:"";position:absolute;left:-7px;bottom:12px;width:12px;height:12px;background:inherit;border-left:1px solid var(--line-2);border-bottom:1px solid var(--line-2);transform:rotate(45deg);border-radius:0 0 0 4px}
+@media (max-width:900px){.si-bot{height:340px;margin-top:0}.si-say{right:0;max-width:200px;top:6%}.si-hit{left:6%;right:38%}}
 @property --sa{syntax:'<angle>';inherits:false;initial-value:0deg}
 /* orbit of three engines around the logo */
 .si-orbit{position:relative;height:250px;margin-top:26px;display:grid;place-items:center;animation:siup .8s .5s both}
@@ -41,7 +51,7 @@
 .si-chip i{width:8px;height:8px;border-radius:50%;background:var(--mint);animation:siping 2s infinite}@keyframes siping{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}.si-chip i{box-shadow:0 0 0 0 var(--mint)}
 .si-chip.c1{right:26px;top:-30px}.si-chip.c2{left:26px;bottom:-32px;animation-delay:-2s}.si-chip.c3{right:26px;bottom:-32px;animation-delay:-4s}
 @keyframes sichip{50%{transform:translateY(-8px)}}
-@media (max-width:900px){.si-orbit,.si-chip{display:none}}
+@media (max-width:900px){.si-chip{display:none}}
 /* card: moving light on the edge, entry motion, small details */
 #form.f:after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;background:conic-gradient(from var(--sa),transparent 0deg,color-mix(in srgb,var(--blue-hi) 80%,transparent) 60deg,transparent 130deg,transparent 220deg,color-mix(in srgb,var(--gold) 75%,transparent) 290deg,transparent 360deg);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:sispin 7s linear infinite}
 @keyframes sispin{to{--sa:360deg}}
@@ -101,7 +111,7 @@
     <h1>Welcome <em>back</em>.</h1>
     <p class="lead">Sign in with a one-time email link or Google. New here? The same step creates your account.</p>
     <ul class="si-perks"><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><div><b>No password to remember</b><small>One secure link by email, or Google.</small></div></li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><div><b>Free account</b><small>Unlocks the free backtest EA.</small></div></li><li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><div><b>Everything in one place</b><small>License, orders, results and notifications.</small></div></li></ul>
-    <div class="si-orbit" aria-hidden="true"><div class="si-core"><span class="logo"></span></div><div class="si-o o1"><i style="--c:#5B86FF"><b>Alpha</b></i></div><div class="si-o o2"><i style="--c:#E3B95F"><b>Beta</b></i></div><div class="si-o o3"><i style="--c:#B07CFF"><b>Gamma</b></i></div><div class="si-cap"><b>Three engines</b><span>one gold robot, trading in public</span></div></div>
+    <div class="si-bot" id="siBot"><iframe id="siRobot" title="GoldTriEngine host robot" loading="lazy" tabindex="-1" aria-hidden="true"></iframe><button type="button" class="si-hit" id="siHit" aria-label="Say hi to the robot"></button><div class="si-say" id="siSay" role="status" aria-live="polite"><b>Host</b><span id="siSayT"></span></div></div>
   </div>
   <div class="si-r"><div class="si-chip c1"><i></i>Live 24/5</div><div class="si-chip c2">Public record</div><div class="si-chip c3">Free account</div><div class="si-rings" aria-hidden="true"><i></i><i></i><i></i></div>
   <div class="f" id="form">
@@ -179,6 +189,34 @@
     requestAnimationFrame(frame);
   }
   size(); frame(); addEventListener('resize', size); addEventListener('pointermove', function (e) { var r = c.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top; }, {passive: true});
+})();
+</script>
+<script>
+/* the host robot reacts to what the visitor does on this page (it only looks, waves and talks; it never touches the form) */
+(function () {
+  var bot = document.getElementById('siBot'), fr = document.getElementById('siRobot'); if (!bot || !fr) return;
+  var say = document.getElementById('siSay'), txt = document.getElementById('siSayT'), swT, typeT, lastMove = 0, touched = false;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function post(m) { try { fr.contentWindow.postMessage(m, '*'); } catch (e) {} }
+  function talk(t, fx, scene) {
+    touched = true; clearTimeout(swT); clearInterval(typeT); say.classList.add('sw');
+    swT = setTimeout(function () { say.classList.remove('sw'); if (reduce) { txt.textContent = t; } else { var i = 0; txt.textContent = ''; typeT = setInterval(function () { i += 2; txt.textContent = t.slice(0, i); if (i >= t.length) clearInterval(typeT); }, 18); } }, 220);
+    if (scene) post({scene: scene}); if (fx) post({fx: fx}); post({talk: Math.min(6000, 1500 + t.length * 45)});
+  }
+  var loaded = false;
+  function load() { if (loaded) return; loaded = true; fr.src = 'robot3d.html?scene=happy&full=1'; fr.onload = function () { setTimeout(function () { if (!touched) talk('Hi! I am the host of the GoldTriEngine live stream. Tick the box, then pick Google or email.', 'wave', 'happy'); }, 900); }; }
+  if ('IntersectionObserver' in window) { new IntersectionObserver(function (es, o) { if (es[0].isIntersecting) { load(); o.disconnect(); } }, {rootMargin: '200px'}).observe(bot); } else load();
+  /* the head follows the pointer */
+  addEventListener('pointermove', function (e) { var n = performance.now(); if (n - lastMove < 90) return; lastMove = n; var r = bot.getBoundingClientRect(), cx = r.left + r.width * .42, cy = r.top + r.height * .3; post({look: [Math.max(-1, Math.min(1, (e.clientX - cx) / (innerWidth * .45))), Math.max(-1, Math.min(1, (e.clientY - cy) / (innerHeight * .5)))]}); }, {passive: true});
+  /* tap the robot */
+  var HI = ['Hi! You found me. I read every trade out loud on the live stream.', 'Fun fact: I never hide a losing trade.', 'No password here. Just a one-time link, or Google.', 'Trading gold can lose money. I will always say so.'], hi = 0;
+  document.getElementById('siHit').onclick = function () { talk(HI[hi++ % HI.length], hi % 2 ? 'wave' : 'thumbs', 'happy'); };
+  /* react to the form */
+  var agree = document.getElementById('agree'), email = document.getElementById('email'), out = document.getElementById('out');
+  if (agree) agree.addEventListener('change', function () { if (agree.checked) talk('Thank you. Now choose Google, or type your email below.', 'thumbs', 'happy'); else talk('No problem. Tick the box when you are ready.', null, 'rest'); });
+  if (email) email.addEventListener('focus', function () { talk('Type your email and I will send you a one-time link. No password.', 'point', 'happy'); }, {once: true});
+  if (out) new MutationObserver(function () { var m = out.querySelector('.msg'); if (!m) return; if (m.classList.contains('err')) talk(m.textContent, 'concerned', 'concerned'); else talk('Link sent! Open it on this device and you are in.', 'cheer', 'happy'); }).observe(out, {childList: true});
+  var box = document.getElementById('agreeBox'); if (box) new MutationObserver(function () { if (box.classList.contains('need')) talk('One quick step first: tick the box above.', 'point', 'happy'); }).observe(box, {attributes: true, attributeFilter: ['class']});
 })();
 </script>
 </body>
