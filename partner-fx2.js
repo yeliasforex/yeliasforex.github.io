@@ -37,7 +37,7 @@
   document.addEventListener('mouseover', function (e) {
     var b = e.target.closest && e.target.closest('#pd-bar button[data-tip]'), root = $('.pd');
     if (!b || !root || !root.classList.contains('pdnc') || innerWidth < 1000) { hideTip(); return; }
-    hideTip(); var r = b.getBoundingClientRect(); tip = document.createElement('div'); tip.id = 'pdx-tip'; tip.textContent = b.dataset.tip; tip.style.left = (r.right + 10) + 'px'; tip.style.top = (r.top + r.height / 2) + 'px'; document.body.appendChild(tip);
+    hideTip(); var r = b.getBoundingClientRect(); tip = document.createElement('div'); tip.id = 'pdx-tip'; tip.textContent = b.dataset.tip; tip.style.left = (r.right + 10) + 'px'; tip.style.top = (r.top + r.height / 2) + 'px'; ($('.pd') || document.body).appendChild(tip);
   });
   document.addEventListener('mouseout', function (e) { if (!e.relatedTarget || !(e.relatedTarget.closest && e.relatedTarget.closest('#pd-bar button[data-tip]'))) hideTip(); });
   function toggle() {

@@ -150,12 +150,16 @@
     return null;
   }
   function planCalc() { var p = $('#pdx-p'), conv = p && +p.dataset.conv, avg = p && +p.dataset.avg; if (!p || !conv) return null; var sl = $('#pdx-sl'), c = sl ? +sl.value : 0; return {title: 'How the planner works', sub: 'Your own numbers, nothing guessed.', chips: [['Click to sale', (conv * 100).toFixed(1) + '%'], ['Per sale', usd(avg, 2)], ['Clicks / month', num(c)]], body: function () { return '<div class="ps-empty">' + num(c) + ' clicks &times; ' + (conv * 100).toFixed(1) + '% = ' + (Math.round(c * conv * 10) / 10) + ' sales<br>' + (Math.round(c * conv * 10) / 10) + ' sales &times; ' + usd(avg, 2) + ' = <b>' + usd(c * conv * avg, 0) + '</b> per month</div>' + tip('It is an estimate from your last ' + S().days + ' days. Results vary and nothing is guaranteed.'); }}; }
+  function levelSpec() {
+    var s = S(), me = s.me, sales = Number(me.paidReferrals || 0), gold = Number(me.goldAt || 10), isGold = sales >= gold, base = Number(me.baseSale || me.rateSale || 0), top = base + Number(me.goldBonus || 0);
+    return {title: 'Levels', sub: 'Your rate grows as your referrals buy.', chips: [['Paid referrals', num(sales)], ['To top level', isGold ? 'Reached' : num(gold - sales) + ' to go'], ['Your rate now', Number(me.rateSale || 0) + '%', 'var(--green)']], body: function () { return rowBtn('Standard rate', base + '% on sales', 'Start', '', Math.min(100, sales / gold * 100)) + rowBtn('Top level', top + '% on sales after ' + gold + ' paid referrals', isGold ? 'Reached' : num(gold - sales) + ' to go', '', isGold ? 100 : sales / gold * 100, 'var(--amber)') + tip('Renewal rate is ' + Number(me.rateRenewal || 0) + '%. Reaching the top level raises your rate on every new sale.') + btn('See your customers', 'data-pgo="customers"'); }};
+  }
   function readySpec() { return balSpec('ready'); }
   function spec(key) {
     var p = String(key).split(':'), k = p[0];
     switch (k) {
       case 'clicks': return clicksSpec(); case 'signups': return signupsSpec(); case 'paid': return paidSpec(); case 'earned': return earnedSpec(); case 'conv': return convSpec(); case 'avg': return avgSpec(); case 'life': return lifeSpec(); case 'paidout': return paidoutSpec();
-      case 'bal': return balSpec(p[1]); case 'ready': return readySpec(); case 'day': return daySpec(p[1]); case 'hour': return hourSpec(+p[1]); case 'zone': return zoneSpec(+p[1]); case 'device': return deviceSpec(p[1]); case 'plan': return planSpec(+p[1]); case 'camp': return campSpec(+p[1]);
+      case 'levels': return levelSpec(); case 'bal': return balSpec(p[1]); case 'ready': return readySpec(); case 'day': return daySpec(p[1]); case 'hour': return hourSpec(+p[1]); case 'zone': return zoneSpec(+p[1]); case 'device': return deviceSpec(p[1]); case 'plan': return planSpec(+p[1]); case 'camp': return campSpec(+p[1]);
       case 'badge': return badgeSpec(p[1]); case 'ins': return insSpec(p[1]); case 'calc': return planCalc(); case 'funnel': return [clicksSpec, signupsSpec, paidSpec][+p[1]]();
     }
     return null;
@@ -178,6 +182,9 @@
     if ((e = t.closest('#pd-campaigns tr.pd-tr'))) return campSpec(+e.dataset.i);
     if ((e = t.closest('#pd-reports tr.pd-tr'))) { var row = ((S().report && S().report.rows) || [])[+e.dataset.i]; return row ? daySpec(String(row.day).slice(0, 10)) : null; }
     if ((e = t.closest('#pd-customers .pd-item[data-i]'))) { var c = (S().custs || [])[+e.dataset.i]; return c ? custSpec(c) : null; }
+    if (t.closest('#pd-tier')) return levelSpec();
+    if (t.closest('#pd-ringc')) return balSpec('ready');
+    if (t.closest('#pd-hold')) return balSpec('hold');
     if ((e = t.closest('#pd-feed .pd-it[data-i]'))) return null;
     return null;
   }

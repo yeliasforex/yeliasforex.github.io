@@ -20,7 +20,7 @@
   }
   function toast(t, bad) {
     var d = document.createElement('div'); d.className = 'pd-toast on'; d.setAttribute('role', 'status'); if (bad) d.style.borderColor = 'var(--red)', d.style.color = 'var(--red)';
-    d.textContent = t; document.body.appendChild(d); setTimeout(function () { d.classList.remove('on'); setTimeout(function () { d.remove(); }, 400); }, 2400);
+    d.textContent = t; ($('.pd') || document.body).appendChild(d); setTimeout(function () { d.classList.remove('on'); setTimeout(function () { d.remove(); }, 400); }, 2400);
   }
   async function copy(t, label) { try { await navigator.clipboard.writeText(t); toast((label || 'Copied')); } catch (e) { toast('Could not copy. Select it and copy by hand.', true); } }
   var col = function (n) { return getComputedStyle($('.pd')).getPropertyValue(n).trim() || '#3CD2FF'; };
@@ -546,7 +546,7 @@
   }
   function gate(html) { $('#pd-app').hidden = true; $('#pd-gate').hidden = false; $('#pd-gate').innerHTML = '<div class="pd-card">' + html + '</div>'; }
   async function init() {
-    document.body.insertAdjacentHTML('beforeend', '<div class="pd-sheetbg"></div><div class="pd-sheet" tabindex="-1"></div>');
+    ($('.pd') || document.body).insertAdjacentHTML('beforeend', '<div class="pd-sheetbg"></div><div class="pd-sheet" tabindex="-1"></div>');
     $('.pd-sheetbg').onclick = closeSheet; document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
     try { S.plans = await gte.plans(); } catch (e) { S.plans = []; }
     if (!DEMO) {

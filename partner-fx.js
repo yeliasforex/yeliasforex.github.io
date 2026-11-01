@@ -106,7 +106,7 @@
     if (!$('#pdx-p', ov)) { ov.insertAdjacentHTML('beforeend', planner(d)); plan(); }
   }
   function toast(t) {
-    var d = document.createElement('div'); d.className = 'pd-toast on'; d.setAttribute('role', 'status'); d.textContent = t; document.body.appendChild(d);
+    var d = document.createElement('div'); d.className = 'pd-toast on'; d.setAttribute('role', 'status'); d.textContent = t; ($('.pd') || document.body).appendChild(d);
     setTimeout(function () { d.classList.remove('on'); setTimeout(function () { d.remove(); }, 400); }, 2600);
   }
 
