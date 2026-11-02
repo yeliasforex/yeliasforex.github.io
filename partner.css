@@ -427,3 +427,10 @@ body.ps-lock{overflow:hidden}
   .pd-bgfx:before{display:none!important}      /* the huge masked, 3D-tilted, endlessly animated grid layer */
   .pd-btn:after{animation:none!important}
 }
+
+/* phones: the search button sits at the top right of the title block instead of taking a row of its own */
+@media (max-width:640px){
+  #pdx-hero{position:relative}
+  #pdx-hero .pdx-hr{position:absolute;top:16px;right:0;margin:0;z-index:2}
+  #pdx-q{padding:9px 11px;border-radius:12px}
+}
