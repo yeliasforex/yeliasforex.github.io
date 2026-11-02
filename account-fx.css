@@ -46,13 +46,12 @@ body.mzfx kbd{font:600 11px/1 var(--sans);padding:4px 6px;border-radius:7px;bord
 #mz-chip{position:fixed;left:50%;bottom:18px;z-index:40;display:flex;align-items:center;gap:12px;padding:9px 16px 9px 14px;border-radius:999px;border:1px solid color-mix(in srgb,var(--blue-hi) 50%,var(--line-2));background:color-mix(in srgb,var(--panel) 90%,transparent);color:var(--fg);font:inherit;cursor:pointer;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 18px 40px -14px rgba(0,0,0,.5);transform:translate(-50%,90px);opacity:0;pointer-events:none;transition:transform .4s cubic-bezier(.2,.8,.2,1),opacity .3s}
 #mz-chip.on{transform:translate(-50%,0);opacity:1;pointer-events:auto}
 #mz-chip small{display:block;font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left}#mz-chip b{font-size:1.05rem;display:block;text-align:left;line-height:1.1}
-#mz-chip{padding:7px 8px 7px 16px;gap:12px;border-color:color-mix(in srgb,#D9A441 55%,var(--line-2));box-shadow:0 18px 40px -14px rgba(0,0,0,.5),0 0 0 1px color-mix(in srgb,#D9A441 18%,transparent),0 0 26px -6px color-mix(in srgb,#D9A441 55%,transparent)}
-#mz-chip .mz-lbl{font-weight:700;font-size:.9rem;white-space:nowrap}
+#mz-chip{padding:7px 14px;gap:10px;box-shadow:0 12px 28px -14px rgba(0,0,0,.5)}
+#mz-chip .mz-lbl{font-weight:600;font-size:.85rem;white-space:nowrap}
 #mz-chip.noeq .mz-eq,#mz-chip.noeq .mz-cd{display:none}#mz-chip:not(.noeq) .mz-lbl{display:none}
-#mz-chip .mz-up{position:relative;flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;overflow:hidden;color:#2a1a00;background:linear-gradient(150deg,#F7DC8E,#D9A441 55%,#B9801F);box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 6px 16px -6px #D9A441}
-#mz-chip .mz-up svg{grid-area:1/1;width:22px;height:22px;animation:mzup 1.6s ease-in-out infinite}#mz-chip .mz-up svg+svg{opacity:.55;animation-delay:.18s}
-@keyframes mzup{0%,100%{transform:translateY(5px)}50%{transform:translateY(-4px)}}
-#mz-chip:active .mz-up{transform:scale(.92)}
+#mz-chip .mz-up{flex:none;display:grid;place-items:center;width:20px;height:24px;color:#D9A441;overflow:hidden}
+#mz-chip .mz-up svg{grid-area:1/1;width:18px;height:18px;animation:mzup 1.6s ease-in-out infinite}#mz-chip .mz-up svg+svg{opacity:.5;animation-delay:.18s}
+@keyframes mzup{0%,100%{transform:translateY(3px)}50%{transform:translateY(-3px)}}
 .mz-has-chip .totop{display:none!important}
 @media (prefers-reduced-motion:reduce){#mz-chip .mz-up svg{animation:none}}
 @media (max-width:900px),(pointer:coarse){#mz-chip{backdrop-filter:none;-webkit-backdrop-filter:none;background:color-mix(in srgb,var(--panel) 97%,transparent)}}
