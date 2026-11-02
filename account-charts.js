@@ -144,15 +144,51 @@
       card('Time in a trade', 'How long trades stayed open.', anyHold ? bars(hold, {title: 'Time in a trade', color: 'var(--blue-hi)', labels: 6}) : '', 'needs open times')]};
   };
 
+  /* ---- pending (limit) orders: placed, waited, then filled, expired or cancelled ---- */
+  var PST = {pending: ['Waiting', 'var(--blue-hi)'], filled: ['Filled', 'var(--mint)'], expired: ['Expired, not filled', 'var(--gold)'], cancelled: ['Cancelled', 'var(--faint)']};
+  function pTime(d) { return d ? new Date(d).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}) : '-'; }
+  function pName(o) { return (o.kind || (o.dir > 0 ? 'BUY LIMIT' : 'SELL LIMIT')) + ' at ' + N(o.order_price).toFixed(2); }
+  function pAway(o, px) { if (px == null) return null; return (N(px) - N(o.order_price)) * (o.dir > 0 ? 1 : -1); }   // positive = the market is still on the far side of the order
+  function pStory(o) {
+    var a = [], ap = pAway(o, o.price_at_place), cl = pAway(o, o.closest_price), st = o.status, ea = pAway(o, o.end_price);
+    if (o.price_at_place != null) a.push('Placed when the market was ' + N(o.price_at_place).toFixed(2) + (ap != null ? ', ' + Math.abs(ap).toFixed(2) + (ap >= 0 ? ' away from the order price' : ' beyond the order price') : '') + '.');
+    if (o.closest_price != null) a.push((st === 'pending' ? 'So far the market came as close as ' : 'The market came as close as ') + N(o.closest_price).toFixed(2) + (cl != null ? ' (' + Math.max(0, cl).toFixed(2) + ' from filling)' : '') + (o.closest_at ? ' at ' + pTime(o.closest_at) : '') + '.');
+    if (st === 'filled') a.push('The order was filled' + (o.ended_at ? ' at ' + pTime(o.ended_at) : '') + ' and became a trade.');
+    else if (st === 'expired') a.push('It expired' + (o.ended_at ? ' at ' + pTime(o.ended_at) : '') + ' without being filled' + (o.end_price != null ? ', with the market at ' + N(o.end_price).toFixed(2) + (ea != null ? ' (' + Math.abs(ea).toFixed(2) + (ea >= 0 ? ' away' : ' past the order') + ')' : '') : '') + '.');
+    else if (st === 'cancelled') a.push('The EA cancelled it' + (o.ended_at ? ' at ' + pTime(o.ended_at) : '') + (o.end_reason ? ' (' + o.end_reason + ')' : '') + (o.end_price != null ? ', with the market at ' + N(o.end_price).toFixed(2) : '') + '.');
+    else a.push(o.expires_at ? 'It waits until ' + pTime(o.expires_at) + ' and is then cancelled if not filled.' : 'It waits until it is filled or cancelled.');
+    return a.join(' ');
+  }
+  function pSheet(o) {
+    var s = PST[o.status] || [o.status, ''];
+    return explain(pName(o), (o.engine === 'D' ? 'Gamma' : (R().ENG[o.engine] || o.engine)) + ' pending order - ' + s[0], [
+      ['Status', s[0], s[1]], ['Market price when placed', o.price_at_place != null ? N(o.price_at_place).toFixed(2) : '-'], ['Order price', N(o.order_price).toFixed(2)], ['Stop-loss', o.sl != null ? N(o.sl).toFixed(2) : '-'], ['Lots', o.lots != null ? N(o.lots).toFixed(2) : '-'],
+      ['Placed', pTime(o.placed_at)], ['Expires', pTime(o.expires_at)], ['Closest the market came', o.closest_price != null ? N(o.closest_price).toFixed(2) + (o.closest_at ? ' at ' + pTime(o.closest_at) : '') : '-'],
+      ['Ended', o.ended_at ? pTime(o.ended_at) : '-'], ['Market price when it ended', o.end_price != null ? N(o.end_price).toFixed(2) : '-']], pStory(o), []);
+  }
+  function pendingParts() {
+    var P = arr(M().pending).slice().sort(function (a, b) { return new Date(b.placed_at) - new Date(a.placed_at); }); if (!P.length) return null;
+    var f = [], wait = P.filter(function (o) { return o.status === 'pending'; }), done = P.filter(function (o) { return o.status !== 'pending'; });
+    wait.slice(0, 2).forEach(function (o) { f.push(fact('info', (o.engine === 'D' ? 'Gamma ' : '') + 'order waiting: ' + pName(o), (o.price_at_place != null ? 'Placed with the market at ' + N(o.price_at_place).toFixed(2) + '. ' : '') + (o.closest_price != null ? 'Closest so far ' + N(o.closest_price).toFixed(2) + '. ' : '') + (o.expires_at ? 'Expires ' + pTime(o.expires_at) + '.' : ''), function () { open(pSheet(o)); })); });
+    var L = done[0]; if (L) { var ls = pStory(L); f.push(fact(L.status === 'filled' ? 'ok' : 'info', 'Last order ' + (PST[L.status] || [L.status])[0].toLowerCase() + ': ' + pName(L), ls.length > 150 ? ls.slice(0, 150) + '...' : ls, function () { open(pSheet(L)); })); }
+    var by = {}; P.forEach(function (o) { (by[o.status] = by[o.status] || []).push(o); });
+    var items = Object.keys(PST).filter(function (k) { return by[k]; }).map(function (k) { return {label: PST[k][0], value: by[k].length, color: PST[k][1], sheet: function () { return explain(PST[k][0] + ' orders', plural(by[k].length, 'order'), by[k].slice(0, 12).map(function (o) { return [pName(o), pTime(o.placed_at)]; }), 'Open the bar chart and tap an order for its full story.', []); }}; });
+    var rows = P.slice(0, 12).map(function (o) { var s = PST[o.status] || [o.status, '']; return {label: pName(o) + ' - ' + pTime(o.placed_at), value: o.closest_price != null ? Math.max(0, pAway(o, o.closest_price)) : 0, color: s[1], sheet: function () { return pSheet(o); }}; });
+    return {facts: f, cards: [
+      card('Pending orders', 'Each order the EA placed and waited for, and how it ended. Tap a slice for the orders.', donut(items, {title: 'Orders', center: P.length, centerLabel: 'orders'}), 'needs pending orders'),
+      card('How close each order came', 'Distance between the nearest market price and the order price. Zero means it reached it. Tap a bar for the full story.', hbars(rows, {title: 'Closest approach', fmt: function (v) { return v.toFixed(2); }, share: false}), 'needs pending orders')]};
+  }
+
   B.trades = function () {
-    var c = ctx(); if (!c) return null; var all = c.all, f = [];
-    if (!all.length) return {title: 'What matters here', facts: f.concat([fact('info', 'No closed trades yet', 'Trades appear here as soon as the EA closes its first one.')]), cards: [card('Last trades', '', '', 'needs trades')]};
+    var c = ctx(); if (!c) return null; var all = c.all, f = [], pp = pendingParts();
+    if (!all.length) return {title: 'What matters here', facts: (pp ? pp.facts : []).concat([fact('info', 'No closed trades yet', 'Trades appear here as soon as the EA closes its first one.')]), cards: pp ? pp.cards : [card('Last trades', '', '', 'needs trades')]};
     var last = all.slice().sort(function (a, b) { return new Date(b.closed_at) - new Date(a.closed_at); }), L = last[0], s = R().stats(all);
     f.push(fact(L.profit >= 0 ? 'ok' : 'warn', 'Last trade ' + sgn(L.profit), (L.dir > 0 ? 'BUY' : 'SELL') + ' closed ' + ago(L.closed_at) + '. Tap for entry, exit and why it closed.', function () { window.gteSheet && window.gteSheet.trade(L); }));
     f.push(fact('info', plural(s.n, 'trade') + ' closed, ' + s.win.toFixed(0) + '% won', 'Average time in a trade ' + (s.avgHold == null ? '-' : R().fmtMin(s.avgHold)) + '. Net ' + sgn(s.net) + '.', sel('allnet')));
     var best = last.slice().sort(function (a, b) { return b.profit - a.profit; })[0]; if (best && best.profit > 0) f.push(fact('ok', 'Best trade ' + sgn(best.profit), 'Closed ' + new Date(best.closed_at).toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric'}) + '.', function () { window.gteSheet.trade(best); }));
     var recent = last.slice(0, 40).reverse().map(function (t) { return {label: new Date(t.closed_at).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}), short: new Date(t.closed_at).toLocaleDateString([], {day: 'numeric', month: 'short'}), value: N(t.profit), sheet: function () { return {k: 'trade', t: t, day: true, title: 'Trade details', sub: new Date(t.closed_at).toLocaleString()}; }}; });
-    return {title: 'What matters here', facts: f, cards: [card('Your last ' + recent.length + ' trades', 'Each bar is one trade: green won, red lost. Tap a bar for its details.', bars(recent, {title: 'Last trades', labels: 6}), 'needs trades', true)]};
+    if (pp) f = pp.facts.concat(f);
+    return {title: 'What matters here', facts: f, cards: [card('Your last ' + recent.length + ' trades', 'Each bar is one trade: green won, red lost. Tap a bar for its details.', bars(recent, {title: 'Last trades', labels: 6}), 'needs trades', true)].concat(pp ? pp.cards : [])};
   };
 
   B.billing = function () {

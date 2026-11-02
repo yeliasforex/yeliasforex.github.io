@@ -186,8 +186,21 @@
     let seed = 7; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647, out = [];
     for (let i = 0; i < 90; i++) { const eng = ['M', 'I', 'D'][Math.floor(r() * 3)], win = r() < .55, R = win ? .3 + r() * 2.2 : -(.5 + r() * .6), lots = .01 + Math.floor(r() * 3) / 100, hrs = 1 + r() * 20;
       const closed = Date.now() - (90 - i) * 5.2 * 36e5;
-      out.push({engine: eng, dir: r() < .5 ? 1 : -1, is_add: false, opened_at: new Date(closed - hrs * 36e5).toISOString(), closed_at: new Date(closed).toISOString(), open_price: 4100 + r() * 100, close_price: 4100 + r() * 100, lots, result_r: R, profit: R * 25 * lots * 100, exit_reason: R < 0 ? (r() < .8 ? 'stop' : 'closed') : (r() < .6 ? 'target' : 'closed')}); }
+      const t = {engine: eng, dir: r() < .5 ? 1 : -1, is_add: false, opened_at: new Date(closed - hrs * 36e5).toISOString(), closed_at: new Date(closed).toISOString(), open_price: 4100 + r() * 100, close_price: 4100 + r() * 100, lots, result_r: R, profit: R * 25 * lots * 100, exit_reason: R < 0 ? (r() < .8 ? 'stop' : 'closed') : (r() < .6 ? 'target' : 'closed')};
+      if (i % 5) {      // most sample trades carry their story (what the trade went through); every fifth one is an older trade without it
+        const risk = 25 * lots * 100, ranOff = R < 0 && r() < .35, mfe = R > 0 ? R + r() * .9 : ranOff ? .5 + r() * .9 : r() * .25, mae = -(R < 0 ? Math.min(1, -R + r() * .1) : r() * .5);
+        Object.assign(t, {mfe_r: mfe, mae_r: mae, mfe_usd: mfe * risk, mae_usd: mae * risk, mfe_pips: mfe * risk / (lots * 10), mae_pips: mae * risk / (lots * 10), risk_usd: risk, stop_r: R < 0 ? (ranOff && r() < .5 ? 0 : -1) : (R > .6 ? Math.max(0, R - .3) : 0),
+          peak_at: new Date(new Date(t.opened_at).getTime() + (.25 + r() * .6) * hrs * 36e5).toISOString()}); }
+      out.push(t); }
     return out;
   }
-  window.gteResults = {dk, held, holdMin, locDay, stats, curve, spark, lineChart, bindHover, engineBars, donut, bars, monthItems, dayItems, calendar, weekdayBars, hourStrip, tradeRows, demo, ENG, ECL, sgn, usd, col, loc, fmtMin};
+  function demoPending() {     // sample pending (limit) orders for ?demo=1: waiting, filled, and two that expired without a fill
+    const h = n => new Date(Date.now() - n * 36e5).toISOString();
+    return [
+      {id: 1, ticket: 5001, engine: 'D', dir: 1, kind: 'BUY LIMIT', symbol: 'XAUUSD', lots: .2, order_price: 3896, sl: 3871, price_at_place: 3925, placed_at: h(.4), expires_at: new Date(Date.now() + 6 * 36e5).toISOString(), status: 'pending', closest_price: 3912.4, closest_at: h(.1)},
+      {id: 2, ticket: 4990, engine: 'D', dir: 1, kind: 'BUY LIMIT', symbol: 'XAUUSD', lots: .2, order_price: 3890, sl: 3866, price_at_place: 3919, placed_at: h(9), expires_at: h(1), status: 'expired', ended_at: h(1), end_price: 3941, end_reason: 'not filled by the expiry hour', closest_price: 3891, closest_at: h(5.5)},
+      {id: 3, ticket: 4970, engine: 'D', dir: -1, kind: 'SELL LIMIT', symbol: 'XAUUSD', lots: .2, order_price: 3955, sl: 3980, price_at_place: 3931, placed_at: h(33), expires_at: h(25), status: 'filled', ended_at: h(30), end_price: 3955, closest_price: 3955, closest_at: h(30)},
+      {id: 4, ticket: 4951, engine: 'D', dir: 1, kind: 'BUY LIMIT', symbol: 'XAUUSD', lots: .2, order_price: 3874, sl: 3850, price_at_place: 3902, placed_at: h(57), expires_at: h(49), status: 'expired', ended_at: h(49), end_price: 3905, end_reason: 'not filled by the expiry hour', closest_price: 3889.5, closest_at: h(52)}];
+  }
+  window.gteResults = {dk, held, holdMin, locDay, stats, curve, spark, lineChart, bindHover, engineBars, donut, bars, monthItems, dayItems, calendar, weekdayBars, hourStrip, tradeRows, demo, demoPending, ENG, ECL, sgn, usd, col, loc, fmtMin};
 })();

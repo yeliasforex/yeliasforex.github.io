@@ -22,7 +22,7 @@
   /* ---- the sheet itself ---- */
   var stack = [], cur = null, flt = 'all';
   function ensure() {
-    var g = $('#gs'); if (g) return g;
+    injectCss(); var g = $('#gs'); if (g) return g;
     g = document.createElement('div'); g.id = 'gs'; g.className = 'gs';
     g.innerHTML = '<div class="gs-bk"></div><aside class="gs-p" role="dialog" aria-modal="true" aria-label="Details" tabindex="-1"><div class="gs-grab"></div><header class="gs-h"><button type="button" class="gs-back" aria-label="Back" hidden>&#8249;</button><div class="gs-ht"><h3 id="gs-t"></h3><p id="gs-s"></p></div><button type="button" class="gs-x" aria-label="Close">&times;</button></header><div class="gs-sum" id="gs-sum"></div><div class="gs-f" id="gs-f"></div><div class="gs-b" id="gs-b"></div><footer class="gs-ft" id="gs-ft"></footer></aside>';
     document.body.appendChild(g);
@@ -48,6 +48,42 @@
     var s = R().stats(list), c = function (l, v, cl) { return '<div class="gs-c"><small>' + l + '</small><b' + (cl ? ' style="color:' + cl + '"' : '') + '>' + v + '</b></div>'; };
     return c('Result', sgn(s.net), col(s.net)) + c('Trades', s.n) + c('Won / lost', s.wins + ' / ' + s.losses) + c('Win rate', s.win.toFixed(0) + '%') + (s.n > 1 ? c('Best', sgn(s.best), 'var(--mint)') + c('Worst', sgn(s.worst), s.worst < 0 ? 'var(--red)' : '') : '');
   }
+  /* what the trade went through while it was open: best point, worst point, where the stop ended, and how that led to the close */
+  function hasStory(t) { return t.mfe_r != null && t.mae_r != null; }
+  function stopWord(t) { var v = t.stop_r; if (v == null) return null; return v <= -0.9 ? 'the original stop' : v > 0.05 ? 'a locked profit of ' + v.toFixed(2) + 'R' : 'breakeven'; }
+  function storyLine(t) {
+    if (!hasStory(t)) return '';
+    var m = Number(t.mfe_r), w = Number(t.mae_r), rr = Number(t.result_r || 0), sw = stopWord(t), gave = m > 0.05 ? Math.max(0, m - rr) : 0, out = [];
+    if (m >= 0.3) out.push('It reached +' + m.toFixed(2) + 'R (' + usd(t.mfe_usd) + (t.mfe_pips != null ? ', ' + Number(t.mfe_pips).toFixed(0) + ' pips' : '') + (t.peak_at ? ' at ' + tm(t.peak_at) : '') + ') in your favour.');
+    else out.push('It never got further than +' + Math.max(0, m).toFixed(2) + 'R in your favour.');
+    if (w <= -0.3) out.push('At its worst it was ' + w.toFixed(2) + 'R (' + usd(t.mae_usd) + ') against you.');
+    if (sw) out.push('The stop sat at ' + sw + ' when it closed' + (t.exit_reason === 'stop' ? ', and the price came back and hit it' : '') + '.');
+    if (m >= 0.5 && rr < m - 0.3) out.push('It gave back ' + gave.toFixed(2) + 'R of that peak' + (rr <= 0.05 ? ' and finished ' + (rr < -0.05 ? 'as a loss' : 'flat') : '') + '.');
+    else if (m >= 0.5 && rr >= m - 0.3) out.push('It closed close to its best point.');
+    return out.join(' ');
+  }
+  function storyBlock(t) {
+    if (!hasStory(t)) return '<div class="gs-story"><h4>What happened inside this trade</h4><p class="gs-fine">Not recorded. Only trades closed by EA 1.09 or newer carry this, and older ones are filled in when the EA re-syncs its history.</p></div>';
+    var m = Math.max(0, Number(t.mfe_r)), w = Math.min(0, Number(t.mae_r)), rr = Number(t.result_r || 0), span = Math.max(m - w, .01), sw = stopWord(t), px = function (v) { return Math.max(0, Math.min(100, (v - w) / span * 100)).toFixed(1); };
+    var kv = function (l, v, c) { return '<div><span>' + l + '</span><b' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</b></div>'; };
+    return '<div class="gs-story"><h4>What happened inside this trade</h4>'
+      + '<div class="gs-rail"><i class="n" style="left:' + px(0) + '%"></i><i class="r" style="left:' + px(rr) + '%"></i><span class="lo" style="left:0;width:' + px(0) + '%"></span><span class="hi" style="left:' + px(0) + '%;right:0"></span></div>'
+      + '<div class="gs-rl"><span>worst ' + w.toFixed(2) + 'R</span><span>entry</span><span>best +' + m.toFixed(2) + 'R</span></div>'
+      + '<div class="gs-kv">' + kv('Best point', '+' + m.toFixed(2) + 'R &middot; ' + usd(t.mfe_usd) + (t.mfe_pips != null ? ' &middot; ' + Number(t.mfe_pips).toFixed(0) + ' pips' : ''), 'var(--mint)')
+      + kv('Worst point', w.toFixed(2) + 'R &middot; ' + usd(t.mae_usd) + (t.mae_pips != null ? ' &middot; ' + Number(t.mae_pips).toFixed(0) + ' pips' : ''), w < -0.05 ? 'var(--red)' : '')
+      + (t.peak_at ? kv('Best point came', dt(t.peak_at) + (t.opened_at ? ' (' + R().fmtMin(Math.max(0, (new Date(t.peak_at) - new Date(t.opened_at)) / 6e4)) + ' in)' : '')) : '')
+      + (sw ? kv('Stop when closed', sw) : '') + (t.risk_usd != null ? kv('Risked (1R)', usd(t.risk_usd)) : '') + '</div>'
+      + '<p class="gs-sent">' + storyLine(t) + '</p></div>';
+  }
+  function injectCss() {
+    if ($('#gs-story-css')) return; var st = document.createElement('style'); st.id = 'gs-story-css';
+    st.textContent = '.gs-story{margin-top:12px;padding-top:10px;border-top:1px solid var(--line,rgba(255,255,255,.12))}.gs-story h4{margin:0 0 8px;font-size:13px;font-weight:700}'
+      + '.gs-rail{position:relative;height:10px;border-radius:5px;background:rgba(255,255,255,.07);margin:6px 0 2px}.gs-rail .lo,.gs-rail .hi{position:absolute;top:3px;height:4px;border-radius:2px}.gs-rail .lo{background:var(--red,#ff5d6c);opacity:.7}.gs-rail .hi{background:var(--mint,#3ddc97);opacity:.7}'
+      + '.gs-rail i{position:absolute;top:-3px;width:2px;height:16px;margin-left:-1px;border-radius:1px}.gs-rail i.n{background:rgba(255,255,255,.55)}.gs-rail i.r{background:var(--gold,#f5c451);width:4px;margin-left:-2px;top:-4px;height:18px}'
+      + '.gs-rl{display:flex;justify-content:space-between;font-size:11px;opacity:.7;margin-bottom:8px}.gs-story .gs-kv{margin:6px 0}'
+      + '.gs-hint{font-size:12px;opacity:.75;margin:6px 0 0}';
+    document.head.appendChild(st);
+  }
   function tradeCard(t, big) {
     var win = t.profit > 0, loss = t.profit < 0, ex = exitOf(t), hm = holdMin(t), mv = (Number(t.close_price) - Number(t.open_price)) * t.dir, eng = R().ENG[t.engine] || '', ec = R().ECL[t.engine] || 'var(--blue-hi)';
     var side = t.dir > 0 ? 'BUY' : 'SELL', rr = Number(t.result_r || 0);
@@ -55,7 +91,7 @@
     return '<div class="gs-t ' + (win ? 'w' : loss ? 'l' : 'z') + (big ? ' big' : '') + '"><div class="gs-t1"><span class="gs-side ' + (t.dir > 0 ? 'b' : 's') + '">' + side + '</span><span class="gs-eng" style="--c:' + ec + '">' + esc(eng) + (t.is_add ? ' add-on' : '') + '</span><span class="gs-time">' + (t.opened_at ? dt(t.opened_at) + ' &rarr; ' : '') + tm(t.closed_at) + '</span><b class="gs-res" style="color:' + col(t.profit) + '">' + sgn(t.profit) + '</b></div>'
       + '<div class="gs-t2"><div><small>Entry</small><b>' + Number(t.open_price).toFixed(2) + '</b></div><div class="gs-arw ' + (mv >= 0 ? 'up' : 'dn') + '"><i></i><em>' + (mv >= 0 ? '+' : '') + mv.toFixed(2) + '</em></div><div><small>Exit</small><b>' + Number(t.close_price).toFixed(2) + '</b></div><div><small>Lots</small><b>' + Number(t.lots).toFixed(2) + '</b></div><div><small>Result</small><b>' + (rr >= 0 ? '+' : '') + rr.toFixed(2) + 'R</b></div><div><small>Held</small><b>' + (hm == null ? '-' : R().fmtMin(hm)) + '</b></div></div>'
       + '<div class="gs-t3"><span class="gs-ex ' + ex[1] + '">' + esc(ex[0]) + '</span><span class="gs-out ' + (win ? 'w' : loss ? 'l' : 'z') + '">' + (win ? 'WIN' : loss ? 'LOSS' : 'FLAT') + '</span></div>'
-      + (big ? '<p class="gs-sent">' + sentence + ' ' + esc(ex[2]) + '</p><p class="gs-fine">One R is the amount the EA risked on this trade; ' + (rr >= 0 ? '+' : '') + rr.toFixed(2) + 'R means this trade ' + (rr >= 0 ? 'earned ' : 'lost ') + Math.abs(rr).toFixed(2) + ' times that risk.</p>' : '') + '</div>';
+      + (big ? '<p class="gs-sent">' + sentence + ' ' + esc(ex[2]) + '</p><p class="gs-fine">One R is the amount the EA risked on this trade; ' + (rr >= 0 ? '+' : '') + rr.toFixed(2) + 'R means this trade ' + (rr >= 0 ? 'earned ' : 'lost ') + Math.abs(rr).toFixed(2) + ' times that risk.</p>' + storyBlock(t) : (hasStory(t) ? '<p class="gs-hint">Best +' + Math.max(0, Number(t.mfe_r)).toFixed(2) + 'R &middot; worst ' + Math.min(0, Number(t.mae_r)).toFixed(2) + 'R' + (stopWord(t) ? ' &middot; stop at ' + stopWord(t) : '') + '</p>' : '')) + '</div>';
   }
   function tradesBody(list, group) {
     list = list.slice().sort(function (a, b) { return new Date(a.closed_at) - new Date(b.closed_at); });

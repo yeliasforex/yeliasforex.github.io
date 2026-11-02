@@ -57,13 +57,21 @@
     const {data, error} = await c.rpc(fn, args || {}); if (error) throw error; return data;
   }
   const TCOLS = 'engine,dir,is_add,opened_at,closed_at,open_price,close_price,lots,result_r,profit,exit_reason,symbol';
-  const tnorm = rows => { rows.forEach(t => { t.profit = Number(t.profit); t.result_r = Number(t.result_r); t.lots = Number(t.lots); }); return rows; };
+  const SCOLS = ',mfe_r,mae_r,mfe_usd,mae_usd,mfe_pips,mae_pips,peak_at,stop_r,risk_usd';      // the story of a trade (EA 1.09+); until the database has these columns the old list is used
+  let storyCols = true;
+  const trSel = async mk => { if (storyCols) { const r = await mk(TCOLS + SCOLS); if (!r.error) return r; storyCols = false; } return mk(TCOLS); };
+  const tnorm = rows => { rows.forEach(t => { t.profit = Number(t.profit); t.result_r = Number(t.result_r); t.lots = Number(t.lots); ['mfe_r', 'mae_r', 'mfe_usd', 'mae_usd', 'mfe_pips', 'mae_pips', 'stop_r', 'risk_usd'].forEach(k => { if (t[k] != null) t[k] = Number(t[k]); }); }); return rows; };
+  async function pendingFor(id) {                                    // pending (limit) orders and how each one ended; empty until the database has the table
+    if (DEMO) return R.demoPending ? R.demoPending() : [];
+    if (INJ) return (window.__inj && window.__inj.pending) || [];
+    try { const {data, error} = await c.from('ea_pending').select('*').eq('license_id', id).order('placed_at', {ascending: false}).limit(60); return error ? [] : (data || []).map(o => { ['order_price', 'sl', 'price_at_place', 'end_price', 'closest_price', 'lots'].forEach(k => { if (o[k] != null) o[k] = Number(o[k]); }); return o; }); } catch (e) { return []; }
+  }
   async function tradesFor(id) {
     const hit = tradeCache[id]; if (hit && Date.now() - hit.at < 55000) return hit.rows;
     if (hit && hit.rows.length && !INJ && !DEMO) {                      // background refresh: fetch only the trades closed since the last one we have
       try {
         const last = hit.rows[hit.rows.length - 1].closed_at;
-        const {data, error} = await c.from('trades').select(TCOLS).eq('license_id', id).gte('closed_at', last).order('closed_at').limit(1000);
+        const {data, error} = await trSel(cols => c.from('trades').select(cols).eq('license_id', id).gte('closed_at', last).order('closed_at').limit(1000));
         if (!error && data) {
           const key = x => x.opened_at + '|' + x.closed_at + '|' + x.lots + '|' + x.profit, have = new Set(hit.rows.map(key));
           hit.rows = hit.rows.concat(tnorm(data).filter(x => !have.has(key(x)))); hit.at = Date.now(); return hit.rows;
@@ -75,7 +83,7 @@
     else
     if (DEMO) rows = R.demo();
     else for (let from = 0; from < 20000; from += 1000) {
-      const {data, error} = await c.from('trades').select(TCOLS).eq('license_id', id).order('closed_at').range(from, from + 999);
+      const {data, error} = await trSel(cols => c.from('trades').select(cols).eq('license_id', id).order('closed_at').range(from, from + 999));
       if (error) throw error; rows = rows.concat(data); if (data.length < 1000) break;
     }
     tnorm(rows);
@@ -179,6 +187,7 @@
     for (const o of S.orders.filter(o => o.status === 'pending' || o.status === 'paid_claimed')) parts.push(`<div id="ord-${o.id}">` + orderPanel(o) + '</div>');
     if (!lic) { parts.push(emptyPanel(), claimPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
+    let pending = []; try { pending = await pendingFor(lic.id); } catch (e) {}
     if (window.gteLive) {
       const lst = stOf(lic.id), lprobs = problems(lic, lst), td = trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()).reduce((a, x) => a + x.profit, 0);
       const fs = DEMO ? new URLSearchParams(location.search).get('state') : null;
@@ -187,7 +196,7 @@
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · …${esc(String(l.key).slice(-4))}</option>`).join('')}</select></div>`);
     const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
     const updAvail = !!(lv && cv && lic.status === 'active' && vc(lv, cv) > 0);
-    window.GTE_MA = {lic, st: stOf(lic.id), trades, profile: S.profile, admin: !!(AS || INJ), rng: a => inRange(a, range), licenses: S.licenses, orders: S.orders, plans: S.plans, plan: planOf(lic.plan_id), tol: S.settings.toleranceActive ?? 5, settings: S.settings};
+    window.GTE_MA = {lic, st: stOf(lic.id), trades, pending, profile: S.profile, admin: !!(AS || INJ), rng: a => inRange(a, range), licenses: S.licenses, orders: S.orders, plans: S.plans, plan: planOf(lic.plan_id), tol: S.settings.toleranceActive ?? 5, settings: S.settings};
     parts.push(hero(lic, trades));
     parts.push(`<div class="subnav" id="subnav">${TABS.map(([k, n]) => `<a href="#tab=${k}" data-tab="${k}" class="${k === tab ? 'on' : ''}">${n}${k === 'inbox' && unread() ? `<span class="nb">${unread()}</span>` : ''}</a>`).join('')}</div><div id="tabbody"></div>`);
     A.classList.toggle('still', quiet); A.innerHTML = parts.join(''); countUp(A); if (window.gteLive) gteLive.mount(); paintBell(); if (window.gteDevice && !AS && !DEMO) gteDevice.prompt(A, rpc, toast, guard); if (!AS && !DEMO) partnerEntry(A); if (stOpen && !quiet) renderSettings();
