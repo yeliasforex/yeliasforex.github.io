@@ -132,9 +132,14 @@
 
   /* ---------- equity chip that follows you down the page ---------- */
   function chip() {
-    if ($('#mz-chip')) return; var c = document.createElement('button'); c.type = 'button'; c.id = 'mz-chip'; c.setAttribute('aria-label', 'Back to the top');
-    c.innerHTML = '<span class="mz-cd" id="mz-cd"></span><span><small>Equity</small><b id="mz-cb">-</b></span><em>Top</em>'; c.onclick = function () { window.scrollTo({top: 0, behavior: reduce ? 'auto' : 'smooth'}); }; document.body.appendChild(c);
-    var tk; addEventListener('scroll', function () { if (tk) return; tk = requestAnimationFrame(function () { tk = 0; var m = M(), st = m && m.st; if (st && st.equity != null) { setT($('#mz-cb'), usd(st.equity)); $('#mz-cd').className = 'mz-cd' + (st.online ? ' on' : ''); c.classList.toggle('on', scrollY > 640); } else c.classList.remove('on'); }); }, {passive: true});
+    if ($('#mz-chip')) return; var c = document.createElement('button'); c.type = 'button'; c.id = 'mz-chip'; c.setAttribute('aria-label', 'Back to the top'); c.className = 'noeq';
+    var chev = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg>';
+    c.innerHTML = '<span class="mz-cd" id="mz-cd"></span><span class="mz-eq"><small>Equity</small><b id="mz-cb">-</b></span><span class="mz-lbl">Back to top</span><i class="mz-up">' + chev + chev + '</i>';
+    c.onclick = function () { window.scrollTo({top: 0, behavior: reduce ? 'auto' : 'smooth'}); }; document.body.appendChild(c);
+    document.documentElement.classList.add('mz-has-chip');      // the site-wide gold chevron is hidden here: this one pill is the only way back to the top
+    var tk; addEventListener('scroll', function () { if (tk) return; tk = requestAnimationFrame(function () { tk = 0; var m = M(), st = m && m.st, has = !!(st && st.equity != null);
+      c.classList.toggle('noeq', !has); if (has) { setT($('#mz-cb'), usd(st.equity)); $('#mz-cd').className = 'mz-cd' + (st.online ? ' on' : ''); }
+      c.classList.toggle('on', scrollY > 640); }); }, {passive: true});
   }
 
   /* ---------- pointer light, tilt, living background, sweep, day/night ripple ---------- */
