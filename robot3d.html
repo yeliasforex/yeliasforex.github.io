@@ -532,6 +532,9 @@ function H(p, f, n, c, t, sp, pole) { return {p, f, n, c, t, sp, pole}; }
 function both(h) { return {L: h, R: {p: mir(h.p), f: mir(h.f), n: mir(h.n), c: h.c.slice(), t: h.t, sp: h.sp, pole: mir(h.pole)}}; }
 // relaxed: arms hang a little in front of the body, elbows soft, fingers loosely curled
 const RESTH = H([.03, -.5, .06], [-.05, -1, .2], [-1, 0, .25], [.35, .45, .55, .6], .35, .2, [.45, -1, -.6]);
+// flight: the arm that leads (points ahead, in the direction he flies) and the one that hangs straight along the body
+const FLY_LEAD_L = H([.3, .17, .4], [.75, .35, 1], [0, -.6, .8], [0, 0, 0, 0], .3, .2, [.3, -1, -.7]), FLY_LEAD_R = both(FLY_LEAD_L).R;
+const FLY_STRAIGHT_R = H([-.01, -.6, .03], [0, -1, .03], [1, 0, .1], [.1, .12, .16, .2], .2, .2, [-.05, -1, -.2]), FLY_STRAIGHT_L = both(FLY_STRAIGHT_R).R;
 const REST = Object.assign({yaw: 0, twist: 0, lean: 0, tilt: 0, hx: 0, hy: 0, hz: 0,
   legL: {hip: 0, out: .035, knee: 0, ankle: 0}, legR: {hip: 0, out: .035, knee: 0, ankle: 0}}, both(RESTH));
 // while talking, between gestures: forearms slightly up, hands loose in front of the hips
@@ -613,7 +616,7 @@ const Fs = Object.assign({}, FACE0, {open: 0, mwide: 0, mo: 0, blink: 0, lx: 0, 
 let blinkAt = performance.now() + 2000, blinkT = -1, lookAt = 0, lookTo = [0, 0], beat = 0, lastLvl = 0, sylAt = -9999;
 let camPunch = 0, camShake = 0, bodyKick = 0, prevG = "", windupUntil = 0;
 function kick(a, s) { camPunch = Math.max(camPunch, a); camShake = Math.max(camShake, s || 0); bodyKick = Math.max(bodyKick, a); }
-let gestId = -1, flyAmt = 0, anchorAt = 0, react = {name: "", until: 0}, frameAmt = 0, walkPh = 0, beatS = 0, browKick = 0;
+let gestId = -1, flyAmt = 0, flyArmW = 0, flyVx = 0, flyWas = false, landT = -1e9, anchorAt = 0, react = {name: "", until: 0}, frameAmt = 0, walkPh = 0, beatS = 0, browKick = 0;
 let gest = {name: "", until: 0}, lastGest = -1e9, lastPose = "", speech = {name: "talk", until: 0}, speakFrom = 0;
 let headT = [0, 0, 0], headS = [0, 0, 0], headAt = 0, swayT = 0, swayS = 0, swayAt = 0;
 const HOLD = {show_buy: 5, show_sell: 5, wave: 2.8, thumbs: 2.6, point: 4, chart: 4.5, idea: 2.6, stop: 2.4, surprised: 2.2, think: 4, watching: 4,
@@ -633,7 +636,9 @@ function frame(now) {
   if (window.__paused) { lastFrameAt = performance.now(); setTimeout(() => frame(performance.now()), 300); return; }
   lastFrameAt = performance.now();
   const dt = Math.min(.05, (now - lastT) / 1000); lastT = now; const t = now / 1000;
-  const W = SNAP ? 1200 : Math.round(glc.clientWidth), Hh = SNAP ? 1600 : Math.round(glc.clientHeight);
+  // sharp on the website too: draw at 2.5-3x the frame size (the picture is scaled down by the browser = smooth edges, fine detail), capped so a phone GPU copes (~1.1 M pixels)
+  const ss = Math.min(3, Math.max(window.devicePixelRatio || 1, 2.5)), cap = Math.min(1, Math.sqrt(1.1e6 / Math.max(1, glc.clientWidth * glc.clientHeight * ss * ss)));
+  const W = SNAP ? 1200 : Math.max(2, Math.round(glc.clientWidth * ss * cap)), Hh = SNAP ? 1600 : Math.max(2, Math.round(glc.clientHeight * ss * cap));
   if (glc.width !== W || glc.height !== Hh) { glc.width = W; glc.height = Hh; }
   // ---- what the body does now ----
   const lvl = level(now), talking = lvl > 0 || now - sylAt < 1300; if (lvl > 0) sylAt = now;
@@ -750,7 +755,25 @@ function frame(now) {
     ["footL", "footR"].forEach(k => { const f = A3[k]; if (f && Math.random() < .6)            // gold sparkles at every step
       spawn(V.add(f, [rnd(-.04, .04), .01, rnd(-.04, .04)]), [rnd(-.6, .6), rnd(.6, 1.6), rnd(-.3, .3)], rnd(.5, 1), rnd(.012, .022), Math.random() < .3 ? [1, .97, .8] : [1, .78, .2], "spark", -3, true); });
   }
-  if (gname === "fly") { P.R.p = [-.01, -.6, .03]; P.R.f = [0, -1, .03]; P.R.n = [1, 0, .1]; P.R.pole = [-.05, -1, -.2]; P.R.c = [.1, .12, .16, .2];      // the free arm hangs perfectly straight, hand in line with the forearm
+  flyArmW += ((gname === "fly" ? 1 : 0) - flyArmW) * Math.min(1, dt * 5);      // the flight pose fades in at lift-off and OUT after the landing (it was cut off at once: the arm jumped to its resting pose)
+  { // flyVx: -1..1, the sideways direction of the flight. The page that steers the host sends it (postMessage {vx}); without it the stream's path is used:
+    // 1.0 s straight up, 4.2 s out to the right and back, 1.2 s down (sideways speed ~ cos(pi * s))
+    const kk = react.name === "fly" ? (now - react.t0) / 1000 : -1;
+    const own = window.__flyVx !== undefined && now < (window.__flyVxUntil || 0);
+    const tgt = own ? window.__flyVx : (kk >= 1.0 && kk < 5.2 ? Math.cos(Math.PI * (kk - 1.0) / 4.2) : 0);
+    flyVx += (tgt - flyVx) * Math.min(1, dt * 3.5); }
+  if (flyArmW > .002) { const w = flyArmW, wl = Math.max(0, Math.min(1, .5 + flyVx * 1.2));      // wl: 1 = flying to the right (his left arm leads), 0 = flying back (the other arm leads)
+    const blend = (a, b, u) => ({p: V.mix(a.p, b.p, u), f: V.norm(V.mix(a.f, b.f, u)), n: V.norm(V.mix(a.n, b.n, u)), pole: V.norm(V.mix(a.pole, b.pole, u)), c: a.c.map((c, i) => c + (b.c[i] - c) * u)});
+    const apply = (arm, tgtH) => { const m = blend(arm, tgtH, w); arm.p = m.p; arm.f = m.f; arm.n = m.n; arm.pole = m.pole; arm.c = m.c; };
+    apply(P.L, blend(FLY_STRAIGHT_L, FLY_LEAD_L, wl)); apply(P.R, blend(FLY_LEAD_R, FLY_STRAIGHT_R, wl));
+    { const away = Math.abs(flyVx) * w;                                  // the body turns and banks into the flight: the hanging hand would sink into the hip and thigh (fingers cut off), so it stands a little out and forward
+      P.R.p = [P.R.p[0] - .1 * away * wl, P.R.p[1], P.R.p[2] + .07 * away * wl]; P.L.p = [P.L.p[0] + .1 * away * (1 - wl), P.L.p[1], P.L.p[2] + .07 * away * (1 - wl)]; }
+    P.yaw += (.55 * flyVx - P.yaw) * w;                                  // he faces the way he flies (and turns round with the turn of the path)
+    P.sway += -.14 * flyVx * w; }                                         // and leans INTO the movement: the body banks, the legs trail behind
+  if (flyWas && gname !== "fly") landT = now; flyWas = gname === "fly";
+  if (P.legL && P.legR && now - landT < 480) { const dip = Math.sin(Math.PI * (now - landT) / 480);      // touch-down: the knees take the landing
+    P.legL.knee += .34 * dip; P.legR.knee += .34 * dip; P.bob -= .03 * dip; }
+  if (gname === "fly") {
     P.bob = .01 * Math.sin(t * 3); P.tilt += .07 * Math.sin(t * 1.3); P.twist += .05 * Math.sin(t * .9); P.L.p = V.add(P.L.p, [0, .012 * Math.sin(t * 2.1), 0]); P.R.p = V.add(P.R.p, [0, .012 * Math.sin(t * 2.1 + 1), 0]);
     P.legL.knee += .06 * Math.sin(t * 2.4); P.legR.knee += .06 * Math.sin(t * 2.4 + 1.2); }      // a slow roll and a little flutter, so the flight is alive, not frozen
   // ---- camera: waist-up presenter view, or the full body for walking, standing and flying ----
@@ -896,7 +919,7 @@ function doReact(name, data) {
   if (EMOJI[name]) EMOJI[name].forEach((e, i) => setTimeout(() => { if (A3.head) EMO3.push({i: ATL_I[e], p: V.add(A3.head, [rnd(-.25, .25), rnd(.05, .2), rnd(-.1, .25)]), age: 0, life: 1.8}); }, i * 260));
   if (name === "fly") EMIT.push({until: now + 5600, tick() {               // jet flames from both feet
     ["footL", "footR"].forEach(k => { const f = A3[k]; if (!f) return;
-      for (let i = 0; i < 7; i++) spawn(V.add(f, [rnd(-.025, .025), 0, rnd(-.025, .025)]), [rnd(-.18, .18), -rnd(1.8, 3), rnd(-.18, .18)], rnd(.18, .3), rnd(.05, .08), null, "flame");
+      for (let i = 0; i < 7; i++) spawn(V.add(f, [rnd(-.025, .025), 0, rnd(-.025, .025)]), [rnd(-.18, .18) - flyVx * .9, -rnd(1.8, 3), rnd(-.18, .18)], rnd(.18, .3), rnd(.05, .08), null, "flame");
       spawn(V.add(f, [0, -.04, 0]), [0, 0, 0], .06, .14, [1, .5, .1], "glow"); }); }});
   if (name === "power") [0, 600, 1200, 1800].forEach(dl => setTimeout(() => { const f = A3.footL || [0, 0, 0];                // shockwave rings burst out of the ground
     for (let i = 0; i < 48; i++) { const a = i / 48 * 6.283; spawn([Math.cos(a) * .12, .04, Math.sin(a) * .08], [Math.cos(a) * 2.2, .25, Math.sin(a) * 1.6], .7, .028, [.4, .75, 1], "glow"); } }, dl));
@@ -1036,5 +1059,6 @@ addEventListener('message',function(e){var d=e.data||{};
   if(d.paused!==undefined){window.__paused=!!d.paused;}
   if(d.fxStop){EMIT=[];react={name:'',until:0};}
   if(d.yaw!==undefined){window.__yaw=d.yaw;}
+  if(d.vx!==undefined){window.__flyVx=Math.max(-1,Math.min(1,+d.vx||0));window.__flyVxUntil=performance.now()+600;}
 });
 </script></body></html>

@@ -33,14 +33,14 @@
 #siPing{position:fixed;z-index:39;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--blue-hi);pointer-events:none;opacity:0}
 #siPing.go{animation:siping2 .9s ease-out}@keyframes siping2{0%{opacity:.9;transform:scale(.4)}100%{opacity:0;transform:scale(4.2)}}
 /* the host robot roams the whole page: it flies, lands, walks along the bottom and talks. It never blocks clicks. */
-#siRoam{position:fixed;left:0;top:0;width:250px;height:330px;z-index:40;pointer-events:none;will-change:transform;opacity:0;transition:opacity .6s}
+#siRoam{position:fixed;left:0;top:0;width:330px;height:330px;z-index:40;pointer-events:none;will-change:transform;opacity:0;transition:opacity .6s}
 #siRoam.on{opacity:1}
 #siRoam iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color-scheme:light;pointer-events:none;filter:drop-shadow(0 22px 26px rgba(0,0,0,.35))}
-.rsay{position:absolute;left:66%;top:2%;width:max-content;max-width:210px;padding:10px 14px 11px;border-radius:16px 16px 16px 4px;border:1px solid var(--line-2);background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(12px);box-shadow:0 18px 40px -18px rgba(0,0,0,.55);font-size:.8rem;line-height:1.45;color:var(--fg);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+.rsay{position:absolute;left:calc(41% + 62px);top:2%;width:max-content;max-width:210px;padding:10px 14px 11px;border-radius:16px 16px 16px 4px;border:1px solid var(--line-2);background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(12px);box-shadow:0 18px 40px -18px rgba(0,0,0,.55);font-size:.8rem;line-height:1.45;color:var(--fg);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
 .rsay.on{opacity:1;transform:none}
 .rsay b{display:block;font:600 .6rem/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
-.rsay.left{left:auto;right:66%;border-radius:16px 16px 4px 16px}
-@media (max-width:640px){#siRoam{width:170px;height:225px}.rsay{max-width:160px;font-size:.74rem}}
+.rsay.left{left:auto;right:calc(59% + 62px);border-radius:16px 16px 4px 16px}
+@media (max-width:640px){#siRoam{width:225px;height:225px}.rsay{left:calc(41% + 42px)}.rsay.left{right:calc(59% + 42px)}.rsay{max-width:160px;font-size:.74rem}}
 @media (prefers-reduced-motion:reduce){#siRoam{display:none}}
 /* the interactive host robot */
 .si-bot{position:relative;height:440px;margin-top:34px;animation:siup .8s .5s both}
@@ -280,6 +280,7 @@
       if (R.mode === 'carried') { /* the visitor holds it */ } else if (R.mode === 'idle') { R.bob += (Math.sin(t / 700) * 3 - R.bob) * Math.min(1, dt * 4); if (performance.now() > R.hold) next(); }
       else {
         var dx = R.tx - R.x, dy = R.ty - R.y, d = Math.hypot(dx, dy), sp = R.mode === 'fly' ? Math.max(120, Math.min(300, d * 1.1 + 90)) : 85;
+        if (R.mode === 'fly' && t - (R.vxAt || 0) > 120) { R.vxAt = t; post({vx: d > 8 ? dx / Math.max(60, Math.abs(dx) + Math.abs(dy) * .4) : 0}); }      // which way he is flying: the lead arm, the facing and the banking follow it
         if (d < 5) { R.x = R.tx; R.y = R.ty; var th = R.then; R.then = null; R.mode = 'idle'; R.bob = 0; if (th) th(); else rest(1200); }
         else { var st = Math.min(d, sp * dt); R.x += dx / d * st; R.y += dy / d * st; if (R.mode === 'fly') { R.bob = Math.sin(t / 260) * 5; if (performance.now() - R.flyAt > 4300) { R.flyAt = performance.now(); post({fx: 'fly'}); } } }
       }
@@ -335,7 +336,7 @@
   document.addEventListener('visibilitychange', function () { post({paused: document.hidden}); });
   setTimeout(function () {
     fr.onload = function () { setTimeout(function () { ready = true; R.x = -120; R.y = floorY() - 220; roam.classList.add('on'); fly(innerWidth * .3, innerHeight * .55, function () { rest(2400, 'wave', 'Hi! I am the host of the GoldTriEngine live stream. Tick the box, then pick Google or email. Tap anywhere and I will fly there.'); }); }, 700); };
-    fr.src = 'robot3d.html?scene=happy&full=1';
+    fr.src = 'robot3d.html?scene=happy&full=1&v=20261102fly';
   }, 800);
   requestAnimationFrame(frame);
 })();

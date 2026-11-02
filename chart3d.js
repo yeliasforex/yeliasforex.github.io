@@ -86,7 +86,7 @@ const pinB=mkPin(bestPos,0xF0B429),pinD=mkPin(ddPos,0xE5484D);
 $('lgBestT').textContent=`${MN[M[bestI][1]-1]} ${M[bestI][0]} +${M[bestI][3].toFixed(1)}%`;
 $('lgDDT').textContent=`-${DD.dd.toFixed(1)}%, ${MN[+DD.date.slice(5)-1]} ${DD.date.slice(0,4)}`;
 /* the host, standing in the scene behind the chart */
-const rc=document.createElement('canvas');rc.width=320;rc.height=360;const rctx=rc.getContext('2d'),rtex=new THREE.CanvasTexture(rc);rtex.colorSpace=THREE.SRGBColorSpace;rtex.minFilter=THREE.LinearFilter;rtex.generateMipmaps=false;let robotOn=false,rcrop=null,rfr=0;
+const rc=document.createElement('canvas');rc.width=640;rc.height=720;const rctx=rc.getContext('2d'),rtex=new THREE.CanvasTexture(rc);rtex.colorSpace=THREE.SRGBColorSpace;rtex.minFilter=THREE.LinearFilter;rtex.generateMipmaps=false;let robotOn=false,rcrop=null,rfr=0;
 const tc=document.createElement('canvas');tc.width=200;tc.height=216;const tctx=tc.getContext('2d',{willReadFrequently:true});
 const robotSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:rtex,transparent:true,depthWrite:false}));robotSprite.visible=false;robotSprite.renderOrder=5;robotSprite.position.set(W/2+1.9,4.1,.3);scene.add(robotSprite);
 const rShadow=new THREE.Mesh(new THREE.CircleGeometry(1,40),new THREE.MeshBasicMaterial({map:sprTex,color:0x1b2740,transparent:true,opacity:.4,depthWrite:false}));rShadow.rotation.x=-Math.PI/2;rShadow.scale.set(2.4,1.1,1);rShadow.position.set(robotSprite.position.x,.03,robotSprite.position.z);scene.add(rShadow);
@@ -124,7 +124,7 @@ const bub=$('bub'),bt=$('bt'),rbw=$('rbw');let swT,voice=false,talkUntil=0,moveT
 const rbF=()=>$('rb'),post=m=>{if(m&&m.pose&&(robotWalking||robotFlying)&&!/^(side|side2|front|rest)$/.test(m.pose)){pendingPose=m.pose;m=Object.assign({},m);delete m.pose}try{rbF()&&rbF().contentWindow.postMessage(m,'*')}catch(e){}};
 function staticHost(){rbw.innerHTML='<img class="st" src="icon-192.png" alt="Host">'}
 function loadRobot(){if(rbw.dataset.l)return;rbw.dataset.l=1;if(Q===0){staticHost();return}const f=document.createElement('iframe');f.id='gx-rb';f.title='Host robot';f.setAttribute('loading','lazy');if(inScene()){rbw.style.width=(narrowMQ.matches?'420px':Q>=2?'800px':'560px');rbw.style.height=(narrowMQ.matches?'450px':Q>=2?'860px':'600px')}
-  f.src='robot3d.html?scene=happy&full=1';
+  f.src='robot3d.html?scene=happy&full=1&v=20261102fly';
   window.__robotFrame=cv=>{if(inScene())robotCopy(cv)};
   rbw.appendChild(f)}
 let speaking=false;
@@ -270,6 +270,7 @@ function frame(now){requestAnimationFrame(frame);if(document.hidden||visR<.02){l
     else if(d>.03){if(!robotFlying&&(d>3.5||route.length>0)){robotFlying=true;robotWalking=false;fxStopped=false;lastFx=now;post({pose:'front',fx:'fly'})}
       else if(!robotFlying&&!robotWalking&&d>.4&&Math.abs(dx)>.05){robotWalking=true;post({pose:dx>=0?'side':'side2'})}
       if(robotFlying&&now-lastFx>4200){lastFx=now;post({fx:'fly'})}
+      if(robotFlying&&now-(window.__vxAt||0)>120){window.__vxAt=now;post({vx:hgt>1.7?dx/d:0})}      /* which way he flies: the lead arm, the facing and the banking follow it */
       if(robotFlying){flyH=2.7;if(hgt>1.7){const stp=Math.min(d,6.4*dt);robotSprite.position.x+=dx/d*stp;robotSprite.position.z+=dz/d*stp}}
       else{const stp=Math.min(d,3*dt);robotSprite.position.x+=dx/d*stp;robotSprite.position.z+=dz/d*stp}}
     else{if(route.length)rT=route.shift();else{flyH=0;if(robotWalking){robotWalking=false;const pp=pendingPose;pendingPose=null;post({pose:pp||'rest'})}if(robotFlying&&hgt<.7&&!fxStopped){fxStopped=true;post({fxStop:true})}if(robotFlying&&hgt<.06){robotFlying=false;const pp=pendingPose;pendingPose=null;post({pose:pp||'rest'})}}}
