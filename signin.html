@@ -27,7 +27,7 @@
 #gGate{position:absolute;inset:0;z-index:3;cursor:pointer}
 #form.ok #gGate{display:none}
 #form:not(.ok) #gBtn{opacity:.55}
-#siGrab{position:absolute;left:calc(41% - 46px);top:calc(66% - 178px);width:92px;height:190px;border:0;background:none;padding:0;border-radius:40px;pointer-events:auto;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
+#siGrab{position:absolute;left:calc(50% - 46px);top:calc(66% - 178px);width:92px;height:190px;border:0;background:none;padding:0;border-radius:40px;pointer-events:auto;cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
 #siGrab:active,#siRoam.drag #siGrab{cursor:grabbing}
 #siGrab:focus-visible{outline:2px solid var(--blue-hi);outline-offset:2px}
 #siPing{position:fixed;z-index:39;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--blue-hi);pointer-events:none;opacity:0}
@@ -36,11 +36,11 @@
 #siRoam{position:fixed;left:0;top:0;width:330px;height:330px;z-index:40;pointer-events:none;will-change:transform;opacity:0;transition:opacity .6s}
 #siRoam.on{opacity:1}
 #siRoam iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;color-scheme:light;pointer-events:none;filter:drop-shadow(0 22px 26px rgba(0,0,0,.35))}
-.rsay{position:absolute;left:calc(41% + 62px);top:2%;width:max-content;max-width:210px;padding:10px 14px 11px;border-radius:16px 16px 16px 4px;border:1px solid var(--line-2);background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(12px);box-shadow:0 18px 40px -18px rgba(0,0,0,.55);font-size:.8rem;line-height:1.45;color:var(--fg);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
+.rsay{position:absolute;left:calc(50% + 62px);top:2%;width:max-content;max-width:210px;padding:10px 14px 11px;border-radius:16px 16px 16px 4px;border:1px solid var(--line-2);background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(12px);box-shadow:0 18px 40px -18px rgba(0,0,0,.55);font-size:.8rem;line-height:1.45;color:var(--fg);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s}
 .rsay.on{opacity:1;transform:none}
 .rsay b{display:block;font:600 .6rem/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
-.rsay.left{left:auto;right:calc(59% + 62px);border-radius:16px 16px 4px 16px}
-@media (max-width:640px){#siRoam{width:225px;height:225px}.rsay{left:calc(41% + 42px)}.rsay.left{right:calc(59% + 42px)}.rsay{max-width:160px;font-size:.74rem}}
+.rsay.left{left:auto;right:calc(50% + 62px);border-radius:16px 16px 4px 16px}
+@media (max-width:640px){#siRoam{width:225px;height:225px}.rsay{left:calc(50% + 42px)}.rsay.left{right:calc(50% + 42px)}.rsay{max-width:160px;font-size:.74rem}}
 @media (prefers-reduced-motion:reduce){#siRoam{display:none}}
 /* the interactive host robot */
 .si-bot{position:relative;height:440px;margin-top:34px;animation:siup .8s .5s both}
@@ -239,7 +239,7 @@
 (function () {
   var roam = document.getElementById('siRoam'), fr = document.getElementById('siRobot'); if (!roam || !fr) return;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var say = document.getElementById('rSay'), txt = document.getElementById('rSayT'), W = 250, H = 330, FX = .41, FY = .66;     // where the feet sit inside the frame
+  var say = document.getElementById('rSay'), txt = document.getElementById('rSayT'), W = 330, H = 330, FX = .5, FY = .66;     // where the feet sit inside the frame
   var R = {x: -200, y: 200, tx: 0, ty: 0, mode: 'idle', flyAt: 0, until: 0, hold: 0, bob: 0}, last = 0, ready = false, sayT, typeT, lastLook = 0, busyUntil = 0, lastHi = 0, face = 1;
   function post(m) { try { fr.contentWindow.postMessage(m, '*'); } catch (e) {} }
   function size() { var r = roam.getBoundingClientRect(); W = roam.offsetWidth; H = roam.offsetHeight; }
@@ -256,6 +256,7 @@
   function typing() { var a = document.activeElement; return a && (a.id === 'email' || a.id === 'agree'); }
   function fly(x, y, then) {
     R.tx = Math.max(40, Math.min(innerWidth - 40, x)); R.ty = Math.max(H * FY + 10, Math.min(innerHeight - 8, y)); R.mode = 'fly'; R.then = then || null; R.flyAt = performance.now();
+    R.vel = R.vel || [0, 0]; R.lift0 = R.y; R.phase = R.y > floorY() - 40 ? 'lift' : 'cruise';      // from the ground he first rises straight up
     post({pose: 'front', fx: 'fly'}); face = R.tx >= R.x ? 1 : -1;
   }
   function walk(x, then) {
@@ -279,10 +280,24 @@
     if (ready) {
       if (R.mode === 'carried') { /* the visitor holds it */ } else if (R.mode === 'idle') { R.bob += (Math.sin(t / 700) * 3 - R.bob) * Math.min(1, dt * 4); if (performance.now() > R.hold) next(); }
       else {
-        var dx = R.tx - R.x, dy = R.ty - R.y, d = Math.hypot(dx, dy), sp = R.mode === 'fly' ? Math.max(120, Math.min(300, d * 1.1 + 90)) : 85;
-        if (R.mode === 'fly' && t - (R.vxAt || 0) > 120) { R.vxAt = t; post({vx: d > 8 ? dx / Math.max(60, Math.abs(dx) + Math.abs(dy) * .4) : 0}); }      // which way he is flying: the lead arm, the facing and the banking follow it
-        if (d < 5) { R.x = R.tx; R.y = R.ty; var th = R.then; R.then = null; R.mode = 'idle'; R.bob = 0; if (th) th(); else rest(1200); }
-        else { var st = Math.min(d, sp * dt); R.x += dx / d * st; R.y += dy / d * st; if (R.mode === 'fly') { R.bob = Math.sin(t / 260) * 5; if (performance.now() - R.flyAt > 4300) { R.flyAt = performance.now(); post({fx: 'fly'}); } } }
+        var dx = R.tx - R.x, dy = R.ty - R.y, d = Math.hypot(dx, dy);
+        if (R.mode === 'fly') {
+          /* flight with real inertia: straight up from the ground, then the speed builds smoothly toward the target, eases off over the last ~200 px
+             and he settles down onto the spot. The lead arm, the facing and the banking follow the REAL sideways velocity. */
+          var vel = R.vel || (R.vel = [0, 0]), wx, wy, k;
+          if (R.phase === 'lift') { wx = 0; wy = -210; k = 3.4; if (R.lift0 - R.y > 78 || R.y <= R.ty) R.phase = 'cruise'; }
+          else { var top = Math.max(170, Math.min(400, d * 1.3 + 120)), s0 = top * Math.min(1, .14 + d / 210); wx = d ? dx / d * s0 : 0; wy = d ? dy / d * s0 : 0; k = 2.7; }
+          vel[0] += (wx - vel[0]) * Math.min(1, dt * k); vel[1] += (wy - vel[1]) * Math.min(1, dt * k);
+          R.x += vel[0] * dt; R.y += vel[1] * dt;
+          R.bob = Math.sin(t / 260) * 5 * Math.min(1, Math.hypot(vel[0], vel[1]) / 80 + .3);
+          if (t - (R.vxAt || 0) > 100) { R.vxAt = t; post({vx: Math.max(-1, Math.min(1, vel[0] / 280))}); }
+          if (performance.now() - R.flyAt > 4300) { R.flyAt = performance.now(); post({fx: 'fly'}); }
+          if (R.phase !== 'lift' && d < 6 && Math.hypot(vel[0], vel[1]) < 60) { R.x = R.tx; R.y = R.ty; vel[0] = vel[1] = 0; post({vx: 0}); var th0 = R.then; R.then = null; R.mode = 'idle'; R.bob = 0; if (th0) th0(); else rest(1200); }
+        } else {
+          var sp = 85;
+          if (d < 5) { R.x = R.tx; R.y = R.ty; var th = R.then; R.then = null; R.mode = 'idle'; R.bob = 0; if (th) th(); else rest(1200); }
+          else { var st = Math.min(d, sp * dt); R.x += dx / d * st; R.y += dy / d * st; }
+        }
       }
       place();
     }
@@ -311,7 +326,7 @@
     });
     grab.addEventListener('pointermove', function (e) {
       if (!drag) return; var d = Math.hypot(e.clientX - sx, e.clientY - sy); moved = Math.max(moved, d);
-      if (moved > 7) { if (R.mode !== 'carried') { R.mode = 'carried'; roam.classList.add('drag'); post({pose: 'front', fx: 'fly'}); talk('Wheee!', 1500); } R.x = Math.max(30, Math.min(innerWidth - 30, e.clientX + drag.ox)); R.y = Math.max(H * FY, Math.min(innerHeight - 4, e.clientY + drag.oy)); R.bob = 0; }
+      if (moved > 7) { if (R.mode !== 'carried') { R.mode = 'carried'; if (R.vel) R.vel[0] = R.vel[1] = 0; roam.classList.add('drag'); post({pose: 'front', fx: 'fly'}); talk('Wheee!', 1500); } R.x = Math.max(30, Math.min(innerWidth - 30, e.clientX + drag.ox)); R.y = Math.max(H * FY, Math.min(innerHeight - 4, e.clientY + drag.oy)); R.bob = 0; }
     });
     function end(e) {
       if (!drag) return; var wasDrag = moved > 7; drag = null; roam.classList.remove('drag'); try { grab.releasePointerCapture(e.pointerId); } catch (x) {}
@@ -336,7 +351,7 @@
   document.addEventListener('visibilitychange', function () { post({paused: document.hidden}); });
   setTimeout(function () {
     fr.onload = function () { setTimeout(function () { ready = true; R.x = -120; R.y = floorY() - 220; roam.classList.add('on'); fly(innerWidth * .3, innerHeight * .55, function () { rest(2400, 'wave', 'Hi! I am the host of the GoldTriEngine live stream. Tick the box, then pick Google or email. Tap anywhere and I will fly there.'); }); }, 700); };
-    fr.src = 'robot3d.html?scene=happy&full=1&v=20261102fly';
+    fr.src = 'robot3d.html?scene=happy&full=1&v=20261102fly3';
   }, 800);
   requestAnimationFrame(frame);
 })();

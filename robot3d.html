@@ -762,12 +762,12 @@ function frame(now) {
     const own = window.__flyVx !== undefined && now < (window.__flyVxUntil || 0);
     const tgt = own ? window.__flyVx : (kk >= 1.0 && kk < 5.2 ? Math.cos(Math.PI * (kk - 1.0) / 4.2) : 0);
     flyVx += (tgt - flyVx) * Math.min(1, dt * 3.5); }
-  if (flyArmW > .002) { const w = flyArmW, wl = Math.max(0, Math.min(1, .5 + flyVx * 1.2));      // wl: 1 = flying to the right (his left arm leads), 0 = flying back (the other arm leads)
+  if (flyArmW > .002) { const w = flyArmW, lfL = Math.max(0, Math.min(1, flyVx * 2.2)), lfR = Math.max(0, Math.min(1, -flyVx * 2.2));      // how far each arm leads: flying right = his left arm points ahead, flying left = his right arm; straight up / down = both hang along the body
     const blend = (a, b, u) => ({p: V.mix(a.p, b.p, u), f: V.norm(V.mix(a.f, b.f, u)), n: V.norm(V.mix(a.n, b.n, u)), pole: V.norm(V.mix(a.pole, b.pole, u)), c: a.c.map((c, i) => c + (b.c[i] - c) * u)});
     const apply = (arm, tgtH) => { const m = blend(arm, tgtH, w); arm.p = m.p; arm.f = m.f; arm.n = m.n; arm.pole = m.pole; arm.c = m.c; };
-    apply(P.L, blend(FLY_STRAIGHT_L, FLY_LEAD_L, wl)); apply(P.R, blend(FLY_LEAD_R, FLY_STRAIGHT_R, wl));
-    { const away = Math.abs(flyVx) * w;                                  // the body turns and banks into the flight: the hanging hand would sink into the hip and thigh (fingers cut off), so it stands a little out and forward
-      P.R.p = [P.R.p[0] - .1 * away * wl, P.R.p[1], P.R.p[2] + .07 * away * wl]; P.L.p = [P.L.p[0] + .1 * away * (1 - wl), P.L.p[1], P.L.p[2] + .07 * away * (1 - wl)]; }
+    apply(P.L, blend(FLY_STRAIGHT_L, FLY_LEAD_L, lfL)); apply(P.R, blend(FLY_STRAIGHT_R, FLY_LEAD_R, lfR));
+    { const rt = Math.max(0, flyVx) * w, lf = Math.max(0, -flyVx) * w;      // the body turns and banks into the flight: the hanging hand would sink into the hip and thigh (fingers cut off), so it stands a little out and forward
+      P.R.p = [P.R.p[0] - .1 * rt, P.R.p[1], P.R.p[2] + .07 * rt]; P.L.p = [P.L.p[0] + .1 * lf, P.L.p[1], P.L.p[2] + .07 * lf]; }
     P.yaw += (.55 * flyVx - P.yaw) * w;                                  // he faces the way he flies (and turns round with the turn of the path)
     P.sway += -.14 * flyVx * w; }                                         // and leans INTO the movement: the body banks, the legs trail behind
   if (flyWas && gname !== "fly") landT = now; flyWas = gname === "fly";
@@ -781,7 +781,7 @@ function frame(now) {
   frameAmt += (full - frameAmt) * Math.min(1, dt * 3);
   flyAmt += ((gname === "fly" ? 1 : 0) - flyAmt) * Math.min(1, dt * 3);   // flying: room under the feet for the jet flames
   const ya = 1.0 + (-.03 - 1.0) * frameAmt - .5 * (TEST.has("full") ? 0 : flyAmt), yb = 2.03 + (2.04 - 2.03) * frameAmt, frac = .49 + ((TEST.has("full") ? .58 : .97) - .49) * frameAmt;
-  let Ht = (yb - ya) / frac, yc = ya + Ht / 2, xc = .15 * Ht;
+  let Ht = (yb - ya) / frac, yc = ya + Ht / 2, xc = (TEST.has("full") ? 0 : .15) * Ht;      // the stream puts him to one side; the website's full-body view centres him, so a reaching arm has room on both sides
   if (TEST.has("full")) yc -= .32 * Ht * frameAmt;      // room under the feet for the jet flames
   if (TEST.has("face")) { Ht = .5; yc = 1.82; xc = 0; }
   camPunch *= Math.exp(-dt * 3.2); camShake *= Math.exp(-dt * 6); bodyKick *= Math.exp(-dt * 4.5);

@@ -124,7 +124,7 @@ const bub=$('bub'),bt=$('bt'),rbw=$('rbw');let swT,voice=false,talkUntil=0,moveT
 const rbF=()=>$('rb'),post=m=>{if(m&&m.pose&&(robotWalking||robotFlying)&&!/^(side|side2|front|rest)$/.test(m.pose)){pendingPose=m.pose;m=Object.assign({},m);delete m.pose}try{rbF()&&rbF().contentWindow.postMessage(m,'*')}catch(e){}};
 function staticHost(){rbw.innerHTML='<img class="st" src="icon-192.png" alt="Host">'}
 function loadRobot(){if(rbw.dataset.l)return;rbw.dataset.l=1;if(Q===0){staticHost();return}const f=document.createElement('iframe');f.id='gx-rb';f.title='Host robot';f.setAttribute('loading','lazy');if(inScene()){rbw.style.width=(narrowMQ.matches?'420px':Q>=2?'800px':'560px');rbw.style.height=(narrowMQ.matches?'450px':Q>=2?'860px':'600px')}
-  f.src='robot3d.html?scene=happy&full=1&v=20261102fly';
+  f.src='robot3d.html?scene=happy&full=1&v=20261102fly3';
   window.__robotFrame=cv=>{if(inScene())robotCopy(cv)};
   rbw.appendChild(f)}
 let speaking=false;
@@ -270,9 +270,10 @@ function frame(now){requestAnimationFrame(frame);if(document.hidden||visR<.02){l
     else if(d>.03){if(!robotFlying&&(d>3.5||route.length>0)){robotFlying=true;robotWalking=false;fxStopped=false;lastFx=now;post({pose:'front',fx:'fly'})}
       else if(!robotFlying&&!robotWalking&&d>.4&&Math.abs(dx)>.05){robotWalking=true;post({pose:dx>=0?'side':'side2'})}
       if(robotFlying&&now-lastFx>4200){lastFx=now;post({fx:'fly'})}
-      if(robotFlying&&now-(window.__vxAt||0)>120){window.__vxAt=now;post({vx:hgt>1.7?dx/d:0})}      /* which way he flies: the lead arm, the facing and the banking follow it */
-      if(robotFlying){flyH=2.7;if(hgt>1.7){const stp=Math.min(d,6.4*dt);robotSprite.position.x+=dx/d*stp;robotSprite.position.z+=dz/d*stp}}
-      else{const stp=Math.min(d,3*dt);robotSprite.position.x+=dx/d*stp;robotSprite.position.z+=dz/d*stp}}
+      const rv=window.__rv||(window.__rv={x:0,z:0});      /* flight with inertia: straight up first, the speed builds smoothly, eases off near the target */
+      if(robotFlying&&now-(window.__vxAt||0)>100){window.__vxAt=now;post({vx:Math.max(-1,Math.min(1,rv.x/6.4))})}      /* which way he really flies: the lead arm, the facing and the banking follow it */
+      if(robotFlying){flyH=2.7;if(hgt>1.7){const sp=6.4*Math.min(1,.15+d/5),k=Math.min(1,dt*2.6);rv.x+=(dx/d*sp-rv.x)*k;rv.z+=(dz/d*sp-rv.z)*k;const mv=Math.hypot(rv.x,rv.z)*dt,f=mv>d?d/mv:1;robotSprite.position.x+=rv.x*dt*f;robotSprite.position.z+=rv.z*dt*f}else{rv.x*=.9;rv.z*=.9}}
+      else{rv.x*=.85;rv.z*=.85;const stp=Math.min(d,3*dt);robotSprite.position.x+=dx/d*stp;robotSprite.position.z+=dz/d*stp}}
     else{if(route.length)rT=route.shift();else{flyH=0;if(robotWalking){robotWalking=false;const pp=pendingPose;pendingPose=null;post({pose:pp||'rest'})}if(robotFlying&&hgt<.7&&!fxStopped){fxStopped=true;post({fxStop:true})}if(robotFlying&&hgt<.06){robotFlying=false;const pp=pendingPose;pendingPose=null;post({pose:pp||'rest'})}}}
     hgt+=(flyH-hgt)*Math.min(1,dt*(flyH===0?6.5:3.2));robotSprite.position.y=rBaseY+hgt;rShadow.material.opacity=.4*Math.max(0,1-hgt/4.2)}rShadow.position.set(robotSprite.position.x,.03,robotSprite.position.z);
   robotHit.position.copy(robotSprite.position);robotHit.quaternion.copy(cam.quaternion);robotHit.scale.set(robotSprite.scale.y*rc.width/rc.height*rFig*1.1,robotSprite.scale.y*.98,1);robotHit.updateMatrixWorld();
