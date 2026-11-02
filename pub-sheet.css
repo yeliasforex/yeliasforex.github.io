@@ -50,3 +50,19 @@ body.gs-lock{overflow:hidden}
   .gs-h{padding-top:10px}
 }
 @media (prefers-reduced-motion:reduce){.gs-p,.gs-bk{transition:none}}
+
+/* the "My account" illustration on the home page: a miniature of the real Overview */
+.ma-card .mx{padding:6px 16px 4px;display:grid;gap:10px}.ma-card .mx small{display:block;font-size:10.5px;color:var(--muted);font-family:var(--mono)}
+.mx-live{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--gold) 35%,var(--line-2));background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 12%,transparent),transparent)}
+.mx-ring{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:var(--mint);border:3px solid color-mix(in srgb,var(--mint) 45%,transparent)}.mx-ring svg{width:20px;height:20px}
+.mx-live b{display:block;font-size:1.02rem}.mx-live em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:2px}.ma-card .mx-live .mx-k{color:var(--gold);letter-spacing:.08em;margin-bottom:2px}
+.mx-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.mx-tiles div{padding:9px 10px;border-radius:12px;border:1px solid var(--line-2);background:var(--panel)}.mx-tiles small{font-size:9.5px!important}.mx-tiles b{display:block;font-size:.98rem;margin-top:2px}
+.mx .up{color:var(--mint)}.mx .dn{color:var(--red)}
+.mx-facts{display:grid;gap:8px}.mx-facts>div{display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-radius:12px;border:1px solid var(--line);border-left:3px solid var(--t);background:var(--panel)}
+.mx-facts .ok{--t:var(--mint)}.mx-facts .info{--t:var(--blue-hi)}.mx-facts i{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:.72rem;color:#fff;background:var(--t)}
+.mx-facts strong{display:block;font-size:.84rem;line-height:1.3}.mx-facts small{font-family:var(--sans)!important;font-size:11.5px!important;margin-top:1px}
+.mx-chart{padding:10px 12px 8px;border-radius:14px;border:1px solid var(--line-2);background:var(--panel)}.mx-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}.mx-h span{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.88rem}.mx-h i{width:4px;height:14px;border-radius:2px;background:var(--blue-hi)}.mx-h small{padding:3px 9px;border:1px solid var(--line-2);border-radius:999px}
+.mx-chart svg{display:block;width:100%;height:56px}
+.mx-trades{border-radius:14px;border:1px solid var(--line-2);background:var(--panel)}.mx-trades>div{display:flex;align-items:center;gap:7px;padding:9px 12px;font-size:12px}.mx-trades>div+div{border-top:1px solid var(--line)}.mx-trades em{flex:1;font-style:normal;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mx-trades b{font-size:.9rem}
+.mx-p{font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:999px;border:1px solid}.mx-p.g{color:#B07CFF;border-color:color-mix(in srgb,#B07CFF 45%,transparent)}.mx-p.b{color:var(--gold);border-color:color-mix(in srgb,var(--gold) 45%,transparent)}.mx-p.s{color:var(--red);border-color:color-mix(in srgb,var(--red) 40%,transparent);background:color-mix(in srgb,var(--red) 10%,transparent)}.mx-p.u{color:var(--mint);border-color:color-mix(in srgb,var(--mint) 40%,transparent);background:color-mix(in srgb,var(--mint) 10%,transparent)}
+@media (max-width:420px){.mx-tiles b{font-size:.86rem}}
