@@ -131,10 +131,9 @@
       card('How far below its best', 'The result against its highest point so far, after each trade. Zero is a new high.', line(dd, {title: 'Drawdown', fmt: function (v) { return sgn(v); }, color: 'var(--red)'}), 'needs trades')];
     var real = cards.filter(function (c) { return !c.empty; });
     box = document.createElement('div'); box.id = 'pubg'; box.className = 'pubg';
-    box.innerHTML = '<h3 class="pubg-h">What matters in this account</h3><p class="pubg-s">The most important facts first. Tap anything for the details behind it.</p><div class="acg-i">' + f.map(function (i, k) { return '<button type="button" class="t-' + (i.tone || 'info') + '" data-af="' + k + '"><i>' + (TONE[i.tone || 'info'] || 'i') + '</i><span><strong>' + E(i.title) + '</strong>' + (i.text ? '<small>' + i.text + '</small>' : '') + '</span></button>'; }).join('') + '</div><div class="acg-gr">' + real.map(function (x) { return x.html; }).join('') + '</div>';
+    box.innerHTML = '<div class="acg-gr">' + real.map(function (x) { return x.html; }).join('') + '</div>';
     var grid = $('.acct-grid', sec), host = grid && grid.parentNode; if (!host) return;
     host.insertBefore(box, grid); built = true;
-    $$('[data-af]', box).forEach(function (b) { b.onclick = function () { var it = f[+b.dataset.af]; if (it && it.act) it.act(); }; });
   }
   document.addEventListener('click', function (e) {
     var el = e.target.closest && e.target.closest('#pubg [data-g][data-i]'); if (!el || !REG[el.dataset.g]) return; var r = REG[el.dataset.g], it = r.items[+el.dataset.i]; if (!it) return;
