@@ -51,12 +51,12 @@
     var grid = [0, .5, 1].map(function (g) { var y = pt + (H - pt - pb) * (1 - g); return '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y + '" y2="' + y + '" class="gcg0"/>'; }).join('');
     var rects = items.map(function (it, i) {
       var x = pl + step * i + (step - bw) / 2, h = Math.max(N(it.value) > 0 ? 2 : 0, (H - pt - pb) * N(it.value) / mx), y = H - pb - h, col = it.color || o.color || pal(0), inner = '';
-      if (it.parts) { var yy = H - pb; inner = it.parts.map(function (p, k) { var ph = (H - pt - pb) * N(p.v) / mx; yy -= ph; return ph > 0 ? '<rect class="acg-bar" x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + ph.toFixed(1) + '" fill="' + (p.c || pal(k)) + '" rx="1.5"/>' : ''; }).join(''); }
-      else inner = '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + col + '" rx="2"' + (reduce ? ' class="acg-bar"' : ' class="gcr acg-bar" style="animation-delay:' + Math.min(600, i * 18) + 'ms"') + '/>';
+      if (it.parts) { var yy = H - pb; inner = it.parts.map(function (p, k) { var ph = (H - pt - pb) * N(p.v) / mx; yy -= ph; return ph > 0 ? '<rect x="' + x.toFixed(1) + '" y="' + yy.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + ph.toFixed(1) + '" fill="' + (p.c || pal(k)) + '" rx="1.5"/>' : ''; }).join(''); }
+      else inner = '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + col + '" rx="2"' + (reduce ? '' : ' class="gcr" style="animation-delay:' + Math.min(600, i * 18) + 'ms"') + '/>';
       var hit = '<rect class="gcs" data-g="' + id + '" data-i="' + i + '" x="' + (pl + step * i).toFixed(1) + '" y="' + pt + '" width="' + step.toFixed(1) + '" height="' + (H - pt - pb) + '" fill="transparent"><title>' + E(it.label) + ': ' + E(f(it.value)) + '</title></rect>';
       var lab = i % every === 0 || i === n - 1 ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" class="gct3">' + E(it.short || it.label) + '</text>' : '';
       var val = n <= 12 && N(it.value) > 0 ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="middle" class="gct4">' + E(f(it.value)) + '</text>' : '';
-      return '<g class="acg-bg">' + inner + hit + lab + val + '</g>';
+      return inner + hit + lab + val;
     }).join('');
     return '<svg class="gcb" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + E(o.title || 'Chart') + '">' + grid + rects + '</svg>';
   };
