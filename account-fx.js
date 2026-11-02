@@ -132,14 +132,8 @@
 
   /* ---------- equity chip that follows you down the page ---------- */
   function chip() {
-    if ($('#mz-chip')) return; var c = document.createElement('button'); c.type = 'button'; c.id = 'mz-chip'; c.setAttribute('aria-label', 'Back to the top'); c.className = 'noeq';
-    var chev = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg>';
-    c.innerHTML = '<span class="mz-cd" id="mz-cd"></span><span class="mz-eq"><small>Equity</small><b id="mz-cb">-</b></span><span class="mz-lbl">Back to top</span><i class="mz-up">' + chev + chev + '</i>';
-    c.onclick = function () { window.scrollTo({top: 0, behavior: reduce ? 'auto' : 'smooth'}); }; document.body.appendChild(c);
-    document.documentElement.classList.add('mz-has-chip');      // the site-wide gold chevron is hidden here: this one pill is the only way back to the top
-    var tk; addEventListener('scroll', function () { if (tk) return; tk = requestAnimationFrame(function () { tk = 0; var m = M(), st = m && m.st, has = !!(st && st.equity != null);
-      c.classList.toggle('noeq', !has); if (has) { setT($('#mz-cb'), usd(st.equity)); $('#mz-cd').className = 'mz-cd' + (st.online ? ' on' : ''); }
-      c.classList.toggle('on', scrollY > 640); }); }, {passive: true});
+    /* the equity pill that used to sit here made a second "back to top" button. The site's own gold double-chevron (pwa.js / wow.css) is now the only one. */
+    var old = $('#mz-chip'); if (old) old.remove(); document.documentElement.classList.remove('mz-has-chip');
   }
 
   /* ---------- pointer light, tilt, living background, sweep, day/night ripple ---------- */
