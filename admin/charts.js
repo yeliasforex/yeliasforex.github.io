@@ -209,7 +209,7 @@
       (empty.length ? '<div class="gcc" style="margin-top:14px"><div class="gcth"><b>' + (real.length ? 'More charts, once there is data' : 'Charts appear as data comes in') + '</b></div><div class="gce">' + empty.map(function (c) { return '<span><b>' + E(c.title) + '</b>' + (c.hint ? ' &middot; ' + E(c.hint) : '') + '</span>'; }).join('') + '</div></div>' : '') + '</div>';
     var anchor = view.querySelector('.grid'); if (anchor && anchor.parentNode === view) view.insertBefore(box, anchor.nextSibling); else view.insertBefore(box, view.firstChild);
     $('#gca-t', box).onclick = function () { var bd = $('#gca-b', box), h = !bd.hidden; bd.hidden = h; this.textContent = h ? 'Show' : 'Hide'; try { localStorage.setItem('gte_gca_' + tabKey, h ? 'c' : 'o'); } catch (e) {} };
-    $$('[data-gi]', box).forEach(function (btn) { btn.onclick = function () { var i = ins[+btn.dataset.gi]; if (i && typeof i.act === 'function') i.act(); else if (i && i.sheet) G.sheet(i.sheet); }; });
+    $$('[data-gi]', box).forEach(function (btn) { btn.onclick = function () { var i = ins[+btn.dataset.gi]; if (i && typeof i.act === 'function') i.act(); else if (i && i.sheet) G.sheet(i.sheet); else if (i) G.sheet({kicker: m.title || 'Key fact', title: i.title, note: E(i.text || ''), go: {label: 'Stay on this tab', tab: tabKey}}); }; });
   }
   var vw = $('#view'); if (vw && window.MutationObserver) new MutationObserver(schedule).observe(vw, {childList: true});
   G.refresh = schedule; schedule();
