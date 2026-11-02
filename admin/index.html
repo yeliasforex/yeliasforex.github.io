@@ -1764,7 +1764,9 @@ async function browserChecks() {
   } catch (e) { add('feed_stale', 'Newest blog post', 'warn', 'The blog feed could not be read.'); }
   const [api, ms] = await timed(fetchT(SB_URL + '/rest/v1/rpc/public_settings', {method: 'POST', headers: {apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json'}, body: '{}'}));
   add('api_slow', 'Database answers', !api || !api.ok ? 'bad' : ms > 2500 ? 'warn' : 'ok', !api || !api.ok ? 'The database did not answer.' : 'Answered in ' + ms + ' ms.');
-  const [fn] = await timed(fetchT(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json'}, body: '{"kind":"ping"}'}));
+  const pingMail = ms => timed(fetchT(SB_URL + '/functions/v1/send-email', {method: 'POST', headers: {apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json'}, body: '{"kind":"ping"}'}, ms));
+  let [fn] = await pingMail(8000);
+  if (!fn || fn.status < 400 || fn.status >= 500) [fn] = await pingMail(20000);      // a function that was idle needs a moment to wake up: one more try with more time before it counts as a problem
   add('email_fn', 'Email function answers', fn && fn.status >= 400 && fn.status < 500 ? 'ok' : 'bad', fn && fn.status >= 400 && fn.status < 500 ? 'The email function is up.' : 'The email function did not answer correctly' + (fn ? ' (code ' + fn.status + ').' : '.'));
   const [cf] = await timed(fetchT(SB_URL + '/rest/v1/rpc/support_contact', {method: 'POST', headers: {apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json'}, body: JSON.stringify({p_name: '', p_email: 'not-an-email', p_topic: 'other', p_subject: '', p_message: 'health check message only'})}));
   const cj = cf ? await cf.json().catch(() => ({})) : {};
