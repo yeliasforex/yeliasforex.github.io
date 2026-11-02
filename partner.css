@@ -417,3 +417,13 @@ body.ps-lock{overflow:hidden}
   .ps-grab{display:block;width:44px;height:5px;border-radius:5px;background:var(--line);margin:9px auto 0}.ps-h{padding-top:10px}
 }
 @media (prefers-reduced-motion:reduce){.ps-p,.ps-bk{transition:none}}
+
+/* phones and tablets: stacked blur layers made Chrome drop tiles on some Android GPUs (a patch of a card lost its background and text),
+   so there is no backdrop blur and no animated glow there. The orbs keep their soft edge through a mask instead of a blur filter. */
+@media (max-width:900px),(pointer:coarse){
+  .pd-card,.pdx-pl,.pdx-clk,#pdx-q,.pd-bar,.pd-nav,#pdx-pal,.pd-sheetbg,.ps-bk,#pd-app>#pd-bar{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+  .pd-orb{filter:none!important;animation:none!important;-webkit-mask-image:radial-gradient(closest-side,#000 0,transparent 100%);mask-image:radial-gradient(closest-side,#000 0,transparent 100%)}
+  #pdx-glow{display:none!important}
+  .pd-bgfx:before{display:none!important}      /* the huge masked, 3D-tilted, endlessly animated grid layer */
+  .pd-btn:after{animation:none!important}
+}
