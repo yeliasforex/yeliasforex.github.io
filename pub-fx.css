@@ -42,3 +42,5 @@
 .pubx-st{display:flex;width:100%;text-align:left;font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
 .pubx-ck{cursor:pointer;transition:transform .2s,border-color .2s}.pubx-ck:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--gold) 55%,var(--line-2))}.pubx-ck:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 #histBody tr,#openList .otrade,#backtest .m[data-m]{cursor:pointer}#histBody tr:hover td{background:color-mix(in srgb,var(--blue-hi) 10%,transparent)}
+
+.pstx{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}.pstx b{font-size:1.3rem}

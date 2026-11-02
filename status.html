@@ -20,7 +20,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="GoldTriEngine">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<script src="pwa.js?v=20261102app8" defer></script><script src="track.js?v=20261021app5" defer></script>
+<link rel="stylesheet" href="pub-sheet.css?v=2"><link rel="stylesheet" href="pub-fx.css?v=5"><script src="pwa.js?v=20261102app8" defer></script><script src="track.js?v=20261021app5" defer></script>
 
 </head>
 <body>
@@ -61,18 +61,21 @@
   var h={apikey:ANON,Authorization:'Bearer '+ANON,'Content-Type':'application/json'};
   Promise.all([
     timed(fetch(URL+'/rest/v1/rpc/public_settings',{method:'POST',headers:h,body:'{}'}).then(function(r){return r.ok?r.json():Promise.reject();})),
-    timed(fetch(location.pathname,{cache:'no-store'}).then(function(r){return r.ok;}))
+    timed(fetch(location.pathname,{cache:'no-store'}).then(function(r){return r.ok;})),
+    timed(fetch('https://raw.githubusercontent.com/yeliasforex/gte-live/main/account.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():Promise.reject();}))
   ]).then(function(res){
-    var api=res[0],web=res[1];
+    var api=res[0],web=res[1],feed=res[2];
     ul.innerHTML='';
-    row('Website',!!web&&web[0],web?'answering ('+web[1]+' ms)':'not answering');
-    row('Licence and account server',!!api,api?'answering ('+api[1]+' ms)':'not answering');
-    row('Orders and sign-in',!!api&&api[0].salesOpen!==false,api?(api[0].salesOpen===false?'sales are paused at the moment':'open'):'unknown');
-    if(api&&api[0].latestVersion)row('Latest EA version',true,'version '+api[0].latestVersion+' &middot; <a href="changelog.html">what changed</a>');
+    var C=[{name:'Website',ok:!!web&&web[0],ms:web?web[1]:null,text:web?'answering ('+web[1]+' ms)':'not answering',short:web?web[1]+' ms':'no answer',about:'Whether this website loads for you right now. It is served from a global network, so a failure here usually means your own connection.',ifDown:'Try again in a minute. The EA does not need this website to trade.'},
+      {name:'Licence and account server',ok:!!api,ms:api?api[1]:null,text:api?'answering ('+api[1]+' ms)':'not answering',short:api?api[1]+' ms':'no answer',about:'The server that checks licences, signs you in and keeps your account, trade history and orders.',ifDown:'Sign-in and My account may not load. Your EA keeps trading: it never stops because this server is busy.'},
+      {name:'Orders and sign-in',ok:!!api&&api[0].salesOpen!==false,text:api?(api[0].salesOpen===false?'sales are paused at the moment':'open'):'unknown',short:api?(api[0].salesOpen===false?'paused':'open'):'unknown',about:'Whether new orders and licence purchases are open. Sales are only paused on purpose, for example during an update.',ifDown:'Orders may be paused for a short time. Write to support if you need a licence urgently.'}];
+    if(api&&api[0].latestVersion)C.push({name:'Latest EA version',ok:true,text:'version '+api[0].latestVersion,short:'v'+api[0].latestVersion,about:'The newest EA build you can download. If your EA shows an older version, download the new file and attach it to your chart.',ifDown:''});
+    if(feed&&feed[0]){var m=Math.round((Date.now()-Date.parse(feed[0].updated))/60000);C.push({name:'Live account feed',ok:m<45,ms:feed[1],text:'last report '+(m<2?'just now':m+' min ago'),short:m<2?'just now':m+' min ago',about:'The live demo account numbers on the home page. MetaTrader 5 reports them automatically every few minutes. It counts as working when the last report is under 45 minutes old.',ifDown:'The numbers on the home page may be out of date. This is the stream computer, not your EA.'});}
+    if(window.gteStatus)window.gteStatus(C);else C.forEach(function(c){row(c.name,c.ok,c.text);});
     document.getElementById('st-when').textContent='Checked '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+' (your time)';
   });
 })();
 </script>
-<script src="partner-track.js?v=20261102p1" defer></script>
+<script src="results.js?v=20261102s1" defer></script><script src="trade-sheet.js?v=4" defer></script><script src="status-fx.js?v=1" defer></script><script src="partner-track.js?v=20261102p1" defer></script>
 </body>
 </html>
