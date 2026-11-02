@@ -38,8 +38,8 @@
       segs += '<circle class="gcs" data-g="' + id + '" data-i="' + i + '" cx="50" cy="50" r="' + R + '" fill="none" stroke="' + it.color + '" stroke-width="14" stroke-dasharray="' + Math.max(0, len - (items.length > 1 ? 1.2 : 0)).toFixed(2) + ' ' + C.toFixed(2) + '" stroke-dashoffset="' + (-acc).toFixed(2) + '" transform="rotate(-90 50 50)"><title>' + E(it.label) + ': ' + E(o.fmt ? o.fmt(it.value) : G.num(it.value)) + '</title></circle>';
       acc += len;
     });
-    var f = o.fmt || G.num;
-    return '<div class="gcd"><svg viewBox="0 0 100 100" role="img" aria-label="' + E(o.title || 'Chart') + '">' + segs + '<text x="50" y="49" text-anchor="middle" class="gct1">' + E(o.center != null ? o.center : f(tot)) + '</text><text x="50" y="61" text-anchor="middle" class="gct2">' + E(o.centerLabel || 'total') + '</text></svg>' +
+    var f = o.fmt || G.num, ct = String(o.center != null ? o.center : f(tot)), fs = ct.length <= 4 ? 14 : ct.length <= 6 ? 11 : ct.length <= 8 ? 9 : 7.5;      // long numbers shrink to stay inside the ring
+    return '<div class="gcd"><svg viewBox="0 0 100 100" role="img" aria-label="' + E(o.title || 'Chart') + '">' + segs + '<text x="50" y="49" text-anchor="middle" class="gct1" style="font-size:' + fs + 'px">' + E(ct) + '</text><text x="50" y="61" text-anchor="middle" class="gct2">' + E(o.centerLabel || 'total') + '</text></svg>' +
       '<ul class="gcl">' + items.map(function (it, i) { return '<li><button type="button" data-g="' + id + '" data-i="' + i + '"><i style="background:' + it.color + '"></i><span>' + E(it.label) + '</span><b>' + E(f(it.value)) + '</b><em>' + G.pct(N(it.value), tot) + '%</em></button></li>'; }).join('') + '</ul></div>';
   };
 
