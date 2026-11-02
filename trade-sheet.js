@@ -51,29 +51,29 @@
   /* what the trade went through while it was open: best point, worst point, where the stop ended, and how that led to the close */
   function hasStory(t) { return t.mfe_r != null && t.mae_r != null; }
   function stopWord(t) { var v = t.stop_r; if (v == null) return null; return v <= -0.9 ? 'the original stop' : v > 0.05 ? 'a locked profit of ' + v.toFixed(2) + 'R' : 'breakeven'; }
-  function storyLine(t) {
+  function storyLine(t) {      // one plain sentence: the whole story in two seconds
     if (!hasStory(t)) return '';
-    var m = Number(t.mfe_r), w = Number(t.mae_r), rr = Number(t.result_r || 0), sw = stopWord(t), gave = m > 0.05 ? Math.max(0, m - rr) : 0, out = [];
-    if (m >= 0.3) out.push('It reached +' + m.toFixed(2) + 'R (' + usd(t.mfe_usd) + (t.mfe_pips != null ? ', ' + Number(t.mfe_pips).toFixed(0) + ' pips' : '') + (t.peak_at ? ' at ' + tm(t.peak_at) : '') + ') in your favour.');
-    else out.push('It never got further than +' + Math.max(0, m).toFixed(2) + 'R in your favour.');
-    if (w <= -0.3) out.push('At its worst it was ' + w.toFixed(2) + 'R (' + usd(t.mae_usd) + ') against you.');
-    if (sw) out.push('The stop sat at ' + sw + ' when it closed' + (t.exit_reason === 'stop' ? ', and the price came back and hit it' : '') + '.');
-    if (m >= 0.5 && rr < m - 0.3) out.push('It gave back ' + gave.toFixed(2) + 'R of that peak' + (rr <= 0.05 ? ' and finished ' + (rr < -0.05 ? 'as a loss' : 'flat') : '') + '.');
-    else if (m >= 0.5 && rr >= m - 0.3) out.push('It closed close to its best point.');
-    return out.join(' ');
+    var m = Number(t.mfe_r), w = Number(t.mae_r), rr = Number(t.result_r || 0), up = Math.max(0, m), fin = (rr >= 0 ? '+' : '') + rr.toFixed(2) + 'R';
+    if (m >= 0.3 && rr < m - 0.3) return 'Went up +' + up.toFixed(2) + 'R (' + usd(t.mfe_usd) + '), then came back and closed at ' + fin + '.';
+    if (m >= 0.3) return 'Went up +' + up.toFixed(2) + 'R (' + usd(t.mfe_usd) + ') and closed near the top at ' + fin + '.';
+    if (rr < -0.05) return 'Went against you almost from the start and closed at ' + fin + '.';
+    return 'Stayed close to the entry and closed at ' + fin + '.';
   }
   function storyBlock(t) {
-    if (!hasStory(t)) return '<div class="gs-story"><h4>What happened inside this trade</h4><p class="gs-fine">Not recorded. Only trades closed by EA 1.09 or newer carry this, and older ones are filled in when the EA re-syncs its history.</p></div>';
-    var m = Math.max(0, Number(t.mfe_r)), w = Math.min(0, Number(t.mae_r)), rr = Number(t.result_r || 0), span = Math.max(m - w, .01), sw = stopWord(t), px = function (v) { return Math.max(0, Math.min(100, (v - w) / span * 100)).toFixed(1); };
-    var kv = function (l, v, c) { return '<div><span>' + l + '</span><b' + (c ? ' style="color:' + c + '"' : '') + '>' + v + '</b></div>'; };
-    return '<div class="gs-story"><h4>What happened inside this trade</h4>'
-      + '<div class="gs-rail"><i class="n" style="left:' + px(0) + '%"></i><i class="r" style="left:' + px(rr) + '%"></i><span class="lo" style="left:0;width:' + px(0) + '%"></span><span class="hi" style="left:' + px(0) + '%;right:0"></span></div>'
-      + '<div class="gs-rl"><span>worst ' + w.toFixed(2) + 'R</span><span>entry</span><span>best +' + m.toFixed(2) + 'R</span></div>'
-      + '<div class="gs-kv">' + kv('Best point', '+' + m.toFixed(2) + 'R &middot; ' + usd(t.mfe_usd) + (t.mfe_pips != null ? ' &middot; ' + Number(t.mfe_pips).toFixed(0) + ' pips' : ''), 'var(--mint)')
-      + kv('Worst point', w.toFixed(2) + 'R &middot; ' + usd(t.mae_usd) + (t.mae_pips != null ? ' &middot; ' + Number(t.mae_pips).toFixed(0) + ' pips' : ''), w < -0.05 ? 'var(--red)' : '')
-      + (t.peak_at ? kv('Best point came', dt(t.peak_at) + (t.opened_at ? ' (' + R().fmtMin(Math.max(0, (new Date(t.peak_at) - new Date(t.opened_at)) / 6e4)) + ' in)' : '')) : '')
-      + (sw ? kv('Stop when closed', sw) : '') + (t.risk_usd != null ? kv('Risked (1R)', usd(t.risk_usd)) : '') + '</div>'
-      + '<p class="gs-sent">' + storyLine(t) + '</p></div>';
+    if (!hasStory(t)) return '<div class="gs-story"><h4>What happened inside this trade</h4><p class="gs-fine">Not recorded. Only trades closed by EA 1.09 or newer carry this; older ones are filled in when the EA re-syncs its history.</p></div>';
+    var m = Math.max(0, Number(t.mfe_r)), w = Math.min(0, Number(t.mae_r)), rr = Number(t.result_r || 0), sw = stopWord(t), gave = m >= 0.5 ? Math.max(0, m - rr) : 0, span = Math.max(m - w, .01), sr = t.stop_r == null ? null : Number(t.stop_r);
+    var px = function (v) { return Math.max(0, Math.min(100, (v - w) / span * 100)).toFixed(1); };
+    var tile = function (l, r, d, c) { return '<div class="gs-tl"><small>' + l + '</small><b style="color:' + c + '">' + r + '</b><em>' + d + '</em></div>'; };
+    var more = (t.peak_at ? '<div><span>Best point came</span><b>' + dt(t.peak_at) + (t.opened_at ? ' (' + R().fmtMin(Math.max(0, (new Date(t.peak_at) - new Date(t.opened_at)) / 6e4)) + ' in)' : '') + '</b></div>' : '')
+      + (sw ? '<div><span>Stop when closed</span><b>' + sw + '</b></div>' : '') + (t.risk_usd != null ? '<div><span>Risked (1R)</span><b>' + usd(t.risk_usd) + '</b></div>' : '');
+    return '<div class="gs-story"><h4>What happened inside this trade</h4><p class="gs-head">' + storyLine(t) + '</p>'
+      + '<div class="gs-rail"><span class="lo" style="left:0;width:' + px(0) + '%"></span><span class="hi" style="left:' + px(0) + '%;right:0"></span>' + (sr != null && sr >= w && sr <= m ? '<u style="left:' + px(sr) + '%" title="Stop"></u>' : '') + '<i class="n" style="left:' + px(0) + '%"></i><i class="r" style="left:' + px(rr) + '%"></i></div>'
+      + '<div class="gs-rl"><span style="color:var(--red)">worst</span><span>entry</span><span style="color:var(--gold)">closed</span><span style="color:var(--mint)">best</span></div>'
+      + '<div class="gs-tls">' + tile('Best', '+' + m.toFixed(2) + 'R', usd(t.mfe_usd) + (t.mfe_pips != null ? ' &middot; ' + Number(t.mfe_pips).toFixed(0) + ' pips' : ''), 'var(--mint)')
+      + tile('Worst', w.toFixed(2) + 'R', usd(t.mae_usd) + (t.mae_pips != null ? ' &middot; ' + Number(t.mae_pips).toFixed(0) + ' pips' : ''), w < -0.05 ? 'var(--red)' : 'inherit')
+      + tile('Closed', (rr >= 0 ? '+' : '') + rr.toFixed(2) + 'R', usd(t.profit), col(t.profit)) + '</div>'
+      + '<div class="gs-chips">' + (gave > 0.3 ? '<span class="gs-chip bad">Gave back ' + gave.toFixed(2) + 'R from the peak</span>' : m >= 0.5 ? '<span class="gs-chip ok">Kept most of the peak</span>' : '') + (sw ? '<span class="gs-chip">Stop: ' + sw + '</span>' : '') + '</div>'
+      + (more ? '<details class="gs-more2"><summary>More details</summary><div class="gs-kv">' + more + '</div></details>' : '') + '</div>';
   }
   function injectCss() {
     if ($('#gs-story-css')) return; var st = document.createElement('style'); st.id = 'gs-story-css';
@@ -81,6 +81,10 @@
       + '.gs-rail{position:relative;height:10px;border-radius:5px;background:rgba(255,255,255,.07);margin:6px 0 2px}.gs-rail .lo,.gs-rail .hi{position:absolute;top:3px;height:4px;border-radius:2px}.gs-rail .lo{background:var(--red,#ff5d6c);opacity:.7}.gs-rail .hi{background:var(--mint,#3ddc97);opacity:.7}'
       + '.gs-rail i{position:absolute;top:-3px;width:2px;height:16px;margin-left:-1px;border-radius:1px}.gs-rail i.n{background:rgba(255,255,255,.55)}.gs-rail i.r{background:var(--gold,#f5c451);width:4px;margin-left:-2px;top:-4px;height:18px}'
       + '.gs-rl{display:flex;justify-content:space-between;font-size:11px;opacity:.7;margin-bottom:8px}.gs-story .gs-kv{margin:6px 0}'
+      + '.gs-head{margin:0 0 6px;font-size:14px;font-weight:600;line-height:1.4}.gs-rail u{position:absolute;top:-2px;height:14px;border-left:2px dashed rgba(255,255,255,.7)}'
+      + '.gs-tls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 8px}.gs-tl{background:rgba(255,255,255,.05);border-radius:10px;padding:8px 9px;min-width:0}.gs-tl small{display:block;font-size:11px;opacity:.7}.gs-tl b{display:block;font-size:16px;margin:1px 0}.gs-tl em{display:block;font-style:normal;font-size:11px;opacity:.75;overflow-wrap:anywhere}'
+      + '.gs-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.gs-chip{font-size:11.5px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.08)}.gs-chip.bad{background:rgba(255,93,108,.18);color:var(--red,#ff5d6c)}.gs-chip.ok{background:rgba(61,220,151,.16);color:var(--mint,#3ddc97)}'
+      + '.gs-more2 summary{cursor:pointer;font-size:12px;opacity:.8;padding:4px 0}'
       + '.gs-hint{font-size:12px;opacity:.75;margin:6px 0 0}';
     document.head.appendChild(st);
   }

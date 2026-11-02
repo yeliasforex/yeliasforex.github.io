@@ -159,12 +159,24 @@
     else a.push(o.expires_at ? 'It waits until ' + pTime(o.expires_at) + ' and is then cancelled if not filled.' : 'It waits until it is filled or cancelled.');
     return a.join(' ');
   }
+  function pHead(o) {
+    var cl = pAway(o, o.closest_price), cs = cl != null ? Math.max(0, cl).toFixed(2) : null, st = o.status;
+    if (st === 'filled') return 'Filled and became a trade' + (o.ended_at ? ' at ' + pTime(o.ended_at) : '') + '.';
+    if (st === 'expired') return 'Missed' + (cs != null ? ': the market came within ' + cs + ' of the order' : '') + (o.end_price != null ? ', then ended at ' + N(o.end_price).toFixed(2) : '') + '. It expired without a fill.';
+    if (st === 'cancelled') return 'Cancelled by the EA' + (cs != null ? '; the market came within ' + cs + ' of it' : '') + '.';
+    return 'Waiting' + (cs != null ? ': the market has come within ' + cs + ' of the order so far' : '') + (o.expires_at ? '. Expires ' + pTime(o.expires_at) + '.' : '.');
+  }
+  function pLadder(o) {      // the prices that matter, highest first, so you can see where the market was against the order
+    var pts = [['Market when placed', o.price_at_place, 'var(--muted)'], ['Order price', o.order_price, 'var(--gold)'], ['Closest the market came', o.closest_price, 'var(--mint)'], [o.status === 'pending' ? 'Market at last update' : 'Market when it ended', o.end_price, 'var(--blue-hi)'], ['Stop-loss if filled', o.sl, 'var(--red)']].filter(function (x) { return x[1] != null; });
+    if (!pts.length) return ''; pts.sort(function (a, b) { return N(b[1]) - N(a[1]); });
+    return '<div class="acg-lad">' + pts.map(function (x) { return '<div><i style="background:' + x[2] + '"></i><span>' + E(x[0]) + '</span><b>' + N(x[1]).toFixed(2) + '</b></div>'; }).join('') + '</div>';
+  }
   function pSheet(o) {
-    var s = PST[o.status] || [o.status, ''];
-    return explain(pName(o), (o.engine === 'D' ? 'Gamma' : (R().ENG[o.engine] || o.engine)) + ' pending order - ' + s[0], [
-      ['Status', s[0], s[1]], ['Market price when placed', o.price_at_place != null ? N(o.price_at_place).toFixed(2) : '-'], ['Order price', N(o.order_price).toFixed(2)], ['Stop-loss', o.sl != null ? N(o.sl).toFixed(2) : '-'], ['Lots', o.lots != null ? N(o.lots).toFixed(2) : '-'],
-      ['Placed', pTime(o.placed_at)], ['Expires', pTime(o.expires_at)], ['Closest the market came', o.closest_price != null ? N(o.closest_price).toFixed(2) + (o.closest_at ? ' at ' + pTime(o.closest_at) : '') : '-'],
-      ['Ended', o.ended_at ? pTime(o.ended_at) : '-'], ['Market price when it ended', o.end_price != null ? N(o.end_price).toFixed(2) : '-']], pStory(o), []);
+    var s = PST[o.status] || [o.status, ''], sp = explain(pName(o), (o.engine === 'D' ? 'Gamma' : (R().ENG[o.engine] || o.engine)) + ' pending order - ' + s[0], [
+      ['Status', s[0], s[1]], ['Lots', o.lots != null ? N(o.lots).toFixed(2) : '-'], ['Placed', pTime(o.placed_at)], ['Expires', pTime(o.expires_at)],
+      ['Closest approach at', o.closest_at ? pTime(o.closest_at) : '-'], ['Ended', o.ended_at ? pTime(o.ended_at) : '-']], '', []);
+    sp.html = '<p class="gs-head">' + E(pHead(o)) + '</p>' + pLadder(o) + sp.html + (o.end_reason ? '<p class="gs-fine">' + E(o.end_reason) + '</p>' : '');
+    return sp;
   }
   function pendingParts() {
     var P = arr(M().pending).slice().sort(function (a, b) { return new Date(b.placed_at) - new Date(a.placed_at); }); if (!P.length) return null;
@@ -221,7 +233,8 @@
     $('[data-acg-t]', box).onclick = function () { var bd = $('.acg-bd', box), h = !bd.hidden; bd.hidden = h; this.textContent = h ? 'Show' : 'Hide'; try { localStorage.setItem('gte_acg_' + key, h ? 'c' : 'o'); } catch (e) {} };
     $$('[data-af]', box).forEach(function (b) { b.onclick = function () { var i = facts[+b.dataset.af]; if (!i) return; if (typeof i.act === 'function') i.act(); else open(explain(i.title, 'Key fact', [], E(i.text || ''), [])); }; });
   }
-  var css = '.acg{margin:0 0 18px}.acg-hd{display:flex;align-items:center;gap:10px;margin:0 0 10px}.acg-hd h3{margin:0;font-size:1.02rem}.acg-tg{margin-left:auto;font:inherit;font-size:.78rem;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-2);border-radius:999px;padding:5px 12px;cursor:pointer}' +
+  var css = '.acg-lad{margin:6px 0 12px;display:flex;flex-direction:column;gap:6px}.acg-lad div{position:relative;display:flex;align-items:center;gap:8px;font-size:.84rem;padding:7px 10px 7px 24px;border-radius:9px;background:var(--panel-2)}.acg-lad i{position:absolute;left:8px;top:50%;width:9px;height:9px;margin-top:-4.5px;border-radius:50%}.acg-lad span{flex:1;min-width:0}.acg-lad b{font-variant-numeric:tabular-nums}.gs-head{margin:0 0 6px;font-size:14px;font-weight:600;line-height:1.4}' +
+    '.acg{margin:0 0 18px}.acg-hd{display:flex;align-items:center;gap:10px;margin:0 0 10px}.acg-hd h3{margin:0;font-size:1.02rem}.acg-tg{margin-left:auto;font:inherit;font-size:.78rem;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-2);border-radius:999px;padding:5px 12px;cursor:pointer}' +
     '.acg-i{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:10px;margin-bottom:14px}.acg-i button{display:flex;gap:11px;align-items:flex-start;text-align:left;font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--tone,var(--blue-hi));border-radius:14px;padding:11px 13px;cursor:pointer;transition:transform .15s,border-color .2s}.acg-i button:hover{transform:translateY(-2px);border-color:var(--tone,var(--blue-hi))}' +
     '.acg-i i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:.8rem;color:#fff;background:var(--tone,var(--blue-hi))}.acg-i strong{display:block;font-size:.88rem;line-height:1.3}.acg-i small{display:block;color:var(--muted);font-size:.76rem;margin-top:2px;line-height:1.4}' +
     '.acg-i .t-bad{--tone:var(--red)}.acg-i .t-warn{--tone:var(--gold)}.acg-i .t-ok{--tone:var(--mint)}.acg-i .t-info{--tone:var(--blue-hi)}.acg-i .t-mute{--tone:var(--faint)}' +
