@@ -69,7 +69,7 @@
     return {k: 'explain', title: title, sub: sub, html: (text ? '<p class="gs-lead">' + text + '</p>' : '') + '<div class="gs-kv">' + rows.map(function (r) { return '<div><span>' + E(r[0]) + '</span><b' + (r[2] ? ' style="color:' + r[2] + '"' : '') + '>' + E(r[1]) + '</b></div>'; }).join('') + '</div>'};
   }
   var UP = 'var(--mint)', DN = 'var(--red)', cl = function (v) { return Number(v) >= 0 ? UP : DN; };
-  function tl(list) { return list.map(function (h) { return {engine: {Alpha: 'M', Beta: 'I', Gamma: 'D'}[h.engine] || 'M', dir: h.side === 'sell' ? -1 : 1, is_add: false, opened_at: h.open_time, closed_at: h.close_time, open_price: h.open_price, close_price: h.close_price, lots: h.lots, profit: h.profit}; }); }
+  function tl(list) { return list.map(function (h) { return {engine: {Alpha: 'M', Beta: 'I', Gamma: 'D'}[h.engine] || 'M', dir: h.side === 'sell' ? -1 : 1, is_add: false, opened_at: h.open_time, closed_at: h.close_time, open_price: h.open_price, close_price: h.close_price, lots: h.lots, profit: h.profit, exit_reason: h.exit_reason, result_r: h.result_r, mfe_r: h.mfe_r, mae_r: h.mae_r, mfe_usd: h.mfe_usd, mae_usd: h.mae_usd, mfe_pips: h.mfe_pips, mae_pips: h.mae_pips, peak_at: h.peak_at, stop_r: h.stop_r, risk_usd: h.risk_usd}; }); }
   function tileSheet(t) {
     if (!FEED) return; var D = FEED.D, S = D.summary || {}, A = D.account || {};
     window.GTE_MA = window.GTE_MA || {}; window.GTE_MA.trades = tl(D.history || []); window.GTE_MA.rng = window.GTE_MA.rng || function (a) { return a; };

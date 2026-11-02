@@ -90,7 +90,7 @@
   function listSheet(title, sub, list) { return {k: 'trades', title: title, sub: sub, list: list, group: true}; }
   function build(D) {
     var sec = $('#account'); if (!sec || !D || !D.history || !D.history.length || built) return;
-    var T = D.history.map(function (h) { return {engine: ENGN[h.engine] || 'M', dir: h.side === 'sell' ? -1 : 1, is_add: false, opened_at: h.open_time, closed_at: h.close_time, open_price: h.open_price, close_price: h.close_price, lots: h.lots, profit: h.profit}; });
+    var T = D.history.map(function (h) { return {engine: ENGN[h.engine] || 'M', dir: h.side === 'sell' ? -1 : 1, is_add: false, opened_at: h.open_time, closed_at: h.close_time, open_price: h.open_price, close_price: h.close_price, lots: h.lots, profit: h.profit, exit_reason: h.exit_reason, result_r: h.result_r, mfe_r: h.mfe_r, mae_r: h.mae_r, mfe_usd: h.mfe_usd, mae_usd: h.mae_usd, mfe_pips: h.mfe_pips, mae_pips: h.mae_pips, peak_at: h.peak_at, stop_r: h.stop_r, risk_usd: h.risk_usd}; });
     T.sort(function (a, b) { return new Date(a.closed_at) - new Date(b.closed_at); });
     window.GTE_MA = window.GTE_MA || {}; window.GTE_MA.trades = T; window.GTE_MA.rng = function (a) { return a; };
     var S = D.summary || {}, A = D.account || {}, wins = T.filter(function (t) { return t.profit > 0; }), loss = T.filter(function (t) { return t.profit < 0; });
