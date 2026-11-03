@@ -22,12 +22,18 @@
       + '<div class="wow-nodes">' + NODES.map(function (n, i) { return '<div class="wow-node" data-i="' + i + '"><div class="wow-orb2"><i></i><span>' + n.svg + '</span></div>' + (i < 3 ? '<div class="wow-wire"><i></i><i></i><i></i></div>' : '') + '</div>'; }).join('') + '</div>';
     var svg = $('.pipe-svg', pipe); if (svg) svg.style.display = 'none'; pipe.insertBefore(wp, $('.pipe-steps', pipe));
     var steps = $$('.step', pipe), nodes = $$('.wow-node', wp), cur = -1, frame = $('.wow-rb-frame', wp), loaded = false;
-    function setOn(i) { nodes.forEach(function (n, k) { n.classList.toggle('on', k === i); n.classList.toggle('done', k < i); }); steps.forEach(function (s, k) { s.classList.toggle('pipe-on', k === i); }); wp.classList.toggle('talk', i === 2); if (i === 2) post({pose: 'wave'}); }
+    var prev = 0, walkT = 0;
+    function setOn(i) { nodes.forEach(function (n, k) { n.classList.toggle('on', k === i); n.classList.toggle('done', k < i); }); steps.forEach(function (s, k) { s.classList.toggle('pipe-on', k === i); }); wp.classList.toggle('talk', i === 2); var im = $('img.rb', frame); if (im) im.src = POSES[i] || POSES[2]; wp.style.setProperty('--rx', (12.5 + 25 * i) + '%');           // the host walks to the circle of the active step and stands on it
+      if (i !== prev) { post({pose: i > prev ? 'side' : 'side2'}); clearTimeout(walkT); walkT = setTimeout(function () { post({pose: 'wave'}); }, 950); } prev = i; }
     function post(m) { try { var f = $('iframe', frame); f && f.contentWindow && f.contentWindow.postMessage(m, '*'); } catch (e) {} }
+    function scheme() { var t = document.documentElement.getAttribute('data-theme'); return t === 'dark' || t === 'light' ? t : (window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'); }
+    function syncScheme() { post({scheme: scheme()}); }
+    new MutationObserver(syncScheme).observe(document.documentElement, {attributes: true, attributeFilter: ['data-theme']});
+    var POSES = ['host-point.webp', 'host-think.webp', 'host-wave.webp', 'host-thumbs.webp'];
     function loadRobot() {
       if (loaded) return; loaded = true;
-      if (still || innerWidth < 620) { frame.innerHTML = '<img src="icon-192.png" alt="Host robot">'; return; }
-      var f = document.createElement('iframe'); f.title = 'Host robot'; f.setAttribute('loading', 'lazy'); f.setAttribute('tabindex', '-1'); f.allowTransparency = true; f.src = 'robot3d.html?scene=happy&full=1&v=20261102fly3'; frame.appendChild(f);
+      if (still) { frame.innerHTML = '<img class="rb" src="host-wave.webp" alt="Host robot">'; return; }
+      var f = document.createElement('iframe'); f.title = 'Host robot'; f.setAttribute('loading', 'lazy'); f.setAttribute('tabindex', '-1'); f.allowTransparency = true; f.src = 'robot3d.html?scene=happy&full=1&cs=' + scheme() + '&v=20261103cs1'; frame.appendChild(f); frame.addEventListener('click', function () { post({pose: 'wave', talk: 1800}); });
     }
     var timer = 0; function run() { clearInterval(timer); cur = -1; timer = setInterval(function () { cur = (cur + 1) % 4; setOn(cur); }, 2100); setOn(0); cur = 0; }
     if ('IntersectionObserver' in window) {

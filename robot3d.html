@@ -18,6 +18,7 @@ html,body{margin:0;background:transparent;overflow:hidden}
 </style><link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<script>/* gteScheme */(function(){var m=/[?&]cs=(dark|light)/.exec(location.search);if(m)document.documentElement.style.colorScheme=m[1];})();</script>
 </head><body><div id="r"><canvas id="gl"></canvas></div><canvas id="fx"></canvas><script>
 "use strict";
 const TEST = new URLSearchParams(location.search), SNAP = TEST.has("snap");
@@ -1054,6 +1055,7 @@ next();   /* embedded on the website: there is no stream bot to poll */
 </script><script>
 /* website: the page can steer the host (pose, mood, where the head looks) */
 addEventListener('message',function(e){var d=e.data||{};
+  if(d.scheme){document.documentElement.style.colorScheme=d.scheme;}
   if(d.pose){poseName=d.pose;lastPose='';lastGest=0;walkDir=d.pose==='side2'?-1:1;}
   if(d.scene){scene=d.scene;}
   if(d.look){window.__look=d.look;window.__lookUntil=performance.now()+3500;}
