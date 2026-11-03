@@ -301,3 +301,42 @@ div.progress{display:none!important}
 /* back to top: just the arrows, in the site colour (they were gold) */
 .totop{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--ac)!important;filter:drop-shadow(0 2px 6px color-mix(in srgb,var(--ac) 45%,transparent))!important}
 .totop:hover{color:var(--vio)!important}
+
+
+/* ---- floating buttons: no box, no border. Contact us = a plane that hovers and flies off on hover; Ask us = a chat bubble, waving dots, and the questions people ask ---- */
+html body .fab{background:none!important;box-shadow:none!important;border:0!important;height:auto;padding:6px 4px 4px;gap:8px;color:var(--ac)!important;text-shadow:0 0 8px var(--ink,#fff),0 0 3px var(--ink,#fff);transition:transform .5s var(--ease,ease),opacity .4s}
+html body .fab:hover{background:none!important;color:var(--vio)!important}
+html body .fab span{padding-bottom:3px;border-bottom:1.5px dashed color-mix(in srgb,var(--ac) 55%,transparent)}
+html body .fab svg{width:22px;height:22px;filter:drop-shadow(0 0 5px var(--ink,#fff));animation:fabHover 2.4s ease-in-out infinite}
+@keyframes fabHover{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-4px) rotate(2deg)}}
+html body .fab:hover svg{animation:fabGo .7s ease-in forwards}
+@keyframes fabGo{to{transform:translate(40px,-24px) rotate(-18deg);opacity:0}}
+
+html body .gc-fab{background:none!important;border:0!important;box-shadow:none!important;color:var(--fg)!important;height:auto;padding:6px 4px;gap:8px;text-shadow:0 0 8px var(--ink,#fff),0 0 3px var(--ink,#fff);font-weight:600}
+html body .gc-fab:hover{transform:translateY(-2px)}
+.gk-b{width:22px;height:22px;flex:none;color:var(--mint,#10B981);filter:drop-shadow(0 0 5px var(--ink,#fff));transform-origin:30% 90%;animation:gkPop 5.6s ease-in-out infinite}
+@keyframes gkPop{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.25) rotate(-6deg)}86%{transform:scale(.95)}92%{transform:scale(1.08)}}
+.gk-w{position:relative;display:block;width:104px;height:20px;overflow:hidden;font-size:.92rem;line-height:20px}
+.gk-w>*{position:absolute;left:0;top:0;opacity:0;white-space:nowrap;font-style:normal;animation:gkSlot 11.2s infinite;animation-delay:calc(var(--i)*1.4s)}
+@keyframes gkSlot{0%{opacity:0;transform:translateY(9px)}2.5%{opacity:1;transform:none}10%{opacity:1;transform:none}12.5%{opacity:0;transform:translateY(-9px)}100%{opacity:0}}
+.gk-d{display:inline-flex;gap:4px;align-items:center;height:20px}
+.gk-d u{width:6px;height:6px;border-radius:50%;background:var(--mint,#10B981);animation:gkWave .9s ease-in-out infinite}
+.gk-d u:nth-child(2){animation-delay:.12s}.gk-d u:nth-child(3){animation-delay:.24s}
+@keyframes gkWave{0%,60%,100%{transform:translateY(0);opacity:.55}30%{transform:translateY(-5px);opacity:1}}
+@media (max-width:600px){html body .gc-fab{padding:0}.gk-w{display:none}.gk-b{width:28px;height:28px}html body .gc-fab::after{display:none!important}html body .fab{padding:0}}
+@media (prefers-reduced-motion:reduce){.gk-w>*{animation:none}.gk-w>*:first-child{opacity:1}.gk-w>*:not(:first-child){display:none}.gk-b,html body .fab svg{animation:none!important}}
+
+/* both floating buttons share one column: same right edge, icons on one line, labels start together */
+html body .fab,html body .gc-fab{right:20px!important;width:146px;box-sizing:border-box;justify-content:flex-start!important;padding:6px 4px!important}
+html body .gc-fab{bottom:calc(max(var(--gcb,18px) - 24px,18px) + var(--lift,0px))!important}
+html body .fab span,html body .gk-w{margin-left:0}
+@media (max-width:600px){html body .fab,html body .gc-fab{right:14px!important;width:auto;padding:0!important}html body .gc-fab{bottom:calc(var(--gcb,14px) + var(--lift,0px))!important}}
+
+/* phones: the two buttons become one small row in the corner, and step aside while the page is scrolling */
+@media (max-width:600px){
+  html body .fab,html body .gc-fab{bottom:calc(16px + env(safe-area-inset-bottom) + var(--lift,0px))!important;transition:opacity .3s,transform .3s}
+  html body .fab{right:14px!important}
+  html body .gc-fab{right:56px!important}
+  html body .fab svg,.gk-b{width:24px;height:24px}
+  html.is-scrolling body .fab,html.is-scrolling body .gc-fab{opacity:0!important;pointer-events:none;transform:translateY(10px)}
+}

@@ -71,6 +71,22 @@
   nav.addEventListener('pointerdown', function (e) { var a = e.target.closest('a, .wow-dd > button'); if (a && nav.contains(a)) { burst(a, e); a.classList.remove('pressed'); void a.offsetWidth; a.classList.add('pressed'); setTimeout(function () { a.classList.remove('pressed'); }, 600); } });
   if (burger) burger.addEventListener('click', function () { setTimeout(function () { $$('nav > a, .wow-dd-m a', nav).forEach(function (a, i) { a.style.setProperty('--i', i); }); }, 0); });
 
+
+  /* ---- the Ask us button: a chat bubble, waving dots, then the questions people ask ---- */
+  (function () {
+    var Q = ['Ask us', null, 'Pricing?', null, 'Setup help?', null, 'Which broker?', null];
+    function dress(f) {
+      if (!f || f.querySelector('.gk-b')) return; var w = '';
+      Q.forEach(function (t, i) { w += t ? '<em style="--i:' + i + '">' + t + '</em>' : '<b class="gk-d" style="--i:' + i + '"><u></u><u></u><u></u></b>'; });
+      f.innerHTML = '<svg class="gk-b" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="gk-w" aria-hidden="true">' + w + '</span>';
+    }
+    var f = document.querySelector('.gc-fab'); if (f) { dress(f); return; }
+    var mo = new MutationObserver(function () { var g = document.querySelector('.gc-fab'); if (g) { dress(g); mo.disconnect(); } }); mo.observe(document.body, {childList: true});
+    setTimeout(function () { mo.disconnect(); }, 15000);
+  })();
+
+  /* phones: the floating buttons step aside while the page scrolls and return when it stops */
+  (function () { var t = null, root = document.documentElement; addEventListener('scroll', function () { if (!matchMedia('(max-width:600px)').matches) return; root.classList.add('is-scrolling'); clearTimeout(t); t = setTimeout(function () { root.classList.remove('is-scrolling'); }, 700); }, {passive: true}); })();
   /* ---- 2. a jump to a section: the scan line, then the section arrives ---- */
   var scan = document.createElement('div'); scan.className = 'wow-scan'; document.body.appendChild(scan);
   function arrive(el) { el.classList.remove('wow-arrive'); void el.offsetWidth; el.classList.add('wow-arrive'); setTimeout(function () { el.classList.remove('wow-arrive'); }, 1400); }
