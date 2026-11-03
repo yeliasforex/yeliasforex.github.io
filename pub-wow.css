@@ -286,3 +286,11 @@ body.wow-kopen{overflow:hidden}
 
 /* phone drawer: solid enough that the page text never shows through */
 @media (max-width:1000px){header.top .nav{background:var(--panel,#fff)!important;-webkit-backdrop-filter:blur(26px) saturate(1.6);backdrop-filter:blur(26px) saturate(1.6)}}
+
+/* laptop widths: the one-line menu is tightened so every item, and the Watch live button, fit */
+@media (min-width:1001px) and (max-width:1400px){
+  header.top .nav a:not(.pill),header.top .nav .wow-dd>button{padding:8px 8px!important;font-size:.855rem}
+  header.top .nav .pill{padding-left:12px!important;padding-right:12px!important;font-size:.8rem}
+  header.top .nav{gap:0!important}
+}
+@media (min-width:1001px) and (max-width:1180px){header.top .nav a[href$="contact.html"]{display:none!important}}
