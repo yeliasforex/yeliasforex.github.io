@@ -42,9 +42,9 @@
     var grid = '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + base + '" y2="' + base + '" class="acg-g0" style="stroke-dasharray:none"/>';
     return '<svg class="acg-b" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + E(o.title || 'Chart') + '">' + grid + items.map(function (it, i) {
       var v = N(it.value), x = pl + step * i + (step - bw) / 2, h = Math.max(v !== 0 ? 2 : 0, half * Math.abs(v) / mx), y = v >= 0 ? base - h : base;
-      return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + (it.color || (v < 0 ? 'var(--red)' : (o.color || 'var(--mint)'))) + '" rx="2"/>' +
+      return '<g class="acg-bg"><rect class="acg-bar" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + (it.color || (v < 0 ? 'var(--red)' : (o.color || 'var(--mint)'))) + '" rx="2"/>' +
         '<rect class="acg-s" data-g="' + id + '" data-i="' + i + '" x="' + (pl + step * i).toFixed(1) + '" y="' + pt + '" width="' + step.toFixed(1) + '" height="' + (H - pt - pb) + '" fill="transparent"><title>' + E(it.label) + ': ' + E(f(v)) + '</title></rect>' +
-        (i % every === 0 || i === n - 1 ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" class="acg-t3">' + E(it.short || it.label) + '</text>' : '');
+        (i % every === 0 || i === n - 1 ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" class="acg-t3">' + E(it.short || it.label) + '</text>' : '') + '</g>';
     }).join('') + '</svg>';
   }
   function line(items, o) {
@@ -200,7 +200,7 @@
     var best = last.slice().sort(function (a, b) { return b.profit - a.profit; })[0]; if (best && best.profit > 0) f.push(fact('ok', 'Best trade ' + sgn(best.profit), 'Closed ' + new Date(best.closed_at).toLocaleDateString([], {day: 'numeric', month: 'short', year: 'numeric'}) + '.', function () { window.gteSheet.trade(best); }));
     var recent = last.slice(0, 40).reverse().map(function (t) { return {label: new Date(t.closed_at).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'}), short: new Date(t.closed_at).toLocaleDateString([], {day: 'numeric', month: 'short'}), value: N(t.profit), sheet: function () { return {k: 'trade', t: t, day: true, title: 'Trade details', sub: new Date(t.closed_at).toLocaleString()}; }}; });
     if (pp) f = pp.facts.concat(f);
-    return {title: 'What matters here', facts: f, cards: [card('Your last ' + recent.length + ' trades', 'Each bar is one trade: green won, red lost. Tap a bar for its details.', bars(recent, {title: 'Last trades', labels: 6}), 'needs trades', true)].concat(pp ? pp.cards : [])};
+    return {title: 'What matters here', facts: f, cards: [card('Your last ' + recent.length + ' trades', 'Each bar is one trade: green won, red lost. Tap a bar for its details.', bars(recent, {title: 'Last trades', labels: 6, fmt: function (v) { return sgn(v); }}), 'needs trades', true)].concat(pp ? pp.cards : [])};
   };
 
   B.billing = function () {

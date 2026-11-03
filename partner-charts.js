@@ -47,10 +47,10 @@
     var grid = [0, .5, 1].map(function (g) { var y = pt + (H - pt - pb) * (1 - g); return '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + y + '" y2="' + y + '" class="pdg-g0"/>'; }).join('');
     return '<svg class="pdg-b" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + E(o.title || 'Chart') + '">' + grid + items.map(function (it, i) {
       var x = pl + step * i + (step - bw) / 2, h = Math.max(N(it.value) > 0 ? 2 : 0, (H - pt - pb) * N(it.value) / mx), y = H - pb - h;
-      return '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + (it.color || o.color || pal(0)) + '" rx="2"/>' +
+      return '<g class="acg-bg"><rect class="acg-bar" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + (it.color || o.color || pal(0)) + '" rx="2"/>' +
         '<rect class="pdg-s" data-g="' + id + '" data-i="' + i + '" x="' + (pl + step * i).toFixed(1) + '" y="' + pt + '" width="' + step.toFixed(1) + '" height="' + (H - pt - pb) + '" fill="transparent"><title>' + E(it.label) + ': ' + E(f(it.value)) + '</title></rect>' +
         (i % every === 0 || i === n - 1 ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" class="pdg-t3">' + E(it.short || it.label) + '</text>' : '') +
-        (n <= 10 && N(it.value) > 0 ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="middle" class="pdg-t4">' + E(f(it.value)) + '</text>' : '');
+        (n <= 10 && N(it.value) > 0 ? '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (y - 3).toFixed(1) + '" text-anchor="middle" class="pdg-t4">' + E(f(it.value)) + '</text>' : '') + '</g>';
     }).join('') + '</svg>';
   }
   function line(items, o) {

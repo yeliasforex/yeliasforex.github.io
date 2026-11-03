@@ -211,7 +211,10 @@
       var p=pts[best]; xh.setAttribute('x1',p[0]);xh.setAttribute('x2',p[0]);xd.setAttribute('cx',p[0]);xd.setAttribute('cy',p[1]);
       var dt=p[2].split('.'), lab=M[+dt[1]-1]+' '+dt[0];
       tip.innerHTML='<b>'+lab+'</b>'+(p[3]<0.05?'At a new high':(p[3].toFixed(1)+'% below peak'));
-      var px=p[0]/vb.width*r.width; tip.style.left=Math.max(70,Math.min(r.width-70,px))+'px';
+      var px=p[0]/vb.width*r.width, py=p[1]/vb.height*r.height, sv=wrap.querySelector('.eq-stem'); if(!sv){sv=document.createElement('i');sv.className='eq-stem';wrap.appendChild(sv);}
+      var cx=Math.max(70,Math.min(r.width-70,px)), th=tip.offsetHeight, gap=34, top=py-th-gap, below=top<2; if(below)top=py+gap;
+      tip.style.left=cx+'px'; tip.style.top=top+'px'; tip.style.setProperty('--ax',(px-cx)+'px'); tip.classList.toggle('below',below);
+      var y0=below?py:top+th, y1=below?top:py; sv.style.left=px-1+'px'; sv.style.top=Math.min(y0,y1)+'px'; sv.style.height=Math.abs(y1-y0)+'px';
       wrap.classList.add('hover');
     }
     wrap.addEventListener('pointermove',function(e){at(e.clientX);});
@@ -254,7 +257,7 @@ window.gteMonthsInit = function () {
     if (!matchMedia('(hover:hover)').matches) return;               // phones: the line under the grid is enough
     var r = c.getBoundingClientRect(), h = host.getBoundingClientRect();
     tip.textContent = c.dataset.m.slice(0, 3) + ' ' + c.dataset.m.slice(-4) + '  ' + d.a + '  ' + d.pc;
-    tip.style.left = (r.left - h.left + r.width / 2) + 'px'; tip.style.top = (r.top - h.top - 30) + 'px'; tip.classList.add('on');
+    tip.style.left = (r.left - h.left + r.width / 2) + 'px'; tip.classList.add('on'); tip.style.top = (r.top - h.top - tip.offsetHeight - 34) + 'px';
   }
   cells.forEach(function (c) {
     c.addEventListener('mouseenter', function () { if (matchMedia('(hover:hover)').matches) show(c, false); });

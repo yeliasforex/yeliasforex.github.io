@@ -1,0 +1,119 @@
+/* Cool-tone override for the public pages: every light yellow / gold tint, glow and chip of the original styles becomes the site blue.
+   Generated from the original rules (only the declarations that carried the colour), so layout is untouched. Amber is kept for warnings (--warn). */
+:root{--ac:var(--blue-hi);--warn:#E08A00}
+/* style.css */
+:root{--gold:#5B86FF}
+em.s{color:var(--ac)}
+.track li::after{background:var(--ac)}
+.chip{color:var(--ac);border:1px solid rgba(91,134,255,.35);background:rgba(91,134,255,.07)}
+.tl .when{color:var(--ac)}
+.pill2.w{background:var(--ac)}
+.contact-r .safe{border:1px solid rgba(91,134,255,.3);background:rgba(91,134,255,.06)}
+.contact-r .safe b{color:var(--ac)}
+/* app.css */
+.plan.pop{border-color:rgba(91,134,255,.55);box-shadow:0 30px 80px -40px rgba(91,134,255,.45)}
+.plan .flag{background:var(--ac)}
+.pill.warn{color:var(--ac);border-color:rgba(91,134,255,.5)}
+.meter.warn i{background:var(--ac)}
+.prob .it.warning{border-left-color:var(--ac)}
+.paybox{border:1px solid rgba(91,134,255,.5);background:rgba(91,134,255,.06)}
+.plan-chip{background:linear-gradient(135deg,var(--ac),#f5d27a)}
+/* wow.css */
+.wow-aurora i:nth-child(3){background:radial-gradient(circle,rgba(91,134,255,.22),transparent 65%)}
+.wow-finder{background:radial-gradient(600px 220px at 100% 0,rgba(91,134,255,.10),transparent 60%),linear-gradient(180deg,var(--panel),var(--ink-2))}
+.wow-day b{color:var(--ac)}
+.yrs{background:linear-gradient(135deg,rgba(91,134,255,.14),rgba(62,224,154,.08));border:1px solid rgba(91,134,255,.35)}
+.yrc i{background:linear-gradient(90deg,#5B86FF,#3EE09A)}
+.fb-bar i{background:linear-gradient(90deg,var(--ac),var(--mint))}
+.fb-st.now{border-color:var(--ac)}
+.fb-st.now b{background:var(--ac)}
+.fb-broker:hover{border-color:var(--ac);box-shadow:0 14px 40px -18px rgba(91,134,255,.6)}
+.fh-band{border:1px solid rgba(91,134,255,.4);background:linear-gradient(135deg,rgba(91,134,255,.12),rgba(62,224,154,.07))}
+.fh-steps li:hover{border-color:var(--ac)}
+.fh-steps b{background:var(--ac)}
+.fz{border:1px solid rgba(91,134,255,.5);background:radial-gradient(120% 140% at 0% 0%,rgba(91,134,255,.16),transparent 60%),radial-gradient(110% 120% at 100% 100%,rgba(62,224,154,.14),transparent 60%),var(--panel);box-shadow:0 40px 90px -50px rgba(91,134,255,.5)}
+.fz-orb.o1{background:#5B86FF}
+.fz-steps::before{background:linear-gradient(var(--ac),var(--mint))}
+.fz-steps b{background:linear-gradient(135deg,var(--ac),#9DB8FF)}
+.fz-line{filter:drop-shadow(0 0 6px rgba(91,134,255,.7))}
+.fz-dot{filter:drop-shadow(0 0 8px #5B86FF)}
+.fz-feat:hover{border-color:var(--ac);box-shadow:0 22px 50px -26px rgba(91,134,255,.7)}
+.fz-feat svg{color:var(--ac)}
+.fact::before{background:linear-gradient(90deg,var(--ac),var(--mint),var(--blue-hi))}
+.fact:hover{border-color:var(--ac);box-shadow:0 26px 60px -30px rgba(91,134,255,.7)}
+.fact b{background:linear-gradient(120deg,var(--fg),var(--ac));-webkit-background-clip:text;background-clip:text;color:transparent}
+.grid3 .card::before{background:linear-gradient(90deg,var(--ac),var(--mint))}
+.grid3 .card:hover{border-color:var(--ac);box-shadow:0 28px 60px -30px rgba(91,134,255,.6)}
+.bk{background:linear-gradient(135deg,rgba(91,134,255,.1),transparent 60%),var(--panel)}
+.bk-mark{background:linear-gradient(135deg,#5B86FF,#f6e3a8);box-shadow:0 0 0 0 rgba(91,134,255,.6)}
+ol.steps li::before{background:linear-gradient(135deg,var(--ac),#9DB8FF)}
+ol.steps li::after{background:linear-gradient(var(--ac),transparent)}
+.fz-strip{border:1px solid rgba(91,134,255,.5);background:linear-gradient(110deg,rgba(91,134,255,.14),rgba(62,224,154,.1))}
+.fz-strip:hover{box-shadow:0 18px 40px -22px rgba(91,134,255,.8)}
+#faq details:hover{border-color:var(--ac)}
+.plan:hover{box-shadow:0 34px 70px -34px rgba(91,134,255,.7);border-color:var(--ac)}
+.plan.pop{border-color:var(--ac);box-shadow:0 0 0 1px rgba(91,134,255,.5),0 30px 80px -40px rgba(91,134,255,.8)}
+.plan.pop::before{background:linear-gradient(120deg,var(--ac),var(--mint),var(--ac))}
+.plan .price{background:linear-gradient(120deg,var(--fg),var(--ac));-webkit-background-clip:text;background-clip:text;color:transparent}
+.pg h1::after{background:linear-gradient(90deg,var(--ac),var(--mint))}
+.page-head::before{background:#5B86FF}
+.page-head h1::after{background:linear-gradient(90deg,var(--ac),var(--mint))}
+.check:hover{border-color:var(--ac);box-shadow:0 26px 60px -32px rgba(91,134,255,.7)}
+.check::before{background:linear-gradient(135deg,var(--ac),#9DB8FF)}
+.faq details:hover{border-color:var(--ac)}
+#form.f{box-shadow:0 34px 80px -44px rgba(91,134,255,.55)}
+#form.f::before{background:linear-gradient(90deg,var(--ac),var(--mint),var(--blue-hi))}
+.nav a.acct-pill{background:linear-gradient(135deg,var(--ac),#9DB8FF);box-shadow:0 8px 24px -10px rgba(91,134,255,.9)}
+.nav a.acct-pill:hover{box-shadow:0 14px 30px -10px rgba(91,134,255,1)}
+.acct-pill .ap-av{color:#9DB8FF}
+.ma-av2{background:linear-gradient(135deg,var(--ac),#9DB8FF)}
+.ma-note i{background:var(--ac)}
+.ma-hero{border:1px solid rgba(91,134,255,.45);background:radial-gradient(120% 140% at 0% 0%,rgba(91,134,255,.16),transparent 60%),radial-gradient(110% 120% at 100% 100%,rgba(62,224,154,.12),transparent 60%),var(--panel)}
+.ma-av{background:linear-gradient(135deg,var(--ac),#9DB8FF);box-shadow:0 0 0 0 rgba(91,134,255,.6)}
+.ma-quick a:hover{border-color:var(--ac)}
+.ma-quick svg{color:var(--ac)}
+.yr .meter i{background:linear-gradient(90deg,#5B86FF,#3EE09A)}
+.yr .meter.warn i{background:var(--ac)}
+.ap-hero{background:linear-gradient(135deg,rgba(62,224,154,.10),rgba(91,134,255,.08))}
+#acct .lv-warn{--lv:#5B86FF}
+#acct .lv-new{--lv:#5B86FF}
+#acct .lv-late .lv-ago{color:#5B86FF}
+.ma-bar{background:linear-gradient(100deg,color-mix(in srgb,var(--ac) 11%,var(--panel)),var(--panel) 58%)}
+.ma-bar .ma-quick svg{color:var(--ac)}
+.ma-ed:hover,.ma-ed:focus-visible{color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent);border-color:color-mix(in srgb,var(--ac) 35%,transparent)}
+.ma-ed.add{color:var(--ac);border-color:color-mix(in srgb,var(--ac) 35%,transparent);background:color-mix(in srgb,var(--ac) 9%,transparent)}
+.ma-form input{border:1.5px solid color-mix(in srgb,var(--ac) 55%,transparent)}
+.ma-form input:focus{border-color:var(--ac);box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 20%,transparent)}
+.ma-bell.has{color:var(--ac);border-color:color-mix(in srgb,var(--ac) 45%,transparent)}
+.np-mk{color:var(--ac)}
+.np-mk:hover{background:color-mix(in srgb,var(--ac) 12%,transparent)}
+.ni.new{background:color-mix(in srgb,var(--ac) 8%,transparent)}
+.k-update{--c:#5B86FF}
+.k-order{--c:#5B86FF}
+.k-warn{--c:#5B86FF}
+.np-f{color:var(--ac)}
+html[data-theme="dark"] #acct .lv-up{color:#5B86FF}
+.app-tabs a.on{color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent)}
+#gte-welcome a{color:var(--ac)}
+.st-s h3 svg{color:var(--ac)}
+.st-av{background:linear-gradient(135deg,var(--ac),#9DB8FF)}
+.st-nm input:focus{border-color:var(--ac);box-shadow:0 0 0 4px color-mix(in srgb,var(--ac) 18%,transparent)}
+.st-d summary{color:var(--ac)}
+.pw-tot::after{background:linear-gradient(90deg,transparent,var(--ac),var(--mint),transparent)}
+.pw-leg i.a{background:var(--ac)}
+.pw-lavg{stroke:var(--ac);filter:drop-shadow(0 0 6px rgba(91,134,255,.55))}
+.pw-end.gold circle:last-of-type{fill:var(--ac)}
+.pw-end.gold .pw-ring2{fill:var(--ac)}
+.pw-rk.u i{background:linear-gradient(90deg,var(--mint),var(--ac))}
+.pw-card::before{background:linear-gradient(90deg,var(--ac),var(--c))}
+.pw-av{background:linear-gradient(135deg,var(--ac),#f3d792) center/cover;box-shadow:0 0 0 2px var(--panel),0 0 0 3.5px var(--ac)}
+.pw-pk{fill:var(--ac)}
+.pw-gg i{background:linear-gradient(90deg,var(--ac),var(--red))}
+.pw-gg.b i{background:linear-gradient(90deg,var(--ac),var(--mint))}
+.pw-card blockquote{border-left:2px solid var(--ac)}
+.pw-eg path{stroke:var(--ac)}
+.pw-plan{color:var(--ac);border:1px solid var(--ac);background:color-mix(in srgb,var(--ac) 10%,transparent)}
+.al-g{color:var(--ac)}
+/* theme.css */
+:root[data-theme="light"]{--gold:#2A55D9}
+:root[data-theme="light"] .phone{--gold:#5B86FF}

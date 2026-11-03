@@ -119,7 +119,7 @@
 </script>
 <link rel="stylesheet" href="wow.css?v=20261101m2">
 <link rel="stylesheet" href="theme.css?v=20261021app5">
-<link rel="stylesheet" href="chart3d.css?v=20261028gx2">
+<link rel="stylesheet" href="chart3d.css?v=20261028gx2"><link rel="stylesheet" href="pub-sheet.css?v=2"><link rel="stylesheet" href="pub-fx.css?v=10"><link rel="stylesheet" href="pub-dash.css?v=17"><link rel="stylesheet" href="pub-ds.css?v=12"><link rel="stylesheet" href="pub-tone.css?v=2"><link rel="stylesheet" href="pub-3d.css?v=3"><link rel="stylesheet" href="pub-premium.css?v=6"><link rel="stylesheet" href="pub-wow.css?v=18">
 <!-- gx-detect --><script>(function(){try{var c=document.createElement("canvas"),g=c.getContext("webgl2")||c.getContext("webgl"),n=navigator,cn=n.connection||{};if(g&&!cn.saveData&&!(n.deviceMemory&&n.deviceMemory<=1)){document.documentElement.classList.add("gx-on");var l=document.createElement("link");l.rel="modulepreload";l.href="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";document.head.appendChild(l)}var x=g&&g.getExtension("WEBGL_lose_context");if(x)x.loseContext()}catch(e){}window.gxFallback=function(){document.documentElement.classList.remove("gx-on");requestAnimationFrame(function(){window.dispatchEvent(new Event("resize"));document.querySelectorAll("#hero-classic .rv").forEach(function(e){e.classList.add("in")})})}})()</script><!-- /gx-detect -->
 
 
@@ -164,7 +164,7 @@
     <a class="brand" href="./" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
     <nav class="nav" id="nav" aria-label="Main">
-      <a href="#account">Live account</a><a href="#how">How it works</a><a href="#backtest">Backtest</a><a href="free-backtest.html">Free EA</a><a href="pricing.html">Pricing</a><a href="guide.html">Guide</a><a href="blog/">Blog</a><a href="faq.html">FAQ</a><a href="contact.html">Contact</a><a href="my-account.html">My account</a><a href="#contact">Contact</a>
+      <a href="#account">Live account</a><a href="#how">How it works</a><a href="#backtest">Backtest</a><a href="free-backtest.html">Free EA</a><a href="pricing.html">Pricing</a><a href="guide.html">Guide</a><a href="blog/">Blog</a><a href="faq.html">FAQ</a><a href="my-account.html">My account</a><a href="#contact">Contact</a>
       <a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a>
     </nav>
   </div>
@@ -346,11 +346,11 @@
       <div class="fz-card" aria-label="Illustration of a Strategy Tester result">
         <div class="fz-bar"><i></i><i></i><i></i><span>Strategy Tester &middot; GoldTriEngine &middot; XAUUSD M15</span></div>
         <svg class="fz-chart" viewBox="0 0 640 300" role="img" aria-label="Published backtest balance curve, simulated">
-          <defs><linearGradient id="fzg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#3EE09A" stop-opacity=".38"/><stop offset="1" stop-color="#3EE09A" stop-opacity="0"/></linearGradient></defs>
+          <defs><linearGradient id="fzg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7C5CF5" stop-opacity=".34"/><stop offset=".6" stop-color="#5B86FF" stop-opacity=".10"/><stop offset="1" stop-color="#5B86FF" stop-opacity="0"/></linearGradient><linearGradient id="fzl" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#22D3EE"/><stop offset=".55" stop-color="#5B86FF"/><stop offset="1" stop-color="#8B6CFF"/></linearGradient></defs>
           <g stroke="currentColor" opacity=".13"><path d="M0 60H640M0 130H640M0 200H640M0 270H640"/></g>
           <path class="fz-area" fill="url(#fzg)" d="M8 292 L632 292 Z"/>
-          <path id="fzp" class="fz-line" pathLength="1" fill="none" stroke="#E3B95F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M8 270 C150 262 250 240 330 190 S520 60 632 24"/>
-          <circle class="fz-dot" r="6" fill="#fff" stroke="#E3B95F" stroke-width="3" cx="0" cy="0"><animateMotion dur="3.4s" begin="indefinite" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1" keyTimes="0;1"><mpath href="#fzp"/></animateMotion></circle>
+          <path id="fzp" class="fz-line" pathLength="1" fill="none" stroke="url(#fzl)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M8 270 C150 262 250 240 330 190 S520 60 632 24"/>
+          <circle class="fz-dot" r="6" fill="#fff" stroke="#5B86FF" stroke-width="3" cx="0" cy="0"><animateMotion dur="3.4s" begin="indefinite" fill="freeze" calcMode="spline" keySplines=".2 .7 .2 1" keyTimes="0;1"><mpath href="#fzp"/></animateMotion></circle>
         </svg>
         <div class="fz-stats"><div><b data-k="pf">2.00</b><span>Profit factor</span></div><div><b data-k="months">29 of 34</b><span>Months positive</span></div><div><b data-k="dd">17.7%</b><span>Largest drawdown</span></div></div>
         <div class="fz-note">Published backtest &middot; simulated &middot; not a promise</div>
@@ -480,7 +480,7 @@
         <g font-family="Geist Mono, monospace" font-size="11" fill="#8892A8" letter-spacing="1.5">
           <g transform="translate(125 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><path d="M-12 8 l8-10 6 5 10-13" fill="none" stroke="#3EE09A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></g>
           <g transform="translate(375 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><rect x="-12" y="-12" width="24" height="24" rx="5" fill="none" stroke="#5B86FF" stroke-width="2"/><path d="M-5 0h10M0-5v10" stroke="#5B86FF" stroke-width="2" stroke-linecap="round"/></g>
-          <g transform="translate(625 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><path d="M-10 -4 v8 M-4 -10 v20 M2 -6 v12 M8 -12 v24" stroke="#E3B95F" stroke-width="2.2" stroke-linecap="round"/></g>
+          <g transform="translate(625 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><path d="M-10 -4 v8 M-4 -10 v20 M2 -6 v12 M8 -12 v24" stroke="#5B86FF" stroke-width="2.2" stroke-linecap="round"/></g>
           <g transform="translate(875 60)"><circle r="34" fill="#0A0E18" stroke="rgba(170,190,230,.22)"/><path d="M-7 -10 L11 0 L-7 10 Z" fill="#FF4D5E"/></g>
         </g>
       </svg>
@@ -504,15 +504,13 @@
       <div class="fz-right">
         <div class="fz-card ma-card" aria-label="Illustration of the My account page">
           <div class="fz-bar"><i></i><i></i><i></i><span>My account &middot; example data</span></div>
-          <div class="ma-top"><span class="ma-av2">Y</span><div><b>Welcome back</b><small>you@example.com</small></div><span class="ma-lic"><i></i>License ACTIVE</span></div>
-          <div class="ma-grid">
-            <div class="ma-cal"><small>Profit calendar</small><div class="ma-cells"><i class="p" style="--i:0"></i><i class="p" style="--i:1"></i><i class="n" style="--i:2"></i><i class="p" style="--i:3"></i><i class="p" style="--i:4"></i><i class="p" style="--i:5"></i><i class="p" style="--i:7"></i><i class="n" style="--i:8"></i><i class="p" style="--i:9"></i><i class="p" style="--i:10"></i><i class="p" style="--i:11"></i><i class="p" style="--i:12"></i><i class="p" style="--i:14"></i><i class="p" style="--i:15"></i><i class="p" style="--i:16"></i><i class="n" style="--i:17"></i><i class="p" style="--i:18"></i><i class="p" style="--i:19"></i><i class="p" style="--i:20"></i><i class="p" style="--i:22"></i><i class="p" style="--i:23"></i><i class="p" style="--i:24"></i><i class="p" style="--i:25"></i><i class="n" style="--i:26"></i><i class="p" style="--i:27"></i><i class="p" style="--i:28"></i><i class="p" style="--i:30"></i><i class="p" style="--i:31"></i><i class="p" style="--i:32"></i><i class="p" style="--i:33"></i><i class="p" style="--i:34"></i><i class="p" style="--i:35"></i></div></div>
-            <div class="ma-side">
-              <div class="ma-kpi"><small>This month</small><b>+$1,284</b></div>
-              <div class="ma-note n1"><i></i>Trade closed in profit</div>
-              <div class="ma-note n2"><i></i>EA back online</div>
-              <div class="ma-note n3"><i></i>New EA version available</div>
-            </div>
+          <div class="ma-top"><span class="ma-av2">A</span><div><b>Welcome back</b><small>you@example.com</small></div><span class="ma-lic"><i></i>License ACTIVE</span></div>
+          <div class="mx">
+            <div class="mx-live"><span class="mx-ring"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><div><small class="mx-k">LIVE STATUS</small><b>Running, all good</b><em>Last report 2 min ago &middot; EA v1.09</em></div></div>
+            <div class="mx-tiles"><div><small>TODAY, CLOSED</small><b class="up">+$42.10</b></div><div><small>OPEN TRADES</small><b>1 &middot; <span class="up">+$18.40</span></b></div><div><small>FLOATING</small><b class="up">+$18.40</b></div></div>
+            <div class="mx-facts"><div class="ok"><i>&#10003;</i><span><strong>Last 7 days +$312.80</strong><small>18 trades closed. Tap for the days.</small></span></div><div class="info"><i>i</i><span><strong>Best day +$118.20</strong><small>Tap for the trades of that day.</small></span></div></div>
+            <div class="mx-chart"><div class="mx-h"><span><i></i>Equity curve</span><small>All charts</small></div><svg viewBox="0 0 170 52" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--mint)" stop-opacity=".38"/><stop offset="1" stop-color="var(--mint)" stop-opacity=".04"/></linearGradient></defs><path d="M0 46 L14 40 L26 43 L40 30 L54 34 L68 22 L82 27 L96 16 L112 20 L128 9 L150 13 L170 4 L170 52 L0 52 Z" fill="url(#mxg)"/><path d="M0 46 L14 40 L26 43 L40 30 L54 34 L68 22 L82 27 L96 16 L112 20 L128 9 L150 13 L170 4" fill="none" stroke="var(--mint)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg></div>
+            <div class="mx-trades"><div><span class="mx-p g">GAMMA</span><span class="mx-p s">SELL</span><em>0.02 lots &middot; 14h 42m</em><b class="up">+$80.03</b></div><div><span class="mx-p b">BETA</span><span class="mx-p u">BUY</span><em>0.01 lots &middot; 11h 26m</em><b class="dn">-$23.45</b></div></div>
           </div>
           <div class="fz-note">Illustration with example numbers</div>
         </div>
@@ -542,7 +540,7 @@
       <div class="moods rv" role="tablist" aria-label="How the host reacts">
         <button type="button" class="mood" data-pose="point" data-c="#5B86FF" data-say="Engine Alpha opened a trade. The stop loss is already on the chart.">When a trade opens</button>
         <button type="button" class="mood" data-pose="thumbs" data-c="#3EE09A" data-say="Engine Gamma closed in profit. Here is what happened on the chart.">When it wins</button>
-        <button type="button" class="mood" data-pose="concerned" data-c="#E3B95F" data-say="Stopped out for a small loss. Losses are part of the plan, and you see them too.">When it loses</button>
+        <button type="button" class="mood" data-pose="concerned" data-c="#5B86FF" data-say="Stopped out for a small loss. Losses are part of the plan, and you see them too.">When it loses</button>
         <button type="button" class="mood" data-pose="surprised" data-c="#5B86FF" data-say="US CPI is in 30 minutes. Gold can move fast, so spreads may widen.">Before big news</button>
         <button type="button" class="mood" data-pose="tablet" data-c="#5B86FF" data-say="Gold is most active when London and New York overlap. Here is why.">Between trades</button>
         <button type="button" class="mood" data-pose="think" data-c="#5B86FF" data-say="Good question from the chat. Let me explain what a drawdown is.">When you ask in chat</button>
@@ -616,9 +614,9 @@
       <div class="phone">
         <div class="phone-top"><span class="tg-av" aria-hidden="true"></span><div><b>GoldTriEngine</b><small>bot</small></div></div>
         <ol class="tg-feed">
-          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#5B86FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></svg></span><b>EA started</b><time>09:00</time></div><p>GoldTriEngine v1.08 · XAUUSD · all 3 engines on · license OK · balance and equity.</p></li>
+          <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#5B86FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></svg></span><b>EA started</b><time>09:00</time></div><p>GoldTriEngine v1.09 · XAUUSD · all 3 engines on · license OK · balance and equity.</p></li>
           <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#3EE09A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span><b>Trade opened</b><time>10:42</time></div><p>Engine Alpha · Buy · stop loss set.</p></li>
-          <li class="tg-msg tg-short"><div class="tg-row"><span class="tg-ic" style="--c:#E3B95F"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span><b>EA offline detected</b><time>13:39</time></div></li>
+          <li class="tg-msg tg-short"><div class="tg-row"><span class="tg-ic" style="--c:#5B86FF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span><b>EA offline detected</b><time>13:39</time></div></li>
           <li class="tg-msg tg-short"><div class="tg-row"><span class="tg-ic" style="--c:#3EE09A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/></svg></span><b>EA back online</b><time>13:52</time></div></li>
           <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#3EE09A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><b>Trade closed</b><time>15:31</time></div><p>Engine Alpha · closed in profit · result and reason.</p></li>
           <li class="tg-msg"><div class="tg-row"><span class="tg-ic" style="--c:#FF6B78"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg></span><b>Drawdown alert</b><time>18:20</time></div><p>The account has reached your first drawdown alert level.</p></li>
@@ -740,11 +738,13 @@
       <div class="contact-l">
         <span class="kicker">Contact</span>
         <h2>Questions? <em class="s">Message the developer.</em></h2>
-        <p>Ask about GoldTriEngine, licenses, brokers or setup. Messages go straight to Yelias on Telegram.</p>
+        <p>Ask about GoldTriEngine, licenses, brokers or setup. Chat on Telegram, or open a support ticket and get a reference number and an answer by email.</p>
         <a class="btn primary big" href="https://t.me/GoldTriEngine_Support" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg>Message on Telegram</a>
-        <p class="contact-handle">@GoldTriEngine_Support</p>
+        <a class="btn big ct-ticket" href="contact.html#write"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1.5a1.5 1.5 0 0 0 0 3V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1.5a1.5 1.5 0 0 0 0-3Z"/><path d="M13 7v10" stroke-dasharray="2 2"/></svg>Open a support ticket</a><p class="contact-handle">@GoldTriEngine_Support</p>
       </div>
       <ul class="contact-r">
+        <li><a href="contact.html#write"><b>Support ticket</b><span>Get a reference number and an answer by email</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></li>
+        <li><a href="support.html"><b>My requests</b><span>Follow your tickets and reply</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></li>
         <li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener"><b>Telegram channel</b><span>Updates and news</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></li>
         <li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><b>YouTube live chat</b><span>Ask the AI host during the stream</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></li>
         <li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener"><b>Myfxbook</b><span>Full track record</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg></a></li>
@@ -787,14 +787,14 @@
       </div>
       <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
       <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="contact.html">Contact &amp; support</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a></li></ul></div>
-      <div><h4>Site</h4><ul><li><a href="pricing.html">Pricing</a></li><li><a href="blog/">Blog &amp; Academy</a></li><li><a href="guide.html">How to judge a gold EA</a></li><li><a href="gold-ea-mt5.html">Gold EA for MT5</a></li><li><a href="best-gold-ea-mt5.html">Best gold EA? 10 checks</a></li><li><a href="goldtriengine-review.html">Review: is it legit?</a></li><li><a href="fusion-markets-ic-markets-gold-ea.html">Fusion and IC Markets</a></li><li><a href="faq.html">FAQ</a></li><li><a href="privacy.html">Privacy</a></li><li><a href="apps.html">Get the app</a></li><li><a href="terms.html">Terms</a></li><li><a href="llms.txt">llms.txt</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="pricing.html">Pricing</a></li><li><a href="partners.html">Partners</a></li><li><a href="blog/">Blog &amp; Academy</a></li><li><a href="guide.html">How to judge a gold EA</a></li><li><a href="gold-ea-mt5.html">Gold EA for MT5</a></li><li><a href="best-gold-ea-mt5.html">Best gold EA? 10 checks</a></li><li><a href="goldtriengine-review.html">Review: is it legit?</a></li><li><a href="fusion-markets-ic-markets-gold-ea.html">Fusion and IC Markets</a></li><li><a href="faq.html">FAQ</a></li><li><a href="privacy.html">Privacy</a></li><li><a href="apps.html">Get the app</a></li><li><a href="terms.html">Terms</a></li><li><a href="llms.txt">llms.txt</a></li></ul></div>
     </div>
     <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: <a href="contact.html">contact page</a> or Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
     Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
   </div>
 </footer>
 <a class="fab" href="https://t.me/GoldTriEngine_Support" rel="noopener" aria-label="Message GoldTriEngine on Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg><span>Contact us</span></a>
-<script src="site.js?v=20261021app5" defer></script><script src="pwnav.js?v=20261030pw6" defer></script><script src="growth.js?v=20261101m2" defer></script>
+<script src="site.js?v=20261103tip1" defer></script><script src="pwnav.js?v=20261030pw6" defer></script><script src="growth.js?v=20261101m2" defer></script>
 <script>if(document.documentElement.classList.contains("gx-on")){import("./chart3d.js?v=20261028gx2").catch(function(){window.gxFallback&&window.gxFallback()})}</script>
 <script src="bt-live.js?v=20261101m1" defer></script>
 <script src="app.js?v=20261021app5"></script>
@@ -802,6 +802,6 @@
 <script src="account.js" defer></script>
 <script src="wow.js?v=20261021app5" defer></script>
 <script src="chat.js?v=20261101m2" defer></script><script src="proofwall.js?v=20261030pw11" defer></script>
-<script src="partner-track.js?v=20261102p1" defer></script>
+<script src="partner-track.js?v=20261102p1" defer></script><script src="pub-wow.js?v=6" defer></script><script src="pub-info.js?v=2" defer></script><script src="pub-story.js?v=4" defer></script><script src="results.js?v=20261102s1" defer></script><script src="trade-sheet.js?v=4" defer></script><script src="pub-dash.js?v=15" defer></script><script src="chart-tip.js?v=9" defer></script><script src="pub-fx.js?v=13" defer></script><script src="pub-ds.js?v=9" defer></script>
 </body>
 </html>

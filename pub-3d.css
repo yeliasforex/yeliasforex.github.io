@@ -1,0 +1,30 @@
+/* "Try it with your own money" panel under the 3D chart: the gold slider, play button and balance bar take the site palette (blue, cyan, mint) and follow day / night. */
+#gx .try h4{color:#2A55D9}
+html[data-theme=dark] #gx .try h4{color:#9DB4FF}
+#gx .play{background:linear-gradient(135deg,#2A55D9,#0891B2);color:#fff;box-shadow:0 10px 24px -10px rgba(8,145,178,.8)}
+html[data-theme=dark] #gx .play{background:linear-gradient(135deg,#6C8CFF,#22D3EE);color:#06122E}
+#gx .play.pulse{animation-name:gxpp2}
+@keyframes gxpp2{0%{box-shadow:0 0 0 0 rgba(34,211,238,.5)}100%{box-shadow:0 0 0 14px rgba(34,211,238,0)}}
+#gx input[type=range]{accent-color:#2A55D9}
+html[data-theme=dark] #gx input[type=range]{accent-color:#6C8CFF}
+#gx .live a{background:rgba(42,85,217,.12);color:#2A55D9}
+html[data-theme=dark] #gx .live a{background:rgba(108,140,255,.25);color:#DDE6FF}
+#gx .stats .big{background:linear-gradient(135deg,#EEF3FF,#DDE8FF);box-shadow:0 0 0 1px rgba(42,85,217,.35) inset}
+#gx .stats .big span{color:#3A4A7A}
+#gx .stats .big b{color:#0B1330}
+#gx .stats .big .spark path{stroke:#0891B2!important}
+#gx .stats .big .spark circle{fill:#0E9F6E!important;stroke:#fff!important}
+html[data-theme=dark] #gx .stats .big{background:linear-gradient(135deg,#0E1A44,#14296A);box-shadow:0 0 0 1px rgba(108,140,255,.55) inset}
+html[data-theme=dark] #gx .stats .big span{color:#9DB0E8}
+html[data-theme=dark] #gx .stats .big b{color:#fff}
+html[data-theme=dark] #gx .stats .big .spark path{stroke:#22D3EE!important}
+html[data-theme=dark] #gx .stats .big .spark circle{fill:#2DD4A0!important;stroke:#0E1A44!important}
+#gx .readout .bal{color:#2A55D9}
+#gx .screen.night .readout .bal{color:#9DB4FF}
+#gx .yrs i{background:linear-gradient(90deg,#6C8CFF,#2DD4A0)}
+#gx .gz.bar u{background:linear-gradient(90deg,#6C8CFF,#22D3EE)}
+
+/* the tour button, its toast and the small gold dots in the 3D chart's controls */
+#gx .tourbtn,#gx #gx-toast{background:linear-gradient(135deg,#6C8CFF,#7C5CF5 60%,#22D3EE)!important;color:#fff!important;box-shadow:0 14px 30px -14px rgba(124,92,245,.9),0 1px 0 rgba(255,255,255,.35) inset}
+#gx .spdot{background:linear-gradient(135deg,#6C8CFF,#22D3EE)!important;box-shadow:0 0 10px rgba(34,211,238,.7)}
+#gx i[style*="rgb(240, 180, 41)"],#gx .pill i:first-child{background:linear-gradient(135deg,#6C8CFF,#22D3EE)!important}

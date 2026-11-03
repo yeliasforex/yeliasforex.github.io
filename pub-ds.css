@@ -1,0 +1,130 @@
+/* accent for decorative light: the site blue (amber stays for warnings) */
+:root{--ac:var(--blue-hi)}
+/* Public pages: one premium design layer for every section (chapter headers, glass cards with a light that follows the pointer, motion, colour grading).
+   Uses only the site's own colour variables, so day and night both work. Pure styling: if this file does not load, the page looks as before. */
+#main{--ds-ease:cubic-bezier(.2,.7,.1,1)}
+
+/* chapter headers */
+#main .pubx-s .sec-head{position:relative;margin-bottom:clamp(28px,5vw,52px)}
+#main .pubx-s .kicker{display:inline-flex;width:fit-content;max-width:100%;align-items:center;gap:10px;padding:6px 15px 6px 7px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ac) 42%,var(--line-2));background:color-mix(in srgb,var(--ac) 9%,transparent);color:var(--ac);font:700 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;margin-bottom:18px}
+.ds-n{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 4px;border-radius:999px;background:linear-gradient(135deg,var(--ac),color-mix(in srgb,var(--ac) 60%,#7aa2ff));color:#fff;font:800 11px/1 var(--mono);letter-spacing:0}
+#main .pubx-s h2{font-size:clamp(2.05rem,5.6vw,3.5rem);letter-spacing:-.035em;line-height:1.04}
+#main .pubx-s h2 em.s{background:linear-gradient(100deg,var(--ac),color-mix(in srgb,var(--ac) 45%,var(--mint)));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+#main .pubx-s .lead{max-width:64ch}
+#main .pubx-s .sec-head:after{content:"";display:block;width:0;height:3px;margin-top:22px;border-radius:3px;background:linear-gradient(90deg,var(--ac),var(--mint));transition:width 1s var(--ds-ease) .25s}
+#main .pubx-s.ds-in .sec-head:after{width:84px}
+
+/* sections breathe: a slow colour glow behind each one */
+#main .pubx-s{overflow:hidden;isolation:isolate}
+#main .pubx-s>.wrap,#main .pubx-s>.narrow{position:relative;z-index:1}
+#main .pubx-s:after{content:"";position:absolute;z-index:0;width:520px;height:520px;border-radius:50%;filter:blur(90px);opacity:.26;pointer-events:none;top:-160px;right:-160px;background:radial-gradient(circle,color-mix(in srgb,var(--ac) 60%,transparent),transparent 66%);animation:dsDrift 20s ease-in-out infinite alternate}
+#main .pubx-s:nth-of-type(even):after{right:auto;left:-180px;top:auto;bottom:-200px;background:radial-gradient(circle,color-mix(in srgb,var(--mint) 50%,transparent),transparent 66%);animation-duration:26s}
+@keyframes dsDrift{to{transform:translate(90px,70px) scale(1.15)}}
+
+/* glass cards with a pointer light */
+.ds-card,#main #license .plan{position:relative;overflow:hidden;border-radius:22px!important;border:1px solid var(--line-2)!important;background:radial-gradient(260px 140px at 100% 0%,color-mix(in srgb,var(--ac) 9%,transparent),transparent 70%),linear-gradient(180deg,color-mix(in srgb,var(--panel) 90%,#fff 5%),var(--panel))!important;box-shadow:0 30px 60px -44px rgba(0,0,0,.55);transition:transform .28s var(--ds-ease),border-color .25s,box-shadow .3s}
+.ds-card:hover,#main #license .plan:hover{transform:translateY(-5px);border-color:color-mix(in srgb,var(--ac) 55%,var(--line-2))!important;box-shadow:0 44px 70px -42px color-mix(in srgb,var(--ac) 55%,transparent)}
+.ds-card:after,#main #license .plan:after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(260px circle at var(--mx,50%) var(--my,-40%),color-mix(in srgb,var(--ac) 19%,transparent),transparent 65%);opacity:0;transition:opacity .25s;pointer-events:none}
+.ds-card:hover:after,#main #license .plan:hover:after{opacity:1}
+.ds-card[role="button"]{cursor:pointer}.ds-card:focus-visible{outline:2px solid var(--ac);outline-offset:3px}
+.ds-card .ico{box-shadow:0 0 24px -4px color-mix(in srgb,var(--ac) 55%,transparent);transition:transform .3s var(--ds-ease)}.ds-card:hover .ico{transform:scale(1.12) rotate(-4deg)}
+.ds-more{display:inline-flex;align-items:center;gap:7px;margin-top:14px;padding:6px 13px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ac) 40%,var(--line-2));background:color-mix(in srgb,var(--ac) 8%,transparent);color:var(--ac);font:700 .74rem var(--sans);cursor:pointer}
+.ds-more:hover{background:color-mix(in srgb,var(--ac) 16%,transparent)}
+.ds-hint{display:block;margin-top:12px;font-size:.72rem;color:var(--muted);opacity:.85}
+.ds-hint:before{content:"";display:inline-block;width:6px;height:6px;margin-right:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 0 0 var(--ac);animation:dsPing 2.4s infinite}
+@keyframes dsPing{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ac) 60%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+
+/* how it works: the numbered steps glow in turn */
+#main #how .step.ds-card .n{color:var(--ac)}
+#main #how.ds-in .step:nth-child(1) .n{animation:dsGlow 4s 0s infinite}#main #how.ds-in .step:nth-child(2) .n{animation:dsGlow 4s 1s infinite}#main #how.ds-in .step:nth-child(3) .n{animation:dsGlow 4s 2s infinite}#main #how.ds-in .step:nth-child(4) .n{animation:dsGlow 4s 3s infinite}
+@keyframes dsGlow{0%,100%{text-shadow:none}12%{text-shadow:0 0 18px var(--ac)}}
+
+/* plans */
+#main #license .plan.pop{border-color:color-mix(in srgb,var(--ac) 70%,var(--line-2))!important;box-shadow:0 40px 80px -40px color-mix(in srgb,var(--ac) 70%,transparent)}
+#main #license .plan{overflow:visible!important}
+#main #license .plan .price,#main #license .plan h3{letter-spacing:-.02em}
+
+/* telegram messages */
+#main #telegram .tg-msg.ds-card{border-radius:16px!important}#main #telegram .tg-msg.ds-card:hover{transform:translateX(6px)}
+
+/* faq: numbered accordion with a smooth open */
+#main #faq .faq{counter-reset:dsq}
+#main #faq .faq details{counter-increment:dsq;border-radius:18px;border:1px solid var(--line-2);background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 90%,#fff 5%),var(--panel));margin-bottom:10px;overflow:hidden;transition:border-color .25s,box-shadow .3s}
+#main #faq .faq details:hover,#main #faq .faq details[open]{border-color:color-mix(in srgb,var(--ac) 50%,var(--line-2))}
+#main #faq .faq details[open]{box-shadow:0 30px 60px -44px color-mix(in srgb,var(--ac) 55%,transparent)}
+#main #faq .faq summary{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer;list-style:none}
+#main #faq .faq summary::-webkit-details-marker{display:none}
+#main #faq .faq summary:before{content:counter(dsq,decimal-leading-zero);flex:none;font:700 11px var(--mono);color:var(--ac);letter-spacing:.08em}
+#main #faq .faq details .a{animation:dsOpen .35s var(--ds-ease)}
+@keyframes dsOpen{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+
+/* contact rows */
+#main #contact .contact-r li{border-radius:16px;transition:transform .2s,background .2s}#main #contact .contact-r li:hover{transform:translateX(6px)}
+
+/* backtest + facts tiles share the card look */
+#main .facts .fact.ds-card{padding:18px}
+#main #backtest .chart-card.ds-card{border-radius:24px!important}
+
+/* motion respects the system setting */
+@media (prefers-reduced-motion:reduce){#main .pubx-s:after,.ds-hint:before,#main #how .step .n{animation:none!important}#main .pubx-s .sec-head:after{transition:none}}
+
+.ds-note{margin:14px 4px 0;font-size:.8rem;color:var(--muted)}.ds-note:before{content:"";display:inline-block;width:6px;height:6px;margin-right:8px;border-radius:50%;background:var(--ac);animation:dsPing 2.4s infinite}
+
+/* telegram feature list as glass rows */
+#main #telegram .tg-list li{padding:13px 16px 13px 18px;border-radius:14px;border:1px solid var(--line-2);border-left:3px solid var(--ac);background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 92%,#fff 4%),var(--panel));margin-bottom:10px;list-style:none;transition:transform .22s var(--ds-ease),border-color .2s}
+#main #telegram .tg-list li:hover{transform:translateX(6px);border-color:color-mix(in srgb,var(--ac) 55%,var(--line-2))}
+#main #telegram .tg-list li:before{display:none}
+#main #faq .faq summary h3{flex:1;text-align:left;font-size:1rem}
+
+/* inner pages: the page header gets the same glow and weight */
+#main .page-head{position:relative;overflow:hidden;isolation:isolate}
+#main .page-head:before{content:"";position:absolute;z-index:0;width:520px;height:520px;border-radius:50%;filter:blur(90px);opacity:.3;pointer-events:none;top:-220px;right:-120px;background:radial-gradient(circle,color-mix(in srgb,var(--ac) 60%,transparent),transparent 66%);animation:dsDrift 20s ease-in-out infinite alternate}
+#main .page-head>*{position:relative;z-index:1}
+#main .page-head h1{font-size:clamp(2.3rem,6vw,3.8rem);letter-spacing:-.035em;line-height:1.04}
+#main .page-head .meta{display:inline-flex;width:fit-content;padding:6px 14px;border-radius:999px;border:1px solid color-mix(in srgb,var(--ac) 42%,var(--line-2));background:color-mix(in srgb,var(--ac) 9%,transparent);color:var(--ac);font:700 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){#main .page-head:before{animation:none}}
+
+/* even spacing between sections (some had no bottom space) */
+#main .pubx-s{padding-top:clamp(52px,8vw,84px)!important;padding-bottom:clamp(52px,8vw,84px)!important}
+#main .pubx-s+.pubx-s{padding-top:clamp(36px,6vw,60px)!important}
+
+/* spacing between stacked cards */
+#main #how .pipe-steps{display:grid;gap:14px}
+#main #how .step.ds-card{padding:20px 22px}
+#main #telegram .tg-feed{display:grid;gap:10px}
+#main .grid3,#main .bk-grid,#main .plans{gap:clamp(12px,2vw,20px)}
+
+
+/* ---- plan finder + plan cards: the same dark terminal look as the dashboard ---- */
+#main #license .wow-finder{position:relative;overflow:hidden;isolation:isolate;margin:0 0 26px;padding:clamp(20px,4vw,34px);border-radius:26px;color:var(--fg);border:1px solid var(--edge);
+  background:var(--shell)!important;box-shadow:var(--shadow)}
+#main #license .wow-finder h3{margin:0 0 6px;font-size:clamp(1.4rem,3.4vw,1.9rem);letter-spacing:-.025em;color:var(--hi)}
+#main #license .wow-finder>p{margin:0 0 22px;color:var(--muted);max-width:60ch}
+#main #license .wow-sl{position:relative}
+#main #license .wow-amt{margin:18px 0 6px;font-size:clamp(2.4rem,7vw,3.6rem);font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums;background:linear-gradient(100deg,var(--bigA) 30%,var(--bigB));-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+#main #license .wow-sl input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:999px;outline:none;cursor:pointer;background:linear-gradient(90deg,var(--cy),var(--blue-hi)) 0/var(--p,15%) 100% no-repeat,var(--gl4);box-shadow:0 0 0 1px var(--line-2) inset}
+#main #license .wow-sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#DDE6FF 60%,#9DB4FF);border:3px solid var(--blue-hi);box-shadow:0 0 0 6px rgba(108,140,255,.22),0 8px 20px -4px rgba(0,0,0,.6)}
+#main #license .wow-sl input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid var(--blue-hi);box-shadow:0 0 0 6px rgba(108,140,255,.22)}
+#main #license .wow-ticks{display:flex;justify-content:space-between;margin-top:10px;font:600 10.5px/1 var(--mono);color:var(--muted);letter-spacing:.06em}
+#main #license .wow-res{display:grid;grid-template-columns:1.1fr 1fr auto;gap:14px;align-items:center;margin-top:22px;padding:16px;border-radius:20px;border:1px solid var(--line-2);background:var(--gl1)!important}
+@media (max-width:760px){#main #license .wow-res{grid-template-columns:1fr}}
+#main #license .wow-pick{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;padding:0!important;border:0!important;background:none!important;color:var(--muted);font-size:.85rem}
+#main #license .wow-pick b{font-size:1.7rem;letter-spacing:-.02em;color:var(--hi)}
+#main #license .wow-pick>span:last-child{padding:3px 11px;border-radius:999px;background:color-mix(in srgb,var(--blue-hi) 14%,transparent);color:var(--blue-hi);font-weight:700}
+#main #license .wow-day{display:block;color:var(--muted);font-size:.86rem;line-height:1.5}#main #license .wow-day b{color:var(--hi)}
+#main #license .wow-res .btn{border:0;background:linear-gradient(135deg,var(--blue-hi),var(--cy))!important;color:var(--btntx,#06122E)!important;font-weight:800;box-shadow:0 16px 34px -14px rgba(34,211,238,.8)}
+#main #license .wow-res .btn:hover{filter:brightness(1.08);transform:translateY(-2px)}
+.ds-fit{grid-column:1/-1;display:grid;gap:7px}.ds-fit div{height:8px;border-radius:999px;background:var(--gl4);overflow:hidden}.ds-fit i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--cy),var(--mint));transition:width .4s}.ds-fit i.hot{background:linear-gradient(90deg,#F59E0B,var(--red))}.ds-fit span{font-size:.78rem;color:var(--muted)}
+
+#main #license .plan{position:relative;border-radius:24px!important;padding:26px 24px 22px!important;color:var(--fg);border:1px solid var(--line-2)!important;
+  background:var(--cardbg)!important;box-shadow:0 36px 70px -46px rgba(20,40,120,.45)!important}
+#main #license .plan h3{color:var(--hi);font-size:1.15rem;letter-spacing:-.01em}
+#main #license .plan .price{color:var(--hi);font-size:2.5rem;font-weight:800;letter-spacing:-.04em}#main #license .plan .price small,#main #license .plan .price span{font-size:.9rem;font-weight:500;color:var(--muted);letter-spacing:0}
+#main #license .plan .covers{color:var(--muted)}#main #license .plan .covers b{color:var(--hi)}
+#main #license .plan .btn{border:1px solid rgba(150,170,230,.3);background:var(--gl3)!important;color:var(--hi)!important;font-weight:700}
+#main #license .plan .btn:hover{background:rgba(108,140,255,.28)!important;border-color:var(--hov)}
+#main #license .plan.pop{border-color:var(--blue-hi)!important;background:var(--cardpop)!important;box-shadow:0 40px 80px -40px rgba(34,211,238,.55),0 0 0 1px rgba(108,140,255,.5)!important}
+#main #license .plan.pop .btn{border:0;background:linear-gradient(135deg,var(--blue-hi),var(--cy))!important;color:var(--btntx,#06122E)!important;font-weight:800;box-shadow:0 14px 30px -14px rgba(34,211,238,.9)}
+#main #license .plan .flag{background:linear-gradient(135deg,var(--blue-hi),var(--cy))!important;color:var(--btntx,#06122E)!important;font-weight:800;box-shadow:0 8px 20px -8px rgba(34,211,238,.8)}
+#main #license .plan.wow-hl{box-shadow:0 0 0 2px var(--cy),0 40px 80px -40px rgba(34,211,238,.6)!important}
+.ds-pday{display:block;margin:2px 0 12px;font-size:.8rem;color:var(--muted)}
