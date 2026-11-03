@@ -85,7 +85,7 @@
       + '.jy-l0{stop-color:var(--jy-a)}.jy-l1{stop-color:var(--jy-b)}.jy-l2.u{stop-color:var(--jy-up)}.jy-l2.d{stop-color:var(--jy-dn)}'
       + '.jy-ar{opacity:0;animation:jyFd 1s 1.2s forwards}@keyframes jyFd{to{opacity:1}}'
       + '.jy-ln{fill:none;stroke-width:3.4;stroke-linejoin:round;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:jyDr 1.7s .2s cubic-bezier(.3,.7,.2,1) forwards}@keyframes jyDr{to{stroke-dashoffset:0}}'
-      + '.jy-wl{stroke:var(--jy-dn);stroke-width:1.1;stroke-dasharray:1 4.5;stroke-linecap:round;opacity:.85}.jy-wt{font-size:11.5px;font-weight:600;fill:var(--jy-dn)}.jy-st{stroke:var(--jy-gold);stroke-width:1.6;stroke-dasharray:5 3}.jy-stt{font-size:11.5px;font-weight:600;fill:var(--jy-gold)}'
+      + '.jy-wp{fill:var(--jy-card);stroke:var(--jy-dn);stroke-width:2}.jy-wl{stroke:var(--jy-dn);stroke-width:1.1;stroke-dasharray:1 4.5;stroke-linecap:round;opacity:.85}.jy-wt{font-size:11.5px;font-weight:600;fill:var(--jy-dn)}.jy-st{stroke:var(--jy-gold);stroke-width:1.6;stroke-dasharray:5 3}.jy-stt{font-size:11.5px;font-weight:600;fill:var(--jy-gold)}'
       + '.jy-br{fill:none;stroke:var(--jy-dn);stroke-width:1.4;stroke-linecap:round;opacity:0;animation:jyFd .6s 1.7s forwards}.jy-bt{font-size:12.5px;font-weight:700;fill:var(--jy-dn);opacity:0;animation:jyFd .6s 1.85s forwards}'
       + '.jy-dot{fill:var(--jy-ink);opacity:calc(.35 + var(--jy-fx) * .65)}.jy-scan{fill:var(--jy-a);fill-opacity:calc(.1 + var(--jy-fx) * .12);animation:jySw 2.2s .15s cubic-bezier(.4,0,.2,1) forwards;pointer-events:none}@keyframes jySw{from{transform:translateX(0);opacity:.9}to{transform:translateX(calc(100% * 14));opacity:0}}'
       + '.jy-o{fill:var(--jy-ink);stroke:var(--jy-card);stroke-width:2.5}'
@@ -112,8 +112,24 @@
     var hm = function (x) { return new Date(x).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', hour12: false}); }, sg = function (v, d) { return (v > 0.004 ? '+' : v < -0.004 ? '\u2212' : '') + Math.abs(v).toFixed(d == null ? 2 : d); };
     var cls = win ? 'u' : 'd', out = '', xo = X(o), xp = X(pkv), xc = X(c), yo = Y(0), yp = Y(best), yc = Y(rr), yw = Y(worst), f = function (n) { return n.toFixed(1); };
     // a smooth path through the recorded points (flat at each point, so there are no sharp corners); it is a guide, the real price moved in between
-    var path = best <= 0.05 ? 'M' + f(xo) + ' ' + f(yo) + ' C ' + f(xo + (xc - xo) * .5) + ' ' + f(yo) + ', ' + f(xc - (xc - xo) * .5) + ' ' + f(yc) + ', ' + f(xc) + ' ' + f(yc)
-      : 'M' + f(xo) + ' ' + f(yo) + ' C ' + f(xo + (xp - xo) * .55) + ' ' + f(yo) + ', ' + f(xp - (xp - xo) * .42) + ' ' + f(yp) + ', ' + f(xp) + ' ' + f(yp) + ' C ' + f(xp + (xc - xp) * .42) + ' ' + f(yp) + ', ' + f(xc - (xc - xp) * .5) + ' ' + f(yc) + ', ' + f(xc) + ' ' + f(yc);
+    var sp9 = c - o, tr = t.trough_at ? new Date(t.trough_at).getTime() : null, dip = worst < -0.05, hasPk = best > 0.05, trKnown = !!(dip && tr && tr > o && tr < c);
+    if (dip && !trKnown) tr = hasPk && pkv - o > sp9 * .12 ? o + (pkv - o) * .5 : (hasPk ? pkv + (c - pkv) * .5 : o + sp9 * .5);     // when the dip happened is not recorded: drawn between the neighbours
+    var pp = [[xo, yo]], wx = null;
+    if (dip && tr <= pkv) { wx = X(Math.max(o + sp9 * .03, Math.min(pkv - sp9 * .04, tr))); pp.push([wx, yw]); }
+    if (hasPk) pp.push([xp, yp]);
+    if (dip && tr > pkv) { wx = X(Math.min(c - sp9 * .04, Math.max(pkv + sp9 * .04, tr))); pp.push([wx, yw]); }
+    pp.push([xc, yc]);
+    pp = pp.filter(function (q, i) { return i === 0 || q[0] > pp[i - 1][0] + .5; });
+    var path = (function (P) {
+      var n = P.length, d = [], m = [], k;
+      for (k = 0; k < n - 1; k++) d.push((P[k + 1][1] - P[k][1]) / (P[k + 1][0] - P[k][0]));
+      m[0] = d[0]; m[n - 1] = d[n - 2];
+      for (k = 1; k < n - 1; k++) m[k] = d[k - 1] * d[k] <= 0 ? 0 : (d[k - 1] + d[k]) / 2;
+      for (k = 0; k < n - 1; k++) { if (d[k] === 0) { m[k] = 0; m[k + 1] = 0; } else { var al = m[k] / d[k], be = m[k + 1] / d[k], h = Math.sqrt(al * al + be * be); if (h > 3) { m[k] = 3 * al / h * d[k]; m[k + 1] = 3 * be / h * d[k]; } } }
+      var s2 = 'M' + f(P[0][0]) + ' ' + f(P[0][1]);
+      for (k = 0; k < n - 1; k++) { var hh = P[k + 1][0] - P[k][0]; s2 += ' C ' + f(P[k][0] + hh / 3) + ' ' + f(P[k][1] + m[k] * hh / 3) + ', ' + f(P[k + 1][0] - hh / 3) + ' ' + f(P[k + 1][1] - m[k + 1] * hh / 3) + ', ' + f(P[k + 1][0]) + ' ' + f(P[k + 1][1]); }
+      return s2;
+    })(pp);
     out += '<defs><linearGradient id="' + id + 'a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="jy-sa ' + cls + '"/><stop offset="1" class="jy-sa ' + cls + ' z"/></linearGradient>'
       + '<linearGradient id="' + id + 'l" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="jy-l0"/><stop offset=".55" class="jy-l1"/><stop offset="1" class="jy-l2 ' + cls + '"/></linearGradient>'
       + '<filter id="' + id + 'g" x="-20%" y="-60%" width="140%" height="220%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'
@@ -128,7 +144,7 @@
     var span = (c - o) / 6e4, ticks = span > 480 ? 180 : span > 300 ? 120 : span > 150 ? 60 : span > 60 ? 30 : span > 20 ? 10 : 5, tick = ticks * 6e4, q0 = Math.ceil(o / tick) * tick, nt = 0;
     for (var q = q0; q <= c && nt < 5; q += tick, nt++) out += '<text class="jy-tx" x="' + f(X(q)) + '" y="' + (H - 8) + '" text-anchor="middle">' + hm(q) + '</text>';
     out += '<g clip-path="url(#' + id + 'c)"><path class="jy-ar" d="' + path + ' L' + f(xc) + ' ' + f(yo) + ' L' + f(xo) + ' ' + f(yo) + ' Z" fill="url(#' + id + 'a)"/></g>';
-    out += '<line class="jy-wl" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + f(yw) + '" y2="' + f(yw) + '"/>' + (worst < -0.05 ? '<text class="jy-wt" x="' + (pl + 6) + '" y="' + f(yw + (worst < -.6 ? -6 : 14)) + '">Worst dip ' + sg(worst) + 'R</text>' : '');
+    out += '<line class="jy-wl" x1="' + pl + '" x2="' + (W - pr) + '" y1="' + f(yw) + '" y2="' + f(yw) + '"/>' + (dip ? '<text class="jy-wt" x="' + f(Math.max(pl + 6, (wx == null ? X(tr) : wx) + 11)) + '" y="' + f(yw + (worst < -.6 ? -6 : 14)) + '">Worst dip ' + sg(worst) + 'R</text><circle class="jy-wp" cx="' + f(wx == null ? X(tr) : wx) + '" cy="' + f(yw) + '" r="4.5"/>' : '');
     if (stop != null && stop >= mn && stop <= mx) { var ys = Y(stop), sx = Math.max(xo + 6, xc - (W - pl - pr) * .3); out += '<line class="jy-st" x1="' + f(sx) + '" x2="' + f(xc) + '" y1="' + f(ys) + '" y2="' + f(ys) + '"/>' ; }
     out += '<path id="' + id + 'p" class="jy-ln" d="' + path + '" stroke="url(#' + id + 'l)" pathLength="1" filter="url(#' + id + 'g)"/>';
     if (gave > 0.3 && best >= 0.5) { var bx = xp + 16; out += '<path class="jy-br" d="M' + f(bx) + ' ' + f(yp + 4) + ' L' + f(bx + 7) + ' ' + f(yp + 4) + ' L' + f(bx + 7) + ' ' + f(yc - 4) + ' L' + f(bx) + ' ' + f(yc - 4) + '"/><text class="jy-bt" x="' + f(bx + 13) + '" y="' + f((yp + yc) / 2 - 2) + '">Gave back</text><text class="jy-bt" x="' + f(bx + 13) + '" y="' + f((yp + yc) / 2 + 12) + '">' + gave.toFixed(2) + 'R</text>'; }
@@ -144,7 +160,7 @@
     var pill1 = keep == null ? '' : '<span class="jy-p" title="How much of the best point was still there at the close"><svg viewBox="0 0 20 20"><circle class="t" cx="10" cy="10" r="8"/><circle class="v ' + kc + '" cx="10" cy="10" r="8" transform="rotate(-90 10 10)" stroke-dasharray="' + rc.toFixed(1) + '" style="--to:' + kd + '"/></svg><b>' + Math.round(keep) + '%</b> of the peak kept</span>';
     var pill2 = per ? '<span class="jy-p" title="The amount at stake on this trade, called 1R"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6l8-3z"/></svg>Risk <b>' + usd(per) + '</b></span>' : '';
     return '<div class="jy"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><div class="jy-in"><div class="jy-top"><span class="jy-h">Trade journey</span><span class="jy-ps">' + pill1 + pill2 + '</span></div><svg class="jy-sv" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Journey of this trade: entry, best point and close, with time to scale">' + out + '</svg>'
-      + '<p class="jy-n">Time to scale, gold price on the right. The line is smoothed between recorded points; the band is the range the price stayed in.</p></div></div>';
+      + '<p class="jy-n">' + (t.sim ? 'Simulated backtest. ' + (t.est ? 'Best and worst points are estimated from 15-minute price bars. ' : 'Best point recorded by the EA during the test; worst point estimated from 15-minute bars. ') : '') + 'Time to scale, gold price on the right. The line is smoothed between recorded points; the band is the range the price stayed in.' + (dip && !trKnown ? ' When the worst dip happened is not recorded, so it is drawn between the points around it.' : '') + '</p></div></div>';
   }
   function storyBlock(t) {
     if (!hasStory(t) && t.result_r == null) return '';
@@ -182,7 +198,7 @@
     document.head.appendChild(st);
 
     var bs = document.createElement('style'); bs.id = 'gs-out-css';
-    bs.textContent = '.gs-out{position:relative;display:inline-flex;align-items:center;gap:6px;padding:5px 13px 5px 7px;border-radius:999px;color:#fff;font:800 12px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;overflow:hidden;isolation:isolate;border:0;animation:gsPop .75s cubic-bezier(.34,1.7,.5,1) both}'
+    bs.textContent = '.gs-tk{cursor:pointer;transition:transform .2s,box-shadow .25s}.gs-tk:hover{transform:translateY(-2px);box-shadow:0 16px 30px -22px rgba(42,85,217,.9)}.gs-out{position:relative;display:inline-flex;align-items:center;gap:6px;padding:5px 13px 5px 7px;border-radius:999px;color:#fff;font:800 12px/1 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;overflow:hidden;isolation:isolate;border:0;animation:gsPop .75s cubic-bezier(.34,1.7,.5,1) both}'
       + '.gs-out b{font-weight:800;position:relative;z-index:2;text-shadow:0 1px 2px rgba(0,0,0,.25)}'
       + '.gs-out i{position:relative;z-index:2;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.24);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset}.gs-out i svg{width:12px;height:12px}'
       + '.gs-out i svg path{stroke-dasharray:40;stroke-dashoffset:40;animation:gsDraw .7s .45s ease-out forwards}'
@@ -202,7 +218,7 @@
     var win = t.profit > 0, loss = t.profit < 0, ex = exitOf(t), hm = holdMin(t), mv = (Number(t.close_price) - Number(t.open_price)) * t.dir, eng = R().ENG[t.engine] || '', ec = R().ECL[t.engine] || 'var(--blue-hi)';
     var side = t.dir > 0 ? 'BUY' : 'SELL', rr = Number(t.result_r || 0);
     var sentence = side + ' ' + Number(t.lots).toFixed(2) + ' lots' + (t.symbol ? ' of ' + esc(t.symbol) : ' of gold') + ', opened ' + (t.opened_at ? dt(t.opened_at) : 'earlier') + ' at ' + Number(t.open_price).toFixed(2) + ', closed ' + dt(t.closed_at) + ' at ' + Number(t.close_price).toFixed(2) + '. The price moved ' + (mv >= 0 ? 'in your favour by ' : 'against you by ') + Math.abs(mv).toFixed(2) + '.';
-    return '<div class="gs-t ' + (win ? 'w' : loss ? 'l' : 'z') + (big ? ' big' : '') + '"><div class="gs-t1"><span class="gs-side ' + (t.dir > 0 ? 'b' : 's') + '">' + side + '</span><span class="gs-eng" style="--c:' + ec + '">' + esc(eng) + (t.is_add ? ' add-on' : '') + '</span><span class="gs-time">' + (t.opened_at ? dt(t.opened_at) + ' &rarr; ' : '') + tm(t.closed_at) + '</span><b class="gs-res" style="color:' + col(t.profit) + '">' + sgn(t.profit) + '</b></div>'
+    return '<div class="gs-t ' + (win ? 'w' : loss ? 'l' : 'z') + (big ? ' big' : ' gs-tk') + '"' + (big ? '' : ' data-tk="' + esc(key(t)) + '" role="button" tabindex="0"') + '><div class="gs-t1"><span class="gs-side ' + (t.dir > 0 ? 'b' : 's') + '">' + side + '</span><span class="gs-eng" style="--c:' + ec + '">' + esc(eng) + (t.is_add ? ' add-on' : '') + '</span><span class="gs-time">' + (t.opened_at ? dt(t.opened_at) + ' &rarr; ' : '') + tm(t.closed_at) + '</span><b class="gs-res" style="color:' + col(t.profit) + '">' + sgn(t.profit) + '</b></div>'
       + '<div class="gs-t2"><div><small>Entry</small><b>' + Number(t.open_price).toFixed(2) + '</b></div><div class="gs-arw ' + (mv >= 0 ? 'up' : 'dn') + '"><i></i><em>' + (mv >= 0 ? '+' : '') + mv.toFixed(2) + '</em></div><div><small>Exit</small><b>' + Number(t.close_price).toFixed(2) + '</b></div><div><small>Lots</small><b>' + Number(t.lots).toFixed(2) + '</b></div>' + (t.result_r == null ? '' : '<div><small>Result</small><b>' + (rr >= 0 ? '+' : '') + rr.toFixed(2) + 'R</b></div>') + '<div><small>Held</small><b>' + (hm == null ? '-' : R().fmtMin(hm)) + '</b></div></div>'
       + '<div class="gs-t3"><span class="gs-ex ' + ex[1] + '">' + esc(ex[0]) + '</span><span class="gs-out ' + (win ? 'w' : loss ? 'l' : 'z') + '"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">' + (win ? '<path d="M12 19V6M6 11l6-6 6 6"/>' : loss ? '<path d="M12 5v13M6 13l6 6 6-6"/>' : '<path d="M5 12h14"/>') + '</svg></i><b>' + (win ? 'WIN' : loss ? 'LOSS' : 'FLAT') + '</b></span></div>'
       + (big ? (hasJourney(t) ? '' : '<p class="gs-sent">' + sentence + ' ' + esc(ex[2]) + '</p>' + (t.result_r == null ? '' : '<p class="gs-fine">One R is the amount the EA risked on this trade; ' + (rr >= 0 ? '+' : '') + rr.toFixed(2) + 'R means this trade ' + (rr >= 0 ? 'earned ' : 'lost ') + Math.abs(rr).toFixed(2) + ' times that risk.</p>')) + storyBlock(t) : (hasStory(t) ? '<p class="gs-hint">Best +' + Math.max(0, Number(t.mfe_r)).toFixed(2) + 'R &middot; worst ' + Math.min(0, Number(t.mae_r)).toFixed(2) + 'R' + (stopWord(t) ? ' &middot; stop at ' + stopWord(t) : '') + '</p>' : '')) + '</div>';
@@ -239,7 +255,7 @@
     wireBody(); wireFlt();
   }
   function wireFlt() { $$('#gs-f [data-f]').forEach(function (b) { b.onclick = function () { flt = b.dataset.f; render(); }; }); }
-  function wireBody() { $$('#gs-b [data-gday]').forEach(function (b) { b.onclick = function () { push(daySpec(b.dataset.gday)); }; }); $$('#gs-b [data-gsel]').forEach(function (b) { b.onclick = function () { var sp = selSpec(b.dataset.gsel); if (sp) push(sp); }; }); }
+  function wireBody() { $$('#gs-b [data-tk]').forEach(function (b) { b.onclick = function () { var t = tradeByKey(b.dataset.tk); if (t) push({k: 'trade', t: t, title: 'Trade details', sub: dt(t.closed_at)}); }; b.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.onclick(); } }; }); $$('#gs-b [data-gday]').forEach(function (b) { b.onclick = function () { push(daySpec(b.dataset.gday)); }; }); $$('#gs-b [data-gsel]').forEach(function (b) { b.onclick = function () { var sp = selSpec(b.dataset.gsel); if (sp) push(sp); }; }); }
   function csv(list, name) {
     var rows = [['Closed', 'Opened', 'Engine', 'Side', 'Lots', 'Entry', 'Exit', 'Result USD', 'R', 'Exit']].concat(list.slice().sort(function (a, b) { return new Date(a.closed_at) - new Date(b.closed_at); }).map(function (t) { return [new Date(t.closed_at).toISOString(), t.opened_at ? new Date(t.opened_at).toISOString() : '', R().ENG[t.engine] || '', t.dir > 0 ? 'BUY' : 'SELL', t.lots, t.open_price, t.close_price, t.profit, t.result_r, t.exit_reason || '']; }));
     var txt = rows.map(function (r) { return r.map(function (c) { return '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"'; }).join(','); }).join('\n'), a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + txt], {type: 'text/csv'})); a.download = 'goldtriengine-' + String(name || 'trades').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.csv'; document.body.appendChild(a); a.click(); a.remove();

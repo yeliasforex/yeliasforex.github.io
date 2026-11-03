@@ -50,7 +50,7 @@
       for (var mo = 1; mo <= 12; mo++) {
         var m = by[y * 12 + mo - 1];
         if (m && m[2] !== 0) {
-          var v = m[2], p = m[3], label = MON[mo - 1] + ' ' + y, part = (y === e.y && mo === e.m) ? ' data-part="1"' : '', sg = v >= 0 ? '+' : '-';
+          var v = m[2], p = m[3], label = MON[mo - 1] + ' ' + y, part = (y === e.y && mo === e.m && e.d < new Date(e.y, e.m, 0).getDate()) ? ' data-part="1"' : '', sg = v >= 0 ? '+' : '-';
           var txt = label + ': ' + (v >= 0 ? 'won ' : 'lost ') + sg + '$' + n0(Math.abs(Math.round(v))) + ' (' + sg + Math.abs(p).toFixed(1) + '%)';
           cells += '<span class="m ' + (v > 0 ? 'p' : 'l') + '" tabindex="0" role="button" data-m="' + label + '" data-v="' + Math.round(v) + '" data-p="' + p.toFixed(1) + '" data-s="' + shortMoney(v) + '"' + part + ' aria-label="' + txt + '" title="' + txt + '"></span>';
         } else cells += '<span class="m" title="' + (m ? 'No trades' : 'Not tested yet') + '"></span>';
@@ -99,6 +99,9 @@
 
   fetch(U + '/rest/v1/rpc/public_backtest', { method: 'POST', headers: { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': 'application/json' }, body: '{}' })
     .then(function (x) { return x.ok ? x.json() : null; })
-    .then(function (r) { if (r && r.months && r.pts && r.years && r.start && r.end) apply(r); })
+    .then(function (r) {
+      if (r && r.months && r.pts && r.years && r.start && r.end) return apply(r);
+      return fetch('backtest-report.json?v=2').then(function (x) { return x.ok ? x.json() : null; }).then(function (q) { if (q && q.months && q.pts && q.years && q.start && q.end) apply(q); });   // no report marked Live in Admin: the one published with the site
+    })
     .catch(function () {});
 })();

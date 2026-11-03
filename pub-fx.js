@@ -25,7 +25,7 @@
     if (i === 0) return open_(sheet('Live 24/5', 'What this means', [['Stream', 'YouTube, Monday to Friday'], ['Market', 'Gold (XAUUSD), 24 hours, 5 days'], ['Who trades', 'The EA alone'], ['Who talks', 'An AI host, only to explain']], 'The robot trades by itself and the stream lets you watch it do it. The AI host explains what the EA did; it never decides a trade and never tells anyone to buy or sell.'));
     if (i === 1) return open_(sheet('Three engines', 'Alpha, Beta and Gamma', ['Alpha', 'Beta', 'Gamma'].map(function (n) { var l = H.filter(function (h) { return h.engine === n; }), net = l.reduce(function (a, h) { return a + Number(h.profit || 0); }, 0); return [n + ' (live demo)', l.length + ' trades, ' + money(net), net >= 0 ? 'var(--mint)' : 'var(--red)']; }), 'Three independent engines trade the same gold market, each on its own. The live demo results of each one are listed here, wins and losses alike.'));
     var live = P ? ' Live demo so far: profit factor ' + Number(S.profit_factor || 0).toFixed(2) + ' over ' + (S.trades || H.length) + ' trades.' : '';
-    return open_(sheet(i === 2 ? 'Backtest trades' : 'Backtest profit factor', 'MT5 Strategy Tester', [['Period', '1 Jan 2024 to 17 Oct 2026'], ['Market', 'XAUUSD (gold)'], ['Data', 'Fusion Markets'], ['Trades', '1,302'], ['Profit factor', '2.00']], 'These are simulated results. A backtest shows what the rules would have done on past prices; it is not a promise.' + live + ' Open the backtest section to see it month by month.'));
+    return open_(sheet(i === 2 ? 'Backtest trades' : 'Backtest profit factor', 'MT5 Strategy Tester', [['Period', '1 Jan 2024 to 31 Oct 2026'], ['Market', 'XAUUSD (gold)'], ['Data', 'Fusion Markets'], ['Trades', '1,323'], ['Profit factor', '1.87']], 'These are simulated results. A backtest shows what the rules would have done on past prices; it is not a promise.' + live + ' Open the backtest section to see it month by month.'));
   }
   if (stats) $$('.facts .fact', stats).forEach(function (f, i) { f.tabIndex = 0; f.setAttribute('role', 'button'); f.classList.add('pubx-ck'); f.addEventListener('click', function () { statSheet(i); }); f.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); statSheet(i); } }); });
 
@@ -33,13 +33,23 @@
   var BT = null, MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   function btTrades(key, label) {
     var go = function (D) {
-      var L = (D.months[key] || []).map(function (x) { return {engine: x[7], dir: x[2], is_add: !!x[9], opened_at: new Date(x[0] * 1000).toISOString(), closed_at: new Date(x[1] * 1000).toISOString(), open_price: x[4], close_price: x[5], lots: x[3], profit: x[6], exit_reason: x[8], symbol: 'XAUUSD'}; });
+      var ci = {}; (D.cols || []).forEach(function (c, i) { ci[c] = i; });
+      var L = (D.months[key] || []).map(function (x) {
+        var t = {engine: x[7], dir: x[2], is_add: !!x[9], opened_at: new Date(x[0] * 1000).toISOString(), closed_at: new Date(x[1] * 1000).toISOString(), open_price: x[4], close_price: x[5], lots: x[3], profit: x[6], exit_reason: x[8], symbol: 'XAUUSD'};
+        if (ci.r != null && x[ci.r] != null) {       // the story of the trade: 1R, best point, worst point, when the best point came
+          var risk = x[ci.risk], per = Math.abs(risk) / 1, mfe = x[ci.mfe], mae = x[ci.mae];
+          t.result_r = x[ci.r]; t.mfe_r = mfe; t.mae_r = mae; t.peak_at = new Date(x[ci.peak] * 1000).toISOString(); t.stop_r = x[ci.stop]; t.risk_usd = risk;
+          t.mfe_usd = mfe * risk; t.mae_usd = mae * risk; t.mfe_pips = mfe * (Math.abs(x[5] - x[4]) > 0 && x[ci.r] ? Math.abs((x[5] - x[4]) / x[ci.r]) / 0.1 : 0); t.mae_pips = mae * (t.mfe_pips && mfe ? t.mfe_pips / mfe : 0);
+          t.sim = 1; t.est = x[ci.est]; if (ci.trough != null && x[ci.trough]) t.trough_at = new Date(x[ci.trough] * 1000).toISOString();
+        }
+        return t;
+      });
       if (!L.length) return open_(sheet(label, 'Backtest', [['Trades', '0']], 'The robot made no trades in this month.'));
       var net = L.reduce(function (a, t) { return a + t.profit; }, 0), w = L.filter(function (t) { return t.profit > 0; }).length;
       window.GTE_MA = window.GTE_MA || {}; window.GTE_MA.rng = window.GTE_MA.rng || function (a) { return a; }; window.GTE_MA.trades = L;
       open_({k: 'trades', title: label + ' (backtest)', sub: 'Simulated: ' + L.length + ' trades, ' + (net >= 0 ? '+$' : '-$') + Math.abs(net).toFixed(2) + ', ' + Math.round(w / L.length * 100) + '% won. Not live results.', list: L, group: true});
     };
-    if (BT) return go(BT); fetch('backtest-trades.json?v=1').then(function (r) { return r.json(); }).then(function (D) { BT = D; go(D); }).catch(function () {});
+    if (BT) return go(BT); fetch('backtest-trades.json?v=2').then(function (r) { return r.json(); }).then(function (D) { BT = D; go(D); }).catch(function () {});
   }
   document.addEventListener('click', function (e) {
     var m = e.target.closest && e.target.closest('#backtest .m[data-m]'); if (!m || !window.gteSheet) return;

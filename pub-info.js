@@ -11,7 +11,7 @@
     return {k: 'explain', title: title, sub: sub, html: (lead ? '<p class="gs-lead">' + E(lead) + '</p>' : '') + (rows && rows.length ? '<div class="gs-kv">' + rows.map(function (r) { return '<div><span>' + E(r[0]) + '</span><b>' + E(r[1]) + '</b></div>'; }).join('') + '</div>' : '')
       + (links || []).filter(function (l) { return l && l[1]; }).map(function (l) { return '<a class="gs-more" href="' + E(l[1]) + '"' + (/^https?:/.test(l[1]) ? ' target="_blank" rel="noopener"' : '') + '>' + E(l[0]) + '</a>'; }).join('')};
   }
-  var BT = 'MT5 Strategy Tester, XAUUSD, 1 Jan 2024 to 17 Oct 2026, Fusion Markets data. Simulated: a backtest shows what the rules would have done on past prices, not a promise.';
+  var BT = 'MT5 Strategy Tester, XAUUSD, 1 Jan 2024 to 31 Oct 2026, Fusion Markets data. Simulated: a backtest shows what the rules would have done on past prices, not a promise.';
   var DEF = {
     'profit factor': ['Profit factor', 'The money the winning trades earned divided by the money the losing trades cost. Above 1.00 the run is in profit; 2.00 means the winners earned twice what the losers cost.'],
     'trades': ['Trades', 'How many trades the EA closed in this run. More trades make the other numbers more reliable than a handful of lucky ones.'],
@@ -48,7 +48,7 @@
   }
   var BOXES = [
     ['#backtest .stats > div', function (el) { return defFor(el, 'Backtest'); }],
-    ['#backtest .months', function () { return sheet('Months closed positive', 'Backtest', 'Each cell is one calendar month of the run: green closed in profit, red in loss. Tap a month to see every trade of that month.', [['Months positive', txt($('#backtest .months-head, #backtest .months h3')).slice(0, 40) || '29 of 34'], ['Run', 'Simulated']], [['Backtest it yourself, free', 'free-backtest.html']]); }],
+    ['#backtest .months', function () { return sheet('Months closed positive', 'Backtest', 'Each cell is one calendar month of the run: green closed in profit, red in loss. Tap a month to see every trade of that month.', [['Months positive', txt($('#backtest .months-head, #backtest .months h3')).slice(0, 40) || '28 of 34'], ['Run', 'Simulated']], [['Backtest it yourself, free', 'free-backtest.html']]); }],
     ['.fz-stats > div', function (el) { return defFor(el, 'Published backtest'); }],
     ['.fz-file', function () { return sheet('GoldTriEngine.ex5', 'Free backtest download', 'The real EA, free for backtesting: it runs in the MT5 Strategy Tester on your own computer and needs no licence key. Live trading needs a licence.', [['Works in', 'MT5 Strategy Tester'], ['Symbol', 'XAUUSD (gold)'], ['Time', 'About 5 minutes']], [['Go to the free backtest', 'free-backtest.html']]); }],
     ['#brokers .bk-why > div', function (el) { var t = txt(el).toLowerCase(), k = Object.keys(WHY).filter(function (x) { return t.indexOf(x) === 0; })[0]; return sheet(txt($('b, strong', el)) || 'Why a raw account', 'Why GoldTriEngine needs a raw account', WHY[k] || txt(el), [['Required', 'Raw account at Fusion Markets or IC Markets'], ['Platform', 'MetaTrader 5']], [['Read the broker guide', 'fusion-markets-ic-markets-gold-ea.html']]); }],
