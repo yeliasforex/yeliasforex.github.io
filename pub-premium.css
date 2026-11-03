@@ -146,3 +146,6 @@ a:not(.btn):hover{color:var(--ac)}
 #gs .gs-ft{border-top:1px solid var(--line-2)!important;background:transparent!important}
 #gs .gs-ft button,#gs .gs-ft a{background:var(--glass)!important;border:1px solid var(--glass-bd)!important;color:var(--fg)!important;border-radius:999px}
 #gs .gs-lead{color:var(--fg-2)}
+
+/* numbered checks (Guide): white number on the gradient circle */
+.check::before{display:grid;place-items:center;width:36px;height:36px;left:24px;top:24px;border-radius:50%;background:var(--g-ac,linear-gradient(135deg,#2A55D9,#7C5CF5))!important;color:#fff!important;font:800 .78rem/1 var(--mono);letter-spacing:0;box-shadow:0 8px 20px -8px color-mix(in srgb,var(--ac,#2A55D9) 80%,transparent)}
