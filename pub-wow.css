@@ -294,3 +294,10 @@ body.wow-kopen{overflow:hidden}
   header.top .nav{gap:0!important}
 }
 @media (min-width:1001px) and (max-width:1180px){header.top .nav a[href$="contact.html"]{display:none!important}}
+
+/* the old page-top scroll bar is replaced by the header line and candle */
+div.progress{display:none!important}
+
+/* back to top: a glass button in the site colours (it was gold) */
+.totop{width:46px;height:46px;padding:0!important;justify-content:center;border-radius:50%;background:var(--glass)!important;border:1px solid var(--glass-bd)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ac)!important;filter:none!important;box-shadow:0 14px 30px -14px color-mix(in srgb,var(--ac) 70%,transparent)}
+.totop:hover{color:var(--vio)!important;border-color:var(--ac)!important}

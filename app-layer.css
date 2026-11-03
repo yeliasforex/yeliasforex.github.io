@@ -1,0 +1,41 @@
+/* The shared polish for My account, Partner and Admin: sliding light under the active tab (Admin), press ripple and sparks, a hint bubble on hover,
+   a progress line when a tab changes, and one glass look for every detail sheet. Purely additive; each page keeps its own colours. */
+:root{--app-ac:#6C8CFF;--app-ac2:#A78BFA;--app-cy:#22D3EE;--app-g:linear-gradient(100deg,var(--app-ac),var(--app-ac2) 55%,var(--app-cy))}
+body.app-ma{--app-ac:var(--blue-hi,#6C8CFF)}
+body.app-pd{--app-ac:var(--cyan,#3CD2FF)}
+body.app-ad{--app-ac:var(--gold,#A78BFA);--app-ac2:var(--gold2,#5EE3F5)}
+
+/* progress line: runs along the top while a tab changes */
+.app-prog{position:fixed;left:0;top:0;height:3px;width:100%;z-index:9500;pointer-events:none;transform-origin:left;transform:scaleX(0);background:var(--app-g);box-shadow:0 0 14px var(--app-ac);opacity:0}
+.app-prog.go{animation:appProg .8s cubic-bezier(.3,.7,.2,1) forwards}
+@keyframes appProg{0%{transform:scaleX(0);opacity:1}70%{transform:scaleX(.96);opacity:1}100%{transform:scaleX(1);opacity:0}}
+
+/* press: ripple and sparks from the pointer */
+.app-rip{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,color-mix(in srgb,var(--app-ac) 55%,transparent),transparent 70%);animation:appRip .7s ease-out forwards;z-index:0}
+@keyframes appRip{to{transform:scale(9);opacity:0}}
+.app-spk{position:absolute;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;pointer-events:none;background:var(--app-g);box-shadow:0 0 8px var(--app-ac);animation:appSpk .75s cubic-bezier(.2,.8,.2,1) forwards;z-index:3}
+@keyframes appSpk{to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+.app-press{animation:appPress .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes appPress{0%{transform:scale(1)}30%{transform:scale(.94)}100%{transform:scale(1)}}
+
+/* hint bubble */
+.app-hint{position:fixed;z-index:9450;display:flex;align-items:center;gap:8px;max-width:260px;padding:8px 13px;border-radius:14px;font:600 .76rem/1.3 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--fg,var(--text,#eef2ff));background:var(--tipbg,var(--panel-s,var(--panel,#101936)));border:1px solid color-mix(in srgb,var(--app-ac) 45%,transparent);box-shadow:0 22px 44px -18px rgba(10,20,90,.6);pointer-events:none;opacity:0;transform:translateY(6px) scale(.9);transition:opacity .2s,transform .4s cubic-bezier(.34,1.6,.64,1)}
+.app-hint.on{opacity:1;transform:none}
+.app-hint:before{content:"";position:absolute;width:9px;height:9px;background:inherit;border-left:1px solid color-mix(in srgb,var(--app-ac) 45%,transparent);border-bottom:1px solid color-mix(in srgb,var(--app-ac) 45%,transparent);left:-5px;top:50%;margin-top:-4.5px;transform:rotate(45deg)}
+.app-hint.below:before{left:50%;top:-5px;margin:0 0 0 -4.5px;transform:rotate(135deg)}
+
+/* every detail sheet: the same glass */
+#gs .gs-p,.pd-sheet,.gas{-webkit-backdrop-filter:blur(26px) saturate(1.5);backdrop-filter:blur(26px) saturate(1.5);box-shadow:-40px 0 90px -30px rgba(10,20,90,.55),0 0 0 1px rgba(255,255,255,.05) inset}
+#gs .gs-p:before,.gas:before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:var(--app-g);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;opacity:.55}
+#gs .gs-bk,.pd-sheetbg,.gas-bg{-webkit-backdrop-filter:blur(8px) saturate(1.2);backdrop-filter:blur(8px) saturate(1.2)}
+#gs .gs-t,.pd-sheet .pd-click,.gas .gas-r{transition:transform .25s cubic-bezier(.2,.7,.1,1),box-shadow .3s,border-color .25s}
+#gs .gs-t:hover,.pd-sheet .pd-click:hover,.gas .gas-r:hover{transform:translateY(-2px);box-shadow:0 22px 40px -24px color-mix(in srgb,var(--app-ac) 70%,transparent)}
+#gs .gs-ht h3{background:var(--app-g);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+
+@media (prefers-reduced-motion:reduce){.app-prog,.app-rip,.app-spk,.app-press,.app-hint,.app-ind{animation:none!important;transition:none!important}}
+
+.pd-sheet{border-top:1px solid color-mix(in srgb,var(--app-ac) 45%,transparent)}
+
+/* back to top: a round glass button in each page's own colour (it was gold) */
+.totop{width:46px;height:46px;padding:0!important;justify-content:center;border-radius:50%;background:var(--panel,var(--panel-s,#fff))!important;border:1px solid color-mix(in srgb,var(--app-ac) 40%,transparent)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--app-ac)!important;filter:none!important;box-shadow:0 14px 30px -14px color-mix(in srgb,var(--app-ac) 70%,transparent)}
+.totop:hover{color:var(--app-ac2)!important;border-color:var(--app-ac)!important}

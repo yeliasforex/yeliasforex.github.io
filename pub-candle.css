@@ -1,0 +1,41 @@
+/* Scroll as a candle: the header fills green going down and red coming back, the Watch live button flashes the page position, a side rail shows the way through
+   the page, and the back-to-top button says how far from the open you are. Decoration only: it is page progress, never a price. */
+header.top{--cd-up:var(--mint,#10B981);--cd-dn:var(--red,#EF4444)}
+.cd-fill{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;z-index:0}
+.cd-fill:before{content:"";position:absolute;left:0;top:0;bottom:0;width:calc(var(--cd-p,0)*100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--cd-c,var(--cd-up)) 22%,transparent));transition:background .35s}
+header.top>*:not(.cd-fill):not(.wow-prog){position:relative;z-index:1}
+header.top.cd-up{--cd-c:var(--cd-up)}header.top.cd-dn{--cd-c:var(--cd-dn)}
+header.top.cd-up.is-float,header.top.cd-dn.is-float{border-color:color-mix(in srgb,var(--cd-c) 55%,var(--glass-bd))!important}
+header.top.cd-dn .wow-prog{background:linear-gradient(90deg,var(--cd-dn),color-mix(in srgb,var(--cd-dn) 50%,var(--vio)))}
+header.top.cd-up .wow-prog{background:linear-gradient(90deg,var(--cy),var(--cd-up))}
+
+/* the line under the header: it ends exactly at the rounded corners, its head shows where you are, and it says when the stream is off */
+header.top .wow-prog{transform:scaleX(var(--cd-p,0))}
+header.top.cd-off .wow-prog{background:repeating-linear-gradient(90deg,var(--muted,#8E9BBE) 0 6px,transparent 6px 10px);box-shadow:none;opacity:.8}
+.cd-head{position:absolute;bottom:-1px;left:calc(18px + (100% - 36px)*var(--cd-p,0));width:0;height:0;pointer-events:none;z-index:2}
+.cd-head:before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--cd-c,var(--cd-up));box-shadow:0 0 0 3px color-mix(in srgb,var(--panel,#fff) 85%,transparent),0 0 10px var(--cd-c,var(--cd-up))}
+.cd-off .cd-head:before{background:var(--muted,#8E9BBE);box-shadow:0 0 0 3px color-mix(in srgb,var(--panel,#fff) 85%,transparent)}
+.cd-off 
+/* Watch live: the tip of the candle */
+.nav .pill{transition:background .3s,color .3s,box-shadow .3s}
+.nav .pill.cd-flash{box-shadow:0 0 0 4px color-mix(in srgb,var(--mint,#10B981) 28%,transparent)}
+.nav .pill.cd-live{animation:cdBeat 2.6s ease-in-out infinite}
+@keyframes cdBeat{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--mint,#10B981) 22%,transparent)}}
+.nav .pill.cd-off{background:var(--glass,rgba(120,140,200,.16))!important;color:var(--fg-2,var(--fg))!important;border:1px solid var(--glass-bd);animation:none;box-shadow:none}
+.nav .pill.cd-off .dot{background:var(--muted,#8E9BBE)!important;animation:none!important;box-shadow:none!important}
+.nav .pill.cd-off:after{display:none}
+
+/* side rail */
+.cd-rail{position:fixed;right:14px;top:50%;transform:translateY(-50%);width:30px;height:min(44vh,340px);z-index:60;opacity:0;pointer-events:none;transition:opacity .4s}
+.cd-rail.on{opacity:1;pointer-events:auto}
+.cd-rail .tk{position:absolute;left:14px;top:0;bottom:0;width:2px;border-radius:2px;background:var(--line-2,rgba(150,170,230,.25))}
+.cd-rail .fl{position:absolute;left:14px;top:0;width:2px;border-radius:2px;height:calc(var(--cd-p,0)*100%);background:var(--cd-c,var(--mint,#10B981));box-shadow:0 0 10px var(--cd-c,var(--mint,#10B981));transition:background .3s}
+.cd-rail .dt{position:absolute;left:14px;top:calc(var(--cd-p,0)*100%);width:12px;height:12px;margin:-6px 0 0 -5px;border-radius:50%;background:var(--cd-c,var(--mint,#10B981));box-shadow:0 0 0 3px var(--panel,#fff),0 0 0 5px color-mix(in srgb,var(--cd-c,var(--mint,#10B981)) 55%,transparent);transition:background .3s}
+.cd-rail a{position:absolute;left:0;width:30px;height:16px;margin-top:-8px;display:block}
+.cd-rail a:before{content:"";position:absolute;left:7px;top:7px;width:16px;border-top:2px dashed color-mix(in srgb,var(--ac,#6C8CFF) 55%,transparent);transition:border-color .25s,width .25s,left .25s}
+.cd-rail a:hover:before,.cd-rail a.cur:before{border-top-style:solid;border-color:var(--ac,#6C8CFF);left:3px;width:24px}
+.cd-rail a span{position:absolute;right:38px;top:-2px;white-space:nowrap;padding:5px 10px;border-radius:10px;font:600 .72rem var(--sans,system-ui);color:var(--fg);background:var(--hdr,var(--panel,#fff));border:1px solid var(--glass-bd);box-shadow:0 14px 30px -14px rgba(10,20,90,.5);opacity:0;transform:translateX(6px);transition:opacity .2s,transform .3s;pointer-events:none}
+.cd-rail a:hover span,.cd-rail a:focus-visible span{opacity:1;transform:none}
+@media (max-width:1180px),(hover:none){.cd-rail{display:none}}
+
+@media (prefers-reduced-motion:reduce){.nav .pill.cd-live{animation:none}.cd-fill:before,.cd-rail *{transition:none!important}}
