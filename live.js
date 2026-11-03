@@ -105,7 +105,7 @@
   function mount() {
     shown = null; if (timer) clearInterval(timer);
     var el = document.getElementById('lv'); if (!el) return;
-    shown = (el.className.match(/lv-(\w+)/) || [])[1];
+    shown = (el.className.match(/lv-(\w+)/) || [])[1]; bind(el);
     el.querySelectorAll('.lv-foot [data-go]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); var t = document.querySelector('#subnav a[data-tab="' + a.dataset.go + '"]'); if (t) t.click(); }; });
     var mb = el.querySelector('.lv-more'), dt = el.querySelector('.lv-detail');
     if (mb) mb.onclick = function () { var o = !el.classList.contains('lv-open'); el.classList.toggle('lv-open', o); mb.setAttribute('aria-expanded', o); try { sessionStorage.setItem('gte_lv_open', o ? '1' : ''); } catch (e) {} };
@@ -115,5 +115,66 @@
     paint();
   }
   function refresh(st) { if (!D || !st) return; D.st = st; D.at = Date.now(); paint(); }
+
+  /* ---- every part of the card opens a sheet with the real details behind it ---- */
+  function when(t) { return t ? new Date(t).toLocaleString([], { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'never'; }
+  function dkey(x) { var y = new Date(x); return y.getFullYear() + '-' + String(y.getMonth() + 1).padStart(2, '0') + '-' + String(y.getDate()).padStart(2, '0'); }
+  function sheet(title, sub, text, rows, links) {
+    if (!window.gteSheet || !D) return;
+    var h = (text ? '<p class="gs-lead">' + text + '</p>' : '') + '<div class="gs-kv">' + rows.map(function (r) { return '<div><span>' + esc(r[0]) + '</span><b' + (r[2] ? ' style="color:' + r[2] + '"' : '') + '>' + esc(r[1]) + '</b></div>'; }).join('') + '</div>'
+      + (links || []).map(function (l) { return l[2] ? '<a class="gs-more" href="' + l[2] + '">' + esc(l[1]) + '</a>' : '<button type="button" class="gs-more" data-lv="' + l[0] + '">' + esc(l[1]) + '</button>'; }).join('');
+    window.gteSheet.open({ k: 'explain', title: title, sub: sub, html: h });
+  }
+  function figs() {
+    var st = D.st || {}, fl = (st.equity != null && st.balance != null) ? st.equity - st.balance : null, m = model(D, Date.now());
+    return { st: st, fl: fl, m: m, online: m.s === 'trade' || m.s === 'wait' || m.s === 'rest' || m.s === 'warn' };
+  }
+  var STATES = [['Online, trade open', 'A report arrived and at least one trade is running.'], ['Online, watching gold', 'No trade now. Normal between signals.'], ['Market closed', 'Weekend: gold does not trade.'], ['Offline', 'No report for longer than the limit. Open trades keep their stop loss.'], ['Needs attention', 'The EA reported a problem, with what to do about it.']];
+  function actions(a) {
+    if (!D) return; var f = figs(), st = f.st, usd = D.usd || function (n) { return '$' + Number(n).toFixed(2); };
+    if (a === 'status') {
+      var t = f.m.s === 'warn' && D.err ? D.fill(D.err.explanation) + (D.err.solution ? ' What to do: ' + D.fill(D.err.solution) : '') : f.m.sub;
+      sheet(f.m.title, 'Live status of your EA', esc(t), [['Last report', st.last_heartbeat ? when(st.last_heartbeat) + (f.m.ago ? ' (' + f.m.ago + ')' : '') : 'none yet'], ['Reports arrive', 'about every ' + D.beatMin + ' min'], ['Marked offline after', D.offMin + ' min without a report'], ['MT5 account', D.l && D.l.bound_account ? String(D.l.bound_account) : 'not attached yet'], ['Broker', D.l && D.l.bound_broker ? D.l.bound_broker : '-']].concat(STATES.map(function (x) { return [x[0], x[1]]; })), [['fresh', 'How fresh is this?']]);
+    } else if (a === 'fresh') {
+      sheet('How fresh is this?', 'The ring and the heartbeat line', 'Your EA sends a short report from MT5 on a schedule. The ring around the icon is full right after a report and empties as time passes. If no report arrives for ' + D.offMin + ' minutes the status changes to offline. Open trades keep their stop loss either way.',
+        [['Last report', st.last_heartbeat ? when(st.last_heartbeat) : 'none yet'], ['Age of that report', f.m.ago || '-'], ['Page last checked', Math.max(0, Math.floor((Date.now() - D.at) / 1000)) + ' s ago'], ['Reports arrive', 'about every ' + D.beatMin + ' min'], ['Offline after', D.offMin + ' min']]);
+    } else if (a === 'version') {
+      sheet('EA version', D.upd ? 'An update is available' : 'You are up to date', D.upd ? 'A newer version is ready. Download it, replace the file in MT5 and attach it to the chart again. Your key stays the same.' : 'This is the newest version we have published.',
+        [['Installed on MT5', st.ea_version ? 'v' + st.ea_version : 'unknown yet'], ['Latest published', D.upd ? 'v' + D.upd : (st.ea_version ? 'v' + st.ea_version : '-')]], D.upd ? [['', 'Download the latest EA', 'download.html']] : [['', 'See what changed', 'changelog.html']]);
+    } else if (a === 'open') {
+      var n = st.open_positions || 0;
+      sheet('Open trades', f.online ? (n ? n + ' running right now' : 'None running right now') : 'Last known', 'These are trades the EA is managing on your MT5 account at this moment. Every trade has a stop loss from the moment it opens, and nothing is closed by hand.' + (f.online ? '' : ' The EA is not reporting, so this is the last known number.'),
+        [['Open positions', String(n)], ['Floating result', f.fl == null ? '-' : D.sgn(f.fl), f.fl == null ? null : D.col(f.fl)], ['Equity', st.equity != null ? usd(st.equity) : '-'], ['Balance', st.balance != null ? usd(st.balance) : '-']], [['trades', 'Open the Trades tab']]);
+    } else if (a === 'float') {
+      sheet('Floating result', 'Profit or loss on trades that are still open', 'Floating is equity minus balance. It moves with the gold price while a trade is open and becomes a real result only when the trade closes.',
+        [['Equity', st.equity != null ? usd(st.equity) : '-'], ['Balance', st.balance != null ? usd(st.balance) : '-'], ['Floating', f.fl == null ? '-' : D.sgn(f.fl), f.fl == null ? null : D.col(f.fl)], ['Open positions', String(st.open_positions || 0)]]);
+    } else if (a === 'today') {
+      var tr = D.todayTrades || [];
+      if (tr.length && window.gteSheet.sel) { window.gteSheet.sel('cday:' + dkey(tr[0].closed_at)); return; }
+      sheet('Today, closed', 'Result of trades that closed today', 'Only trades that have already closed count here. Open trades are shown separately as floating.', [['Closed today', String(tr.length)], ['Result', D.sgn(D.today || 0), D.col(D.today || 0)]], [['trades', 'Open the Trades tab']]);
+    } else if (a === 'trades') {
+      var t = document.querySelector('#subnav a[data-tab="trades"]'); if (window.gteSheet.close) window.gteSheet.close(); if (t) t.click();
+    }
+  }
+  function bind(el) {
+    function mk(node, a, label) { if (!node) return; node.classList.add('lv-click'); node.setAttribute('role', 'button'); node.setAttribute('tabindex', '0'); if (label) node.setAttribute('aria-label', label); node.dataset.lva = a; }
+    mk(el.querySelector('.lv-orb'), 'status', 'What this status means');
+    mk(el.querySelector('.lv-title'), 'status'); mk(el.querySelector('.lv-sub'), 'status'); mk(el.querySelector('.lv-eyebrow'), 'status');
+    mk(el.querySelector('.lv-ago'), 'fresh'); mk(el.querySelector('.lv-chk'), 'fresh'); mk(el.querySelector('.lv-ecg'), 'fresh');
+    var ver = [].slice.call(el.querySelectorAll('.lv-meta > span')).filter(function (x) { return /^EA v/.test(x.textContent); })[0]; mk(ver, 'version');
+    var up = el.querySelector('.lv-up'); if (up) { up.dataset.lva = 'version'; up.addEventListener('click', function (e) { e.preventDefault(); }); up.setAttribute('role', 'button'); }
+    var st = el.querySelectorAll('.lv-stats > div'); mk(st[0], 'today', 'Today, closed: details'); mk(st[1], 'open', 'Open trades: details'); mk(st[2], 'float', 'Floating result: details');
+    mk(el.querySelector('.lv-steps'), 'status');
+    [].forEach.call(el.querySelectorAll('.lv-tr'), function (r, i) { r.classList.add('lv-click'); r.setAttribute('role', 'button'); r.setAttribute('tabindex', '0'); r.dataset.lvt = i; });
+    if (el.__lvb) return; el.__lvb = 1;
+    var go = function (e) {
+      var t = e.target.closest ? e.target.closest('.lv-tr[data-lvt]') : null;
+      if (t && el.contains(t)) { var tr = (D && D.todayTrades || []).slice().sort(function (a, b) { return new Date(a.closed_at) - new Date(b.closed_at); }).reverse()[+t.dataset.lvt]; if (tr && window.gteSheet) { e.preventDefault(); window.gteSheet.trade(tr); } return; }
+      var n = e.target.closest ? e.target.closest('[data-lva]') : null; if (n && el.contains(n)) { e.preventDefault(); actions(n.dataset.lva); }
+    };
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest && e.target.closest('.lv-click')) { e.preventDefault(); go(e); } });
+  }
+  if (!window.__lvDoc) { window.__lvDoc = 1; document.addEventListener('click', function (e) { var b = e.target.closest && e.target.closest('#gs [data-lv]'); if (b) { e.preventDefault(); actions(b.dataset.lv); } }); }
   window.gteLive = { html: html, mount: mount, refresh: refresh };
 })();

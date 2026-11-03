@@ -47,4 +47,18 @@
     addEventListener('scroll', function () { tip.classList.remove('on'); cur = null; }, {passive: true});
   }
 
+
+  /* Ask us: a chat bubble, waving dots, then the questions people ask (same as the public pages) */
+  (function () {
+    var Q = ['Ask us', null, 'Pricing?', null, 'Setup help?', null, 'Which broker?', null];
+    function dress(f) {
+      if (!f || f.querySelector('.gk-b')) return; var w = '';
+      Q.forEach(function (t, i) { w += t ? '<em style="--i:' + i + '">' + t + '</em>' : '<b class="gk-d" style="--i:' + i + '"><u></u><u></u><u></u></b>'; });
+      f.innerHTML = '<svg class="gk-b" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="gk-w" aria-hidden="true">' + w + '</span>';
+    }
+    var f = document.querySelector('.gc-fab'); if (f) dress(f);
+    else { var mo = new MutationObserver(function () { var g = document.querySelector('.gc-fab'); if (g) { dress(g); mo.disconnect(); } }); mo.observe(document.body, {childList: true}); setTimeout(function () { mo.disconnect(); }, 15000); }
+    var t = null, root = document.documentElement;
+    addEventListener('scroll', function () { if (!matchMedia('(max-width:600px)').matches) return; root.classList.add('is-scrolling'); clearTimeout(t); t = setTimeout(function () { root.classList.remove('is-scrolling'); }, 700); }, {passive: true});
+  })();
 })();

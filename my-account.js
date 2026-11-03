@@ -165,6 +165,8 @@
   const stOf = id => S.statuses.find(s => s.license_id === id) || {};
   const fill = t => String(t || '').replace('{SUPPORT}', S.settings.supportUrl || 'the support link');
   const statePill = s => ({active: ['ok', 'Active'], unused: ['info', 'Ready to activate'], expired: ['warn', 'Expired'], disabled: ['bad', 'Disabled']}[s] || ['', s]);
+  let eqRange = 'all'; try { eqRange = sessionStorage.getItem('gte_eqr') || 'all'; } catch (e) {}
+  const eqSlice = (t, r) => r === 'all' ? t : t.filter(x => new Date(x.closed_at).getTime() >= Date.now() - ({'1w': 7, '1m': 30, '3m': 90}[r] || 3650) * 864e5);
   const inRange = (t, r) => r === 'all' ? t : t.filter(x => new Date(x.closed_at).getTime() >= Date.now() - (r === '1m' ? 30 : 90) * 864e5);
   const prettyState = s => { s = String(s || ''); if (/^M:/.test(s)) return s.includes('IN') ? 'In trade' : 'Running'; return s ? s[0] + s.slice(1).toLowerCase() : 'Running'; };
   function problems(l, st) {
@@ -211,6 +213,9 @@
     const today = trades.filter(t => new Date(t.closed_at).toDateString() === new Date().toDateString()).reduce((a, t) => a + t.profit, 0);
     const week = trades.filter(t => new Date(t.closed_at).getTime() >= Date.now() - 7 * 864e5).reduce((a, t) => a + t.profit, 0);
     const mon = trades.filter(t => { const d = new Date(t.closed_at), n = new Date(); return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth(); }).reduce((a, t) => a + t.profit, 0);
+    const prevMon = trades.filter(t => { const d = new Date(t.closed_at), n = new Date(), p = new Date(n.getFullYear(), n.getMonth() - 1, 1); return d.getFullYear() === p.getFullYear() && d.getMonth() === p.getMonth(); }).reduce((a, t) => a + t.profit, 0);
+    const prevWeek = trades.filter(t => { const x = new Date(t.closed_at).getTime(); return x >= Date.now() - 14 * 864e5 && x < Date.now() - 7 * 864e5; }).reduce((a, t) => a + t.profit, 0);
+    const vs = (now, before, what) => `<div class="s cmp"><span>${what}</span> ${R.sgn(before)}</div>`;
     const online = l.status === 'active' ? (st.online ? 'on' : 'off') : '';
     const fl = (st.equity != null && st.balance != null) ? st.equity - st.balance : null;
     return `<div class="hero">
@@ -222,10 +227,10 @@
         ${R.spark(R.curve(trades).map(p => p.c), '#3EE09A', 54)}
       </div>
       <div class="hero-r">
-        <div class="tile" data-sel="month" role="button" tabindex="0"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div></div>
-        <div class="tile" data-sel="week" role="button" tabindex="0"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div></div>
-        <div class="tile" data-sel="allnet" role="button" tabindex="0"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades</div></div>
-        <div class="tile" data-sel="win" role="button" tabindex="0"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2)}</div></div>
+        <div class="tile" data-sel="month" role="button" tabindex="0"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div>${vs(mon, prevMon, 'Last month')}</div>
+        <div class="tile" data-sel="week" role="button" tabindex="0"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div>${vs(week, prevWeek, 'The 7 days before')}</div>
+        <div class="tile" data-sel="allnet" role="button" tabindex="0"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades · since the start</div></div>
+        <div class="tile" data-sel="win" role="button" tabindex="0"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2) + ' · ' + s.wins + ' won, ' + s.losses + ' lost'}</div></div>
       </div>
       <div class="hero-f">
         <div class="row"><button class="btn sm" data-copy="${esc(l.key)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:15px;height:15px;margin-right:6px;vertical-align:-2px"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>Copy license key</button><a class="hint" href="#tab=billing" data-go="billing">See all keys</a></div>
@@ -259,7 +264,7 @@
         <div class="kv" data-sel="limit" role="button" tabindex="0"><span>Deposited minus withdrawn</span><b>${usd(funded)}</b></div>
         ${lim == null ? '' : `<div class="meter ${over ? 'bad' : near ? 'warn' : ''}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div><div class="hint">Limit ${usd(lim, 0)} + ${tol}% tolerance${Number(l.extra_allowance_usd) ? ' + ' + usd(l.extra_allowance_usd, 0) + ' allowance' : ''}. Profits never count.</div>`}
         ${over ? '<div class="msg err" style="margin-top:12px">Deposits are above your plan. New trades are paused until you upgrade or withdraw the excess. Open trades keep being managed.</div><div class="row" style="margin-top:10px"><a class="btn sm mint" href="#tab=billing" data-go="billing">Upgrade plan</a></div>' : ''}</div></div>
-      <div class="panel"><div class="row sp"><div><h2>Equity curve</h2><p class="sub" style="margin:0">Cumulative net result of closed trades.</p></div><a class="btn sm" href="#tab=results" data-go="results">All charts</a></div><div id="ov-eq"></div></div>
+      <div class="panel"><div class="row sp"><div><h2>Equity curve</h2><p class="sub" style="margin:0">Your result after every closed trade. Tap or hover a point to see that trade.</p></div><a class="btn sm" href="#tab=results" data-go="results">All charts</a></div><div class="eq-rng" id="eq-rng" role="group" aria-label="Range"><button type="button" data-eqr="1w">1 week</button><button type="button" data-eqr="1m">1 month</button><button type="button" data-eqr="3m">3 months</button><button type="button" data-eqr="all">All</button></div><div id="ov-eq"></div><div class="eq-chips" id="ov-eqs"></div></div>
       <div class="panel"><div class="row sp"><div><h2>Recent trades</h2><p class="sub" style="margin:0">Times in your local time.</p></div><a class="btn sm" href="#tab=trades" data-go="trades">All trades</a></div>
         ${recent.length ? `<div style="overflow-x:auto"><table class="tbl2 rec"><tr><th>Closed</th><th>Engine</th><th>Side</th><th>Lots</th><th>Open</th><th>Close</th><th>Held</th><th>Result</th></tr>${R.tradeRows(recent)}</table></div>` : '<div class="empty">The EA has not closed a trade on this account yet. Charts and history appear here automatically.</div>'}</div>
       ${trades.length ? `<div class="panel"><div class="row sp"><div><h2>Last 14 days</h2><p class="sub" style="margin:0">Result per day, amounts in USD.</p></div><a class="btn sm" href="#tab=results" data-go="results">Profit calendar</a></div>${R.bars(R.dayItems(trades, 14), 190)}</div>
@@ -327,10 +332,19 @@
       <div class="panel"><h2>Need help?</h2><p class="sub">Write to us about your license, the EA or an order. We answer here and on Telegram.</p><a class="btn sm" href="contact.html">Contact support</a> <a class="btn sm" href="support.html">My requests</a></div>`;
   }
   function afterDraw(l, all) {
-    const t = inRange(all, range), cv = R.curve(t), cvAll = R.curve(all);
+    const t = inRange(all, range), cv = R.curve(t), cvAll = R.curve(eqSlice(all, eqRange));
     for (const [host, key, color, neg, pts] of [['ov-eq', 'c', '#3EE09A', false, cvAll], ['rs-eq', 'c', '#3EE09A', false, cv], ['rs-dd', 'dd', '#FF6B78', true, cv]]) {
       const el = document.getElementById(host); if (!el) continue;
       el.innerHTML = R.lineChart(host + 'c', pts, key, color, neg); R.bindHover(el, host + 'c', pts, key, neg);
+    }
+    A.querySelectorAll('tr.ct').forEach(r => { const tb = r.closest('table'); if (tb) tb.classList.add('tcards'); });
+    const eqr = document.getElementById('eq-rng');
+    if (eqr) {
+      const slice = eqSlice(all, eqRange), st = R.stats(slice), cc = R.curve(slice), peak = cc.length ? Math.max(...cc.map(p => p.c)) : 0, dip = cc.length ? Math.max(...cc.map(p => p.dd)) : 0;
+      eqr.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.eqr === eqRange); b.onclick = () => { eqRange = b.dataset.eqr; try { sessionStorage.setItem('gte_eqr', eqRange); } catch (e) {} afterDraw(l, all); }; });
+      const chip = (lab, v, sub, clr, sel) => `<div class="eq-chip"${sel ? ` data-sel="${sel}" role="button" tabindex="0"` : ''}><span>${lab}</span><b${clr ? ` style="color:${clr}"` : ''}>${v}</b><i>${sub}</i></div>`;
+      const eqc = document.getElementById('ov-eqs');
+      if (eqc) eqc.innerHTML = slice.length ? chip('Result in this range', R.sgn(st.net), st.n + ' closed trades', R.col(st.net), 'net') + chip('Highest point', R.sgn(peak), 'best the curve reached', R.col(peak)) + chip('Deepest dip', dip ? '-' + usd(dip) : '$0', 'drop from the highest point', dip ? R.col(-1) : null, 'dd') + chip('Won', st.win.toFixed(0) + '%', st.wins + ' of ' + st.n + ' trades', null, 'win') : '<p class="hint" style="margin:8px 0 0">No trade closed in this range yet.</p>';
     }
     const calHost = document.getElementById('calhost');
     if (calHost) calHost.onclick = e => {

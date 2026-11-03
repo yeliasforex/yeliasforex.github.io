@@ -340,3 +340,19 @@ html body .fab span,html body .gk-w{margin-left:0}
   html body .fab svg,.gk-b{width:24px;height:24px}
   html.is-scrolling body .fab,html.is-scrolling body .gc-fab{opacity:0!important;pointer-events:none;transform:translateY(10px)}
 }
+
+/* phones: a closed menu must not catch taps (it was invisible but still covered the page, so a tap on a backtest month could open Blog or FAQ) */
+@media (max-width:1000px){
+  header.top .nav{transition:opacity .3s,transform .5s cubic-bezier(.34,1.45,.64,1),visibility 0s linear .5s!important}
+  header.top .nav:not(.open){visibility:hidden!important;pointer-events:none!important}
+  header.top .nav:not(.open) *{pointer-events:none!important}
+  header.top .nav.open{visibility:visible!important;transition-delay:0s!important}
+}
+
+/* phones: the backtest month cells were 18 x 16 px, too small to tap; they are taller and their touch area fills the gaps */
+@media (max-width:600px){
+  #backtest .mgrid{gap:5px 3px}
+  #backtest .mgrid .m{height:34px;border-radius:6px}
+  #backtest .mgrid .m[data-v]::before{content:"";position:absolute;inset:-2px -1.5px}
+  #backtest .mgrid .y{align-self:center}
+}

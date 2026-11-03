@@ -64,7 +64,7 @@
       $$(b[0], document).forEach(function (el) {
         if (el.__info || el.closest('a,button,summary')) return; el.__info = 1; el.classList.add('ds-clk'); el.tabIndex = 0; el.setAttribute('role', 'button');
         var go = function () { var s = b[1](el); if (s) open_(s); };
-        el.addEventListener('click', function (e) { if (e.target.closest('a,button,input')) return; go(); });
+        el.addEventListener('click', function (e) { if (e.target.closest('a,button,input,.m[data-m]')) return; go(); });   // a month cell opens its own month, not the card
         el.addEventListener('keydown', function (e) { if (e.target === el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); go(); } });
       });
     });
