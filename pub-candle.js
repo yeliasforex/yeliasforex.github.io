@@ -5,7 +5,6 @@
   var $ = function (s, r) { return (r || document).querySelector(s); }, $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
   var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var fill = document.createElement('i'); fill.className = 'cd-fill'; hdr.insertBefore(fill, hdr.firstChild);
-  var head = document.createElement('i'); head.className = 'cd-head'; hdr.appendChild(head);
   var pill = $('.nav .pill', hdr), base = '', t1 = null;
   if (pill) base = pill.innerHTML;
   var dir = 1, last = window.pageYOffset, offline = false;

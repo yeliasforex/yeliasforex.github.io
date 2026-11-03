@@ -9,13 +9,9 @@ header.top.cd-up.is-float,header.top.cd-dn.is-float{border-color:color-mix(in sr
 header.top.cd-dn .wow-prog{background:linear-gradient(90deg,var(--cd-dn),color-mix(in srgb,var(--cd-dn) 50%,var(--vio)))}
 header.top.cd-up .wow-prog{background:linear-gradient(90deg,var(--cy),var(--cd-up))}
 
-/* the line under the header: it ends exactly at the rounded corners, its head shows where you are, and it says when the stream is off */
+/* the line under the header: it ends exactly at the rounded corners and it says when the stream is off */
 header.top .wow-prog{transform:scaleX(var(--cd-p,0))}
 header.top.cd-off .wow-prog{background:repeating-linear-gradient(90deg,var(--muted,#8E9BBE) 0 6px,transparent 6px 10px);box-shadow:none;opacity:.8}
-.cd-head{position:absolute;bottom:-1px;left:calc(18px + (100% - 36px)*var(--cd-p,0));width:0;height:0;pointer-events:none;z-index:2}
-.cd-head:before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--cd-c,var(--cd-up));box-shadow:0 0 0 3px color-mix(in srgb,var(--panel,#fff) 85%,transparent),0 0 10px var(--cd-c,var(--cd-up))}
-.cd-off .cd-head:before{background:var(--muted,#8E9BBE);box-shadow:0 0 0 3px color-mix(in srgb,var(--panel,#fff) 85%,transparent)}
-.cd-off 
 /* Watch live: the tip of the candle */
 .nav .pill{transition:background .3s,color .3s,box-shadow .3s}
 .nav .pill.cd-flash{box-shadow:0 0 0 4px color-mix(in srgb,var(--mint,#10B981) 28%,transparent)}
