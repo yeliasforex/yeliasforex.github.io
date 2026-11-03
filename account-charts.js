@@ -64,7 +64,7 @@
     o = o || {}; var v = N(value), m = N(max) || 1, p = Math.min(100, v / m * 100), Rr = 38, C = 2 * Math.PI * Rr, c = o.color || (p > 100 ? 'var(--red)' : p > 85 ? 'var(--gold)' : 'var(--mint)'), id = reg([{label: o.label || 'Used', value: v, sheet: o.sheet}], {});
     return '<button type="button" class="acg-ga" data-g="' + id + '" data-i="0"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="' + Rr + '" fill="none" stroke="var(--line-2)" stroke-width="12"/><circle cx="50" cy="50" r="' + Rr + '" fill="none" stroke="' + c + '" stroke-width="12" stroke-linecap="round" stroke-dasharray="' + (C * Math.min(100, p) / 100).toFixed(1) + ' ' + C.toFixed(1) + '" transform="rotate(-90 50 50)"/><text x="50" y="53" text-anchor="middle" class="acg-t1" style="font-size:15px">' + Math.round(p) + '%</text></svg><span>' + E(o.caption || '') + '</span></button>';
   }
-  function card(title, sub, body, hint, wide) { return body ? {html: '<section class="panel acg-c' + (wide ? ' acg-w' : '') + '"><h3>' + E(title) + '</h3><div class="hint">' + E(sub) + '</div>' + body + '<div class="acg-f">Tap any part for the details.</div></section>'} : {empty: true, title: title, hint: hint || ''}; }
+  function card(title, sub, body, hint, wide, plain) { return body ? {html: '<section class="panel acg-c' + (wide ? ' acg-w' : '') + '"><h3>' + E(title) + '</h3><div class="hint">' + E(sub) + '</div>' + body + (plain ? '<p class="acg-plain"><b>In plain words</b>' + E(plain) + '</p>' : '') + '<div class="acg-f">Tap any part for the details.</div></section>'} : {empty: true, title: title, hint: hint || ''}; }
   function fact(tone, title, text, act) { return {tone: tone, title: title, text: text, act: act}; }
   var TONE = {bad: '!', warn: '!', ok: '&#10003;', info: 'i', mute: '&middot;'};
 
@@ -136,12 +136,19 @@
     if (s.pf != null) facts.push(fact(s.pf >= 1 ? 'ok' : 'warn', 'Profit factor ' + s.pf.toFixed(2), s.pf >= 1 ? 'The winners earned ' + s.pf.toFixed(2) + ' dollars for every dollar the losers cost.' : 'The losers cost more than the winners earned in this period.', sel('pf')));
     var dm = {}; T.forEach(function (t) { var k = dk(t.closed_at); dm[k] = (dm[k] || 0) + N(t.profit); }); var dks = Object.keys(dm).sort(function (a, b) { return dm[a] - dm[b]; });
     if (dks.length > 1) facts.push(fact('info', 'Best day ' + sgn(dm[dks[dks.length - 1]]) + ', worst day ' + sgn(dm[dks[0]]), 'Tap for the trades of each day.', sel('bestday')));
+    var nowDD = dd.length ? -N(dd[dd.length - 1].value) : 0, wonN = T.filter(function (t) { return N(t.profit) > 0; }).length;
+    var pDD = 'The deepest dip was ' + usd(mdd, 2) + (mddPct ? ' (' + mddPct + '% of the highest result)' : '') + '. ' + (nowDD < 0.005 ? 'Right now the result is at its highest point.' : 'Right now it is ' + usd(nowDD, 2) + ' below its highest point.');
+    var pHist = wonN + ' of ' + T.length + ' trades made money (' + pct(wonN, T.length) + '%). The biggest win was ' + sgn(hi) + ' and the biggest loss ' + sgn(lo) + '.';
+    var wr = function (l) { return pct(l.filter(function (t) { return N(t.profit) > 0; }).length, l.length) + '% won, net ' + sgn(net(l)); };
+    var pSide = 'BUY: ' + buy.length + ' trades, ' + (buy.length ? wr(buy) : 'none') + '. SELL: ' + sell.length + ' trades, ' + (sell.length ? wr(sell) : 'none') + '.';
+    var pEx = exI.length ? exI.map(function (x) { return x.value + ' ' + x.label.toLowerCase() + ' (' + pct(x.value, T.length) + '%)'; }).join(', ') + '. A stop-loss is the limit the EA sets before every trade.' : '';
+    var topH = hold.slice().sort(function (a, b) { return b.value - a.value; })[0], pHold = topH && topH.value ? 'Most trades (' + pct(topH.value, T.length) + '%) stayed open ' + topH.label.toLowerCase() + '.' : '';
     return {title: 'What matters in this period', facts: facts, cards: [
-      card('Drawdown over time', 'How far the result sat below its highest point after each trade. Zero is a new high.', line(dd, {title: 'Drawdown', fmt: function (v) { return usd(v, 2); }, color: 'var(--red)'}), 'needs trades'),
-      card('How big your trades were', 'Each bar counts trades by their result. Green is profit, red is loss.', bars(hist, {title: 'Results', labels: 7}), 'needs trades'),
-      card('BUY and SELL', 'Which direction the EA traded most.', donut(side, {title: 'Direction', center: T.length, centerLabel: 'trades'}), 'needs trades'),
-      card('How trades ended', 'At the stop, at the target or another way.', donut(exI, {title: 'Exits', center: T.length, centerLabel: 'trades'}), 'needs exit reasons'),
-      card('Time in a trade', 'How long trades stayed open.', anyHold ? bars(hold, {title: 'Time in a trade', color: 'var(--blue-hi)', labels: 6}) : '', 'needs open times')]};
+      card('Drawdown over time', 'How far the result sat below its highest point after each trade. Zero is a new high.', line(dd, {title: 'Drawdown', fmt: function (v) { return usd(v, 2); }, color: 'var(--red)'}), 'needs trades', false, pDD),
+      card('How big your trades were', 'Each bar counts trades by their result. Green is profit, red is loss.', bars(hist, {title: 'Results', labels: 7}), 'needs trades', false, pHist),
+      card('BUY and SELL', 'Which direction the EA traded most.', donut(side, {title: 'Direction', center: T.length, centerLabel: 'trades'}), 'needs trades', false, pSide),
+      card('How trades ended', 'At the stop, at the target or another way.', donut(exI, {title: 'Exits', center: T.length, centerLabel: 'trades'}), 'needs exit reasons', false, pEx),
+      card('Time in a trade', 'How long trades stayed open.', anyHold ? bars(hold, {title: 'Time in a trade', color: 'var(--blue-hi)', labels: 6}) : '', 'needs open times', false, pHold)]};
   };
 
   /* ---- pending (limit) orders: placed, waited, then filled, expired or cancelled ---- */
@@ -239,6 +246,7 @@
     '.acg-i i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:700;font-size:.8rem;color:#fff;background:var(--tone,var(--blue-hi))}.acg-i strong{display:block;font-size:.88rem;line-height:1.3}.acg-i small{display:block;color:var(--muted);font-size:.76rem;margin-top:2px;line-height:1.4}' +
     '.acg-i .t-bad{--tone:var(--red)}.acg-i .t-warn{--tone:var(--gold)}.acg-i .t-ok{--tone:var(--mint)}.acg-i .t-info{--tone:var(--blue-hi)}.acg-i .t-mute{--tone:var(--faint)}' +
     '.acg-gr{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}.acg-c{min-width:0;padding:18px 18px 14px}.acg-c h3{margin:0 0 2px;font-size:.98rem}.acg-w{grid-column:1/-1}.acg-f{margin-top:10px;font-size:.72rem;color:var(--muted);opacity:.85}.acg-e{margin-top:12px}.acg-c .hint{margin:0 0 10px;font-size:.8rem}' +
+    '.acg-plain{margin:10px 0 0;padding:10px 12px;border-radius:12px;font-size:.84rem;line-height:1.45;color:var(--fg-2,inherit);background:color-mix(in srgb,var(--blue-hi,#6C8CFF) 8%,transparent);border:1px solid color-mix(in srgb,var(--blue-hi,#6C8CFF) 22%,transparent)}.acg-plain b{display:block;font:700 .66rem var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--blue-hi,#6C8CFF);margin-bottom:3px}' +
     '.acg-d{display:grid;grid-template-columns:128px 1fr;gap:12px;align-items:center}@media(max-width:480px){.acg-d{grid-template-columns:1fr}.acg-d svg{max-width:160px;margin:0 auto}}.acg-d svg{width:100%}' +
     '.acg-t1{font-weight:700;font-family:inherit;fill:var(--fg)}.acg-t2{font-size:5.5px;font-weight:500;font-family:inherit;fill:var(--muted)}.acg-t3{font-size:8px;font-weight:500;font-family:inherit;fill:var(--muted)}.acg-g0{stroke:var(--line-2);stroke-width:.6;stroke-dasharray:3 3}' +
     '.acg-s{cursor:pointer;transition:stroke-width .15s}circle.acg-s:hover{stroke-width:17}rect.acg-s:hover{fill:var(--blue-hi);fill-opacity:.14}' +

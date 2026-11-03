@@ -217,7 +217,7 @@
     $$('#acct .hero-r .tile:not([data-mz])').forEach(function (el) {
       el.dataset.mz = '1'; var l = (($('.l', el) || {}).textContent || '').toLowerCase(), vals = null;
       if (l.indexOf('month') > -1) vals = dayCum(t, new Date(now.getFullYear(), now.getMonth(), 1).getTime()); else if (l.indexOf('7 days') > -1) vals = dayCum(t, Date.now() - 7 * 864e5); else if (l.indexOf('net result') > -1) vals = r.curve(t).map(function (p) { return p.c; });
-      if (vals && vals.length > 1) { var last = vals[vals.length - 1]; el.insertAdjacentHTML('beforeend', '<div class="mz-tsp">' + r.spark(vals, last >= 0 ? '#3EE09A' : '#FF6B78', 28) + '</div>'); }
+      if (vals && vals.length > 1) { var last = vals[vals.length - 1];  el.insertAdjacentHTML('beforeend', '<div class="mz-tsp">' + r.spark(vals, last >= 0 ? '#3EE09A' : '#FF6B78', 28) + '</div>'); }
       else if (l.indexOf('win rate') > -1) { var s = r.stats(t); el.insertAdjacentHTML('beforeend', '<div class="mz-wr"><i style="width:' + Math.max(2, Math.min(100, s.win)) + '%"></i></div>'); }
     });
     var hero = $('#acct .hero'); if (hero) hero.classList.toggle('mz-live', !!(m.st && m.st.online));

@@ -207,6 +207,50 @@
     drawTab(lic, trades);
     const h = location.hash.match(/^#order=(.+)$/); if (h) { const e = document.getElementById('ord-' + h[1]); if (e) e.scrollIntoView({behavior: 'smooth', block: 'start'}); }
   }
+  function chips14(trades) {
+    const d = R.dayItems(trades, 14).filter(x => x.has), n = d.reduce((a, x) => a + x.v, 0), g = d.filter(x => x.v > 0).length, r = d.filter(x => x.v < 0).length;
+    if (!d.length) return '<p class="hint" style="margin:10px 0 0">No trade closed in the last 14 days.</p>';
+    const best = d.reduce((a, x) => x.v > a.v ? x : a), worst = d.reduce((a, x) => x.v < a.v ? x : a);
+    const c = (lab, v, sub, clr, attr) => `<div class="eq-chip"${attr ? ` ${attr} role="button" tabindex="0"` : ''}><span>${lab}</span><b${clr ? ` style="color:${clr}"` : ''}>${v}</b><i>${sub}</i></div>`;
+    return `<div class="eq-chips">${c('Result', R.sgn(n), d.length + ' days with closed trades', R.col(n), 'data-sel="net"')}${c('Up / down', g + ' / ' + r, 'days up and days down')}${c('Best', R.sgn(best.v), best.label, R.col(best.v), 'data-bar="' + best.key + '"')}${c('Worst', R.sgn(worst.v), worst.label, worst.v < 0 ? R.col(worst.v) : '', 'data-bar="' + worst.key + '"')}</div>`;
+  }
+  function engineLine(trades) {
+    const rows = ['M', 'I', 'D'].map(e => ({e, n: R.stats(trades.filter(y => y.engine === e)).net})), tot = rows.reduce((a, x) => a + Math.max(0, x.n), 0);
+    if (!tot) return '';
+    const top = rows.reduce((a, x) => x.n > a.n ? x : a);
+    return `<p class="acg-plain"><b>In plain words</b>${R.ENG[top.e]} earned the most: ${R.sgn(top.n)}, which is ${Math.round(Math.max(0, top.n) / tot * 100)}% of what the profitable engines made. The three engines trade different setups, so one quiet engine is normal.</p>`;
+  }
+  function heroChart(trades) {
+    const cv = R.curve(trades); if (cv.length < 2) return '';
+    const mn = Math.min(0, ...cv.map(p => p.c)), mx = Math.max(0, ...cv.map(p => p.c)), rg = (mx - mn) || 1, t0 = cv[0].t, t1 = cv[cv.length - 1].t, tr = (t1 - t0) || 1;
+    const X = p => (p.t - t0) / tr * 100, Y = p => 6 + (1 - (p.c - mn) / rg) * 88, zero = 6 + (1 - (0 - mn) / rg) * 88;
+    const d = cv.map((p, i) => (i ? 'L' : 'M') + X(p).toFixed(2) + ' ' + Y(p).toFixed(2)).join(' '), last = cv[cv.length - 1], up = last.c >= 0, col = up ? '#3EE09A' : '#FF6B78';
+    const dd = x => new Date(x).toLocaleDateString([], {month: 'short', day: 'numeric'});
+    return `<div class="hc" data-hc><div class="hc-w" style="--c:${col}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Cumulative result of closed trades" role="img"><defs><linearGradient id="hcg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+        <line x1="0" x2="100" y1="${zero.toFixed(2)}" y2="${zero.toFixed(2)}" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/>
+        <path d="${d} L100 ${zero.toFixed(2)} L0 ${zero.toFixed(2)} Z" fill="url(#hcg)"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
+        <i class="hc-st"></i><i class="hc-dt" style="left:100%;top:${Y(last).toFixed(2)}%"></i><div class="hc-tip"></div>
+</div>
+</div>`;
+  }
+  function bindHero(trades) {
+    const root = document.querySelector('[data-hc]'); if (!root) return; const cv = R.curve(trades), w = root.querySelector('.hc-w'), tip = root.querySelector('.hc-tip'), dt = root.querySelector('.hc-dt'), st = root.querySelector('.hc-st');
+    const mn = Math.min(0, ...cv.map(p => p.c)), mx = Math.max(0, ...cv.map(p => p.c)), rg = (mx - mn) || 1, t0 = cv[0].t, tr = (cv[cv.length - 1].t - t0) || 1; let cur = null;
+    const at = (cx) => { const r = w.getBoundingClientRect(), f = Math.max(0, Math.min(1, (cx - r.left) / r.width)), tt = t0 + f * tr; let b = 0, bd = 1e30; cv.forEach((p, i) => { const q = Math.abs(p.t - tt); if (q < bd) { bd = q; b = i; } }); return b; };
+    const show = (i) => {
+      const p = cv[i], r = w.getBoundingClientRect(), x = (p.t - t0) / tr * r.width, y = (6 + (1 - (p.c - mn) / rg) * 88) / 100 * r.height; cur = p;
+      dt.style.left = x + 'px'; dt.style.top = y + 'px'; dt.style.opacity = 1;
+      const x2 = p.tr, lab = new Date(p.t).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+      tip.innerHTML = '<b style="color:' + R.col(p.c) + '">' + R.sgn(p.c) + '</b><span>' + lab + '</span>' + (x2 ? '<span>' + esc(R.ENG[x2.engine] || '') + ' ' + (x2.dir > 0 ? 'Buy' : 'Sell') + ' <em style="color:' + R.col(x2.profit) + '">' + R.sgn(x2.profit) + '</em></span><small>Tap to open this trade</small>' : '<span>Start</span>');
+      tip.classList.add('on'); const tw = tip.offsetWidth, th = tip.offsetHeight, below = y - th - 22 < -4; tip.style.left = Math.max(2, Math.min(r.width - tw - 2, x - tw / 2)) + 'px'; tip.style.top = (below ? y + 18 : y - th - 18) + 'px';
+      st.style.left = x + 'px'; st.style.top = (below ? y : y - 18) + 'px'; st.style.height = '18px'; st.style.opacity = 1;
+    };
+    const move = e => { if (e.pointerType === 'touch' && e.type === 'pointermove' && !w.__drag) return; show(at(e.clientX)); };
+    w.addEventListener('pointermove', move); w.addEventListener('pointerdown', e => { w.__drag = 1; show(at(e.clientX)); });
+    ['pointerup', 'pointercancel'].forEach(n => w.addEventListener(n, () => { w.__drag = 0; }));
+    w.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') { tip.classList.remove('on'); st.style.opacity = 0; dt.style.left = '100%'; dt.style.top = (6 + (1 - (cv[cv.length - 1].c - mn) / rg) * 88) + '%'; } });
+    w.addEventListener('click', () => { if (cur && cur.tr && window.gteSheet) window.gteSheet.trade(cur.tr); });
+  }
   function hero(l, trades) {
     const st = stOf(l.id), pl = planOf(l.plan_id), [pc, pt] = statePill(l.status), s = R.stats(trades);
     const days = l.expires_at ? Math.ceil((new Date(l.expires_at) - Date.now()) / 864e5) : null, pct = days == null ? 0 : Math.max(0, Math.min(100, days / 365 * 100));
@@ -224,7 +268,7 @@
         <div class="eyebrow">EQUITY</div>
         <div class="eqbig"${st.equity != null ? ` data-cu="${st.equity}" data-f="usd"` : ''}>${st.equity != null ? usd(st.equity) : '-'}</div>
         <div class="hint">Balance ${st.balance != null ? usd(st.balance) : '-'}${fl != null ? ' · Floating <b style="color:' + R.col(fl) + '">' + R.sgn(fl) + '</b>' : ''} · ${st.open_positions ?? 0} open position${(st.open_positions ?? 0) === 1 ? '' : 's'}</div>
-        ${R.spark(R.curve(trades).map(p => p.c), '#3EE09A', 54)}
+        ${heroChart(trades)}
       </div>
       <div class="hero-r">
         <div class="tile" data-sel="month" role="button" tabindex="0"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div>${vs(mon, prevMon, 'Last month')}</div>
@@ -267,8 +311,8 @@
       <div class="panel"><div class="row sp"><div><h2>Equity curve</h2><p class="sub" style="margin:0">Your result after every closed trade. Tap or hover a point to see that trade.</p></div><a class="btn sm" href="#tab=results" data-go="results">All charts</a></div><div class="eq-rng" id="eq-rng" role="group" aria-label="Range"><button type="button" data-eqr="1w">1 week</button><button type="button" data-eqr="1m">1 month</button><button type="button" data-eqr="3m">3 months</button><button type="button" data-eqr="all">All</button></div><div id="ov-eq"></div><div class="eq-chips" id="ov-eqs"></div></div>
       <div class="panel"><div class="row sp"><div><h2>Recent trades</h2><p class="sub" style="margin:0">Times in your local time.</p></div><a class="btn sm" href="#tab=trades" data-go="trades">All trades</a></div>
         ${recent.length ? `<div style="overflow-x:auto"><table class="tbl2 rec"><tr><th>Closed</th><th>Engine</th><th>Side</th><th>Lots</th><th>Open</th><th>Close</th><th>Held</th><th>Result</th></tr>${R.tradeRows(recent)}</table></div>` : '<div class="empty">The EA has not closed a trade on this account yet. Charts and history appear here automatically.</div>'}</div>
-      ${trades.length ? `<div class="panel"><div class="row sp"><div><h2>Last 14 days</h2><p class="sub" style="margin:0">Result per day, amounts in USD.</p></div><a class="btn sm" href="#tab=results" data-go="results">Profit calendar</a></div>${R.bars(R.dayItems(trades, 14), 190)}</div>
-      <div class="panel"><h2>By engine</h2><p class="sub">Which part of the strategy earned what.</p>${R.engineBars(trades)}</div>` : ''}`;
+      ${trades.length ? `<div class="panel"><div class="row sp"><div><h2>Last 14 days</h2><p class="sub" style="margin:0">Result per day, amounts in USD.</p></div><a class="btn sm" href="#tab=results" data-go="results">Profit calendar</a></div>${R.bars(R.dayItems(trades, 14), 190)}${chips14(trades)}</div>
+      <div class="panel"><h2>By engine</h2><p class="sub">Which part of the strategy earned what. Tap an engine for its trades.</p>${R.engineBars(trades)}${engineLine(trades)}</div>` : ''}`;
   }
 
   // approved partners (and people who applied) get a button to the partner dashboard; everyone else sees nothing
@@ -337,6 +381,7 @@
       const el = document.getElementById(host); if (!el) continue;
       el.innerHTML = R.lineChart(host + 'c', pts, key, color, neg); R.bindHover(el, host + 'c', pts, key, neg);
     }
+    bindHero(all);
     A.querySelectorAll('tr.ct').forEach(r => { const tb = r.closest('table'); if (tb) tb.classList.add('tcards'); });
     const eqr = document.getElementById('eq-rng');
     if (eqr) {
@@ -344,7 +389,7 @@
       eqr.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.eqr === eqRange); b.onclick = () => { eqRange = b.dataset.eqr; try { sessionStorage.setItem('gte_eqr', eqRange); } catch (e) {} afterDraw(l, all); }; });
       const chip = (lab, v, sub, clr, sel) => `<div class="eq-chip"${sel ? ` data-sel="${sel}" role="button" tabindex="0"` : ''}><span>${lab}</span><b${clr ? ` style="color:${clr}"` : ''}>${v}</b><i>${sub}</i></div>`;
       const eqc = document.getElementById('ov-eqs');
-      if (eqc) eqc.innerHTML = slice.length ? chip('Result in this range', R.sgn(st.net), st.n + ' closed trades', R.col(st.net), 'net') + chip('Highest point', R.sgn(peak), 'best the curve reached', R.col(peak)) + chip('Deepest dip', dip ? '-' + usd(dip) : '$0', 'drop from the highest point', dip ? R.col(-1) : null, 'dd') + chip('Won', st.win.toFixed(0) + '%', st.wins + ' of ' + st.n + ' trades', null, 'win') : '<p class="hint" style="margin:8px 0 0">No trade closed in this range yet.</p>';
+      if (eqc) eqc.innerHTML = slice.length ? chip('Result', R.sgn(st.net), st.n + ' closed trades', R.col(st.net), 'net') + chip('High', R.sgn(peak), 'best the curve reached', R.col(peak)) + chip('Dip', dip ? '-' + usd(dip) : '$0', 'drop from the highest point', dip ? R.col(-1) : null, 'dd') + chip('Won', st.win.toFixed(0) + '%', st.wins + ' of ' + st.n + ' trades', null, 'win') : '<p class="hint" style="margin:8px 0 0">No trade closed in this range yet.</p>';
     }
     const calHost = document.getElementById('calhost');
     if (calHost) calHost.onclick = e => {

@@ -97,3 +97,33 @@ html body .gc-fab:hover{transform:translateY(-2px)}
 }
 /* the middle axis label shares the class name "m" with the month cells and picked up their grey box */
 .chw .axx.m{background:none!important;padding:0!important;border:0!important;box-shadow:none!important;min-width:0!important;height:auto!important;border-radius:0!important}
+
+/* the hero card no longer pulses a green glow behind itself (it looked like a light blinking in day mode); a steady soft edge instead */
+#acct .hero.mz-live{animation:none!important;box-shadow:0 22px 50px -34px color-mix(in srgb,var(--mint) 45%,transparent)}
+
+/* My account hero graph: labelled, with a tap or drag readout */
+#acct .hc{margin-top:14px}
+#acct .hc-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px;font-size:.78rem}
+#acct .hc-h b{font-weight:600;color:var(--fg)}#acct .hc-h span{color:var(--muted);font-size:.72rem}
+#acct .hc-w{position:relative;height:118px;margin:0 0 0 0;touch-action:pan-y;cursor:crosshair;color:var(--fg-2)}
+#acct .hc-w svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#acct .hc-y{position:absolute;left:2px;transform:translateY(-100%);padding:0 4px;font:600 .62rem var(--mono);color:var(--muted);background:color-mix(in srgb,var(--panel,#fff) 70%,transparent);border-radius:4px;pointer-events:none}
+#acct .hc-y.z{opacity:.7}
+#acct .hc-x{display:flex;justify-content:space-between;margin-top:5px;font:500 .66rem var(--mono);color:var(--muted)}
+#acct .hc-dt{position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;background:var(--c);box-shadow:0 0 0 3px var(--panel,#fff),0 0 0 5px color-mix(in srgb,var(--c) 55%,transparent);pointer-events:none;transition:opacity .2s}
+#acct .hc-st{position:absolute;width:2px;margin-left:-1px;border-radius:2px;background:var(--c);opacity:0;pointer-events:none;transition:opacity .2s}
+#acct .hc-tip{position:absolute;z-index:4;padding:7px 11px;border-radius:12px;background:var(--panel,#fff);border:1px solid color-mix(in srgb,var(--c) 50%,transparent);box-shadow:0 16px 34px -14px rgba(10,20,90,.5);font-size:.74rem;line-height:1.35;white-space:nowrap;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s,transform .2s}
+#acct .hc-tip.on{opacity:1;transform:none}
+#acct .hc-tip b{display:block;font-size:1rem}#acct .hc-tip span{display:block;color:var(--muted)}#acct .hc-tip small{display:block;margin-top:2px;color:var(--blue-hi);font-weight:600}#acct .hc-tip em{font-style:normal;font-weight:700}
+#acct .mz-cap{display:flex;justify-content:space-between;margin-top:3px;font:500 .6rem var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+#acct .hero-r .tile[data-sel]:after{content:"\203A";position:absolute;right:12px;top:10px;font-size:1.1rem;line-height:1;color:var(--muted);transition:transform .25s,color .2s}
+#acct .hero-r .tile[data-sel]:hover:after{transform:translateX(3px);color:var(--blue-hi)}
+
+/* summary chips: one small row, no sentences */
+#acct .eq-chips{grid-template-columns:repeat(4,1fr)!important;gap:6px!important;margin-top:8px!important}
+#acct .eq-chip{padding:6px 8px!important;border-radius:10px!important;min-width:0}
+#acct .eq-chip span{font-size:.56rem!important;white-space:nowrap}
+#acct .eq-chip b{font-size:.88rem!important;white-space:nowrap}
+#acct .eq-chip i{display:none!important}
+#acct .eq-chip b{font-size:.8rem!important}
+@media (max-width:700px){#acct table.tcards tr:not(.ct){display:none}}
