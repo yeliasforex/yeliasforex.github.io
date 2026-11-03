@@ -36,6 +36,6 @@ body.app-ad{--app-ac:var(--gold,#A78BFA);--app-ac2:var(--gold2,#5EE3F5)}
 
 .pd-sheet{border-top:1px solid color-mix(in srgb,var(--app-ac) 45%,transparent)}
 
-/* back to top: a round glass button in each page's own colour (it was gold) */
-.totop{width:46px;height:46px;padding:0!important;justify-content:center;border-radius:50%;background:var(--panel,var(--panel-s,#fff))!important;border:1px solid color-mix(in srgb,var(--app-ac) 40%,transparent)!important;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--app-ac)!important;filter:none!important;box-shadow:0 14px 30px -14px color-mix(in srgb,var(--app-ac) 70%,transparent)}
-.totop:hover{color:var(--app-ac2)!important;border-color:var(--app-ac)!important}
+/* back to top: just the arrows, in each page's own colour (they were gold) */
+.totop{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none;backdrop-filter:none;color:var(--app-ac)!important;filter:drop-shadow(0 2px 6px color-mix(in srgb,var(--app-ac) 45%,transparent))!important}
+.totop:hover{color:var(--app-ac2)!important}
