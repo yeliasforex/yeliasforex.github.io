@@ -15,7 +15,10 @@ html,body{margin:0;background:transparent;overflow:hidden}
  color:#ffd23f;text-shadow:0 .4vh 1vh rgba(0,0,0,.45);animation:rise 1.8s ease-out forwards}
 @keyframes rise{0%{opacity:0;transform:translateY(0) scale(.5)}15%{opacity:1;transform:translateY(-3vh) scale(1.1)}
  100%{opacity:0;transform:translateY(-20vh) scale(1)}}
-</style></head><body><div id="r"><canvas id="gl"></canvas></div><canvas id="fx"></canvas><script>
+</style><link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+</head><body><div id="r"><canvas id="gl"></canvas></div><canvas id="fx"></canvas><script>
 "use strict";
 const TEST = new URLSearchParams(location.search), SNAP = TEST.has("snap");
 if (TEST.has("bg")) document.documentElement.style.background = "#" + TEST.get("bg");
