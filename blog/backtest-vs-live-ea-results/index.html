@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Backtest vs Live: Why EA Results Differ and How to Check Them | GoldTriEngine</title>
+<meta name="description" content="Why a great EA backtest often fails live: spreads, slippage, bad data, overfitting and execution. A checklist for judging any gold EA before you trust it with money.">
+<link rel="canonical" href="https://goldtriengine.com/blog/backtest-vs-live-ea-results/">
+<meta name="author" content="Yelias">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GoldTriEngine">
+<meta property="og:title" content="Backtest vs Live: Why EA Results Differ and How to Check Them | GoldTriEngine">
+<meta property="og:description" content="Why a great EA backtest often fails live: spreads, slippage, bad data, overfitting and execution. A checklist for judging any gold EA before you trust it with money.">
+<meta property="og:url" content="https://goldtriengine.com/blog/backtest-vs-live-ea-results/">
+<meta property="og:image" content="https://goldtriengine.com/blog/img/backtest-vs-live-ea-results.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Backtest vs Live: Why EA Results Differ and How to Check Them | GoldTriEngine">
+<meta name="twitter:description" content="Why a great EA backtest often fails live: spreads, slippage, bad data, overfitting and execution. A checklist for judging any gold EA before you trust it with money.">
+<meta name="twitter:image" content="https://goldtriengine.com/blog/img/backtest-vs-live-ea-results.png">
+<link rel="alternate" type="application/rss+xml" title="GoldTriEngine blog" href="/blog/feed.xml">
+
+
+<meta name="theme-color" content="#F4F6FB">
+<meta property="og:site_name" content="GoldTriEngine">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="/style.css?v=20261101m2">
+<link rel="stylesheet" href="/wow.css?v=20261101m2">
+<link rel="stylesheet" href="/theme.css?v=20261021app5">
+<link rel="stylesheet" href="/blog.css?v=20261031bl3">
+<script src="/theme.js?v=20261021app5"></script>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GoldTriEngine">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/pwa.js?v=20261102app8" defer></script><script src="/track.js?v=20261021app5" defer></script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
+<link rel="stylesheet" href="/pub-ds.css?v=12">
+<link rel="stylesheet" href="/pub-tone.css?v=2">
+<link rel="stylesheet" href="/pub-premium.css?v=7">
+<link rel="stylesheet" href="/pub-wow.css?v=35">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Backtest vs Live: Why EA Results Differ and How to Check Them","description":"Why a great EA backtest often fails live: spreads, slippage, bad data, overfitting and execution. A checklist for judging any gold EA before you trust it with money.","image":["https://goldtriengine.com/blog/img/backtest-vs-live-ea-results.png"],"datePublished":"2026-11-04","dateModified":"2026-11-04","author":{"@type":"Person","name":"Yelias"},"publisher":{"@type":"Organization","name":"GoldTriEngine","logo":{"@type":"ImageObject","url":"https://goldtriengine.com/icon-192.png"}},"mainEntityOfPage":"https://goldtriengine.com/blog/backtest-vs-live-ea-results/","articleSection":"EA Education","wordCount":498,"inLanguage":"en"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://goldtriengine.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://goldtriengine.com/blog/"},{"@type":"ListItem","position":3,"name":"EA Education","item":"https://goldtriengine.com/blog/category/ea-education/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Why is my EA live result worse than the backtest?","acceptedAnswer":{"@type":"Answer","text":"Usually a mix of wider spreads, slippage, execution delay, imperfect test data and settings tuned too closely to the past. Compare trade by trade on the same broker to find which."}},{"@type":"Question","name":"How long should I forward test an EA?","acceptedAnswer":{"@type":"Answer","text":"At least a month on a demo account, and ideally until it has produced a few dozen trades, so you can compare with the back-test over the same dates."}},{"@type":"Question","name":"What is overfitting?","acceptedAnswer":{"@type":"Answer","text":"Tuning an EA's settings until it looks perfect on past data. It then fits the past's random noise and tends to fail on new prices."}},{"@type":"Question","name":"Is a backtest useless?","acceptedAnswer":{"@type":"Answer","text":"No. It shows whether an idea ever worked and how bad the losing streaks were. It is just not enough on its own."}}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/index.html" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
+    <nav class="nav" id="nav" aria-label="Main"><a href="/index.html#account">Live account</a><a href="/index.html#how">How it works</a><a href="/index.html#backtest">Backtest</a><a href="/free-backtest.html">Free EA</a><a href="/pricing.html">Pricing</a><a href="/guide.html">Guide</a><a href="/blog/">Blog</a><a href="/faq.html">FAQ</a><a href="/contact.html">Contact</a><a href="/my-account.html">My account</a><a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a></nav>
+  </div>
+</header>
+<main id="main">
+<div class="bl-wrap"><header class="bl-head"><nav class="bl-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/blog/">Blog</a> <span>/</span> <a href="/blog/category/ea-education/">EA Education</a> <span>/</span> <span>Backtest vs Live: Why EA Results Differ and How to Check Them</span></nav><a class="bl-chip" href="/blog/category/ea-education/"><i></i>EA Education</a><h1>Backtest vs Live: Why EA Results Differ and How to Check Them</h1><p class="bl-answer">A backtest is a simulation of the past, and every shortcut in it flatters the result. The only evidence that counts is a live account, on the same broker you will use, tracked by someone else. A good backtest is where an EA&#x27;s story starts, not where it ends.</p><div class="bl-meta"><span><b>Yelias</b></span><span>Published 4 November 2026</span><span>2 min read</span></div></header><div class="bl-grid"><article class="bl-body"><h2 id="what-a-backtest-really-is">What a backtest really is</h2>
+<p>A backtest replays an EA&#x27;s rules over historical prices and adds up the trades. It is useful: it shows whether an idea ever worked and how big the losing streaks were. It is also easy to get wrong, and almost every error makes the result look better than reality.</p>
+<h2 id="ten-reasons-live-results-differ">Ten reasons live results differ</h2>
+<div class="bl-tw"><table><thead><tr><th>Cause</th><th>What goes wrong</th><th>Effect</th></tr></thead><tbody><tr><td class=""><strong>Spread and commission</strong></td><td class="">Tests use a fixed or average spread; live spreads widen at news and rollover</td><td class="">Profit per trade shrinks, scalpers suffer most</td></tr><tr><td class=""><strong>Slippage</strong></td><td class="">In a test every order fills at the exact price</td><td class="">Live fills are worse, especially in fast markets</td></tr><tr><td class=""><strong>Low-quality data</strong></td><td class="">Gaps and interpolated ticks give trades that never existed</td><td class="">Phantom profits</td></tr><tr><td class=""><strong>Overfitting</strong></td><td class="">Settings tuned until the past looks perfect</td><td class="">Fits noise, fails on new data</td></tr><tr><td class=""><strong>Look-ahead errors</strong></td><td class="">A rule accidentally uses information from the future</td><td class="">Impossible, perfect-looking results</td></tr><tr><td class=""><strong>Execution delay</strong></td><td class="">Live orders take time and the price moves</td><td class="">Entries and exits land worse</td></tr><tr><td class=""><strong>Broker differences</strong></td><td class="">Another broker, different prices, spreads and stop rules</td><td class="">A strategy can work on one and not another</td></tr><tr><td class=""><strong>Market change</strong></td><td class="">The regime the EA was tuned for ends</td><td class="">Edge fades</td></tr><tr><td class=""><strong>Position sizing</strong></td><td class="">The test used different lot sizing from your account</td><td class="">Drawdowns are not comparable</td></tr><tr><td class=""><strong>Short samples</strong></td><td class="">A few dozen trades cannot show the true win rate</td><td class="">Luck looks like skill</td></tr></tbody></table></div><figcaption>No single item is fatal. The danger is that all ten push in the same direction.</figcaption>
+<h2 id="how-to-check-an-ea-properly">How to check an EA properly</h2>
+<ol class="bl-steps"><li><strong>Demand a live record on a third-party tracker</strong> such as Myfxbook, on a real account, with the broker named. We publish ours: <a href="/index.html#account">see our live account</a>.</li><li><strong>Compare like with like.</strong> Same broker, same account type, same symbol. Our EA is supported only on Fusion Markets and IC Markets Raw accounts for this reason.</li><li><strong>Run it on a demo account first</strong> for at least a month and compare trade by trade with the back-test over the same dates.</li><li><strong>Check the trade count.</strong> A back-test of 30 trades says almost nothing; look for hundreds.</li><li><strong>Look at drawdown, not only profit.</strong> Ask how deep it went and how long it lasted, in testing and live.</li><li><strong>Look for a stable curve across years,</strong> not one lucky period.</li><li><strong>Ask what happens when it stops working.</strong> There should be a rule for that.</li><li><strong>Start small.</strong> Use the smallest plan or lot size until live results match expectations.</li></ol>
+<aside class="bl-call "><b class="t">What to compare</b><p>Take the same date range in the back-test and on a demo or live account. Compare number of trades, win rate, average win and loss, and maximum drawdown. Small gaps are normal. Large, one-sided gaps are a warning.</p></aside>
+<h2 id="why-we-show-everything-in-public">Why we show everything in public</h2>
+<p>We trade gold with our own EA, publish every trade on the website, and stream it live. Our back-test is on the home page, labelled as a simulation. When you read any EA seller&#x27;s numbers, ask the same question we ask of ours: <strong>is it something I can check without trusting the seller?</strong></p><h2 id="faq">Frequently asked questions</h2><div class="bl-faq"><details><summary>Why is my EA live result worse than the backtest?</summary><p>Usually a mix of wider spreads, slippage, execution delay, imperfect test data and settings tuned too closely to the past. Compare trade by trade on the same broker to find which.</p></details><details><summary>How long should I forward test an EA?</summary><p>At least a month on a demo account, and ideally until it has produced a few dozen trades, so you can compare with the back-test over the same dates.</p></details><details><summary>What is overfitting?</summary><p>Tuning an EA&#x27;s settings until it looks perfect on past data. It then fits the past&#x27;s random noise and tends to fail on new prices.</p></details><details><summary>Is a backtest useless?</summary><p>No. It shows whether an idea ever worked and how bad the losing streaks were. It is just not enough on its own.</p></details></div><h2 id="sources">Sources and method</h2><ul class="bl-src"><li><a href="https://goldtriengine.com/index.html#account" rel="noopener">Our own live account and back-test, with the method stated, on the GoldTriEngine home page.</a></li></ul><div class="bl-author"><div class="av">Y</div><p><b>Yelias</b>, GoldTriEngine. We trade gold with an automated EA and publish every trade in public. Everything here is built from that live data. <a href="/index.html#account">See the live account</a> or <a href="/pricing.html">the EA</a>.</p></div><div class="bl-disc"><b>Not financial advice.</b> This is education and research, not a recommendation to buy or sell anything. Trading gold and CFDs carries a high risk of loss, and past results, back-tests and forecasts do not guarantee future results. Read our <a href="/risk.html">risk disclaimer</a>. Numbers in this article are computed by our own software from our own price data and trading account; drafting is assisted by AI. Written under the name Yelias.</div></article><aside class="bl-aside"><nav class="bl-toc" aria-label="On this page"><b>On this page</b><a href="#what-a-backtest-really-is">What a backtest really is</a><a href="#ten-reasons-live-results-differ">Ten reasons live results differ</a><a href="#how-to-check-an-ea-properly">How to check an EA properly</a><a href="#why-we-show-everything-in-public">Why we show everything in public</a><a href="#faq">Frequently asked questions</a><a href="#sources">Sources and method</a></nav><div class="bl-side-cta"><p>Watch the same EA trade gold live, 24/5, with every entry and exit explained.</p><a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch live</a></div></aside></div></div><div class="bl-wrap"><section class="bl-related"><h2>Keep reading</h2><div class="bl-cards"><a class="bl-card" href="/blog/ai-trading-bots-what-ai-can-and-cannot-do/"><span class="bl-chip"><i></i>AI Trading</span><h3>AI Trading Bots and AI Agents: What They Can and Cannot Do</h3><p>What AI really does in trading: rule-based EAs, machine learning and LLM agents explained, why most &#x27;AI&#x27; claims fail, and what our own test of a data-driven forecaster found over 3,595 days.</p><div class="bl-meta"><span>3 Nov 2026</span><span>4 min read</span></div></a><a class="bl-card" href="/blog/position-sizing-risk-of-ruin/"><span class="bl-chip"><i></i>Risk &amp; Money</span><h3>Position Sizing and Risk of Ruin: What 1%, 2% and 5% Risk Really Do</h3><p>We simulated 20,000 traders with a real edge. At 1% risk per trade almost none suffered a 30% drawdown; at 5% most did. See the numbers, the formula for gold lot size and why losses need bigger gains to recover.</p><div class="bl-meta"><span>1 Nov 2026</span><span>4 min read</span></div></a></div></section></div>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="/./"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+        <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
+      </div>
+      <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="/contact.html">Contact &amp; support</a></li><li><a href="/stream-bot.html">Stream software</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="/pricing.html">Pricing</a></li><li><a href="/partners.html">Partners</a></li><li><a href="/blog/">Blog &amp; Academy</a></li><li><a href="/guide.html">How to judge a gold EA</a></li><li><a href="/gold-ea-mt5.html">Gold EA for MT5</a></li><li><a href="/best-gold-ea-mt5.html">Best gold EA? 10 checks</a></li><li><a href="/goldtriengine-review.html">Review: is it legit?</a></li><li><a href="/fusion-markets-ic-markets-gold-ea.html">Fusion and IC Markets</a></li><li><a href="/faq.html">FAQ</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/apps.html">Get the app</a></li><li><a href="/terms.html">Terms</a></li><li><a href="/llms.txt">llms.txt</a></li></ul></div>
+    </div>
+    <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: <a href="/contact.html">contact page</a> or Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+  </div>
+</footer>
+<a class="fab" href="https://t.me/GoldTriEngine_Support" rel="noopener" aria-label="Message GoldTriEngine on Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg><span>Contact us</span></a>
+<script src="/site.js?v=20261021app5" defer></script><script src="/pwnav.js?v=20261030pw6" defer></script><script src="/growth.js?v=20261101m2" defer></script>
+<script src="/wow.js?v=20261021app5" defer></script>
+<script src="/chat.js?v=20261101m2" defer></script>
+<link rel="stylesheet" href="/pub-ds.css?v=12"><link rel="stylesheet" href="/pub-tone.css?v=2"><link rel="stylesheet" href="/pub-premium.css?v=7"><link rel="stylesheet" href="/pub-wow.css?v=35"><script src="/pub-ds-page.js?v=3" defer></script><script src="/partner-track.js?v=20261102p1" defer></script><script src="/pub-wow.js?v=8" defer></script>
+<script src="/blog.js?v=20261031bl3" defer></script>
+<script src="/pub-ds-page.js?v=3" defer></script>
+<script src="/pub-wow.js?v=8" defer></script>
+</body>
+</html>
