@@ -237,22 +237,21 @@
     const vs = (now, before, what) => `<div class="s cmp"><span>${what}</span> ${R.sgn(before)}</div>`;
     const online = l.status === 'active' ? (st.online ? 'on' : 'off') : '';
     const fl = (st.equity != null && st.balance != null) ? st.equity - st.balance : null;
-    return `<div class="hero">
+    return `<div class="hero hero-c">
       <div class="hero-l">
-        <div class="row"><span class="plan-chip">${esc(pl.name)}</span><span class="pill ${pc}">${pt}</span><span class="pill ${l.bound_is_demo ? 'info' : ''}">${l.bound_account ? (l.bound_is_demo ? 'Demo account' : 'Real account') : 'Not bound'}</span></div>
-        <div class="eyebrow">EQUITY</div>
-        <div class="eqbig"${st.equity != null ? ` data-cu="${st.equity}" data-f="usd"` : ''}>${st.equity != null ? usd(st.equity) : '-'}</div>
-        <div class="hint">Balance ${st.balance != null ? usd(st.balance) : '-'}</div>
+        <div class="row"><span class="plan-chip">${esc(pl.name)}</span><span class="pill ${pc}">${pt}</span><span class="pill ${l.bound_is_demo ? 'info' : ''}">${l.bound_account ? (l.bound_is_demo ? 'Demo' : 'Real') : 'Not bound'}</span></div>
+        <div class="hc-eq"><div><div class="eyebrow">EQUITY</div><div class="eqbig"${st.equity != null ? ` data-cu="${st.equity}" data-f="usd"` : ''}>${st.equity != null ? usd(st.equity) : '-'}</div></div><div class="hint hc-bal">Balance<br><b>${st.balance != null ? usd(st.balance) : '-'}</b></div></div>
       </div>
       <div class="hero-r">
         <div class="tile" data-sel="month" role="button" tabindex="0"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div>${vs(mon, prevMon, 'Last month')}</div>
-        <div class="tile" data-sel="week" role="button" tabindex="0"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div>${vs(week, prevWeek, 'The 7 days before')}</div>
-        <div class="tile" data-sel="allnet" role="button" tabindex="0"><div class="l">Net result · all time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades · since the start</div></div>
-        <div class="tile" data-sel="win" role="button" tabindex="0"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.pf == null ? '' : 'Profit factor ' + s.pf.toFixed(2) + ' · ' + s.wins + ' won, ' + s.losses + ' lost'}</div></div>
+        <div class="tile" data-sel="week" role="button" tabindex="0"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div>${vs(week, prevWeek, 'Week before')}</div>
+        <div class="tile" data-sel="allnet" role="button" tabindex="0"><div class="l">All time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} trades</div></div>
+        <div class="tile" data-sel="win" role="button" tabindex="0"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.n ? s.wins + ' won · ' + s.losses + ' lost' : ''}</div></div>
       </div>
       <div class="hero-f">
-        <div class="row"><button class="btn sm" data-copy="${esc(l.key)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:15px;height:15px;margin-right:6px;vertical-align:-2px"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>Copy license key</button><a class="hint" href="#tab=billing" data-go="billing">See all keys</a></div>
-        <div class="yr"><div class="row sp"><span class="hint">${days != null ? (days >= 0 ? 'License valid until <b>' + date(l.expires_at) + '</b>' : 'Expired on ' + date(l.expires_at)) : 'The year starts when you first attach the key'}</span><span class="hint">${days != null && days >= 0 ? days + ' days left' : ''}</span></div><div class="meter ${days != null && days <= 30 ? 'warn' : ''}"><i style="width:${pct}%"></i></div></div>
+        <button class="btn sm" data-copy="${esc(l.key)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:15px;height:15px;margin-right:6px;vertical-align:-2px"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>Copy key</button>
+        <div class="yr"><div class="row sp"><span class="hint">${days != null ? (days >= 0 ? 'Valid until <b>' + date(l.expires_at) + '</b>' : 'Expired ' + date(l.expires_at)) : 'Starts when you attach the key'}</span><span class="hint">${days != null && days >= 0 ? days + ' days left' : ''}</span></div><div class="meter ${days != null && days <= 30 ? 'warn' : ''}"><i style="width:${pct}%"></i></div></div>
+        <a class="hint" href="#tab=billing" data-go="billing">All keys</a>
       </div></div>`;
   }
   function drawTab(lic, trades) {

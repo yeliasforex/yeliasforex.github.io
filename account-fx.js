@@ -212,12 +212,29 @@
 
   /* tiles get a small trend line drawn from the customer's own closed trades */
   function dayCum(trades, from) { var m = {}; trades.forEach(function (t) { var d = new Date(t.closed_at); if (d.getTime() >= from) { var k = d.toISOString().slice(0, 10); m[k] = (m[k] || 0) + t.profit; } }); var ks = Object.keys(m).sort(), c = 0; return ks.map(function (k) { c += m[k]; return c; }); }
+  /* small labelled charts inside the overview tiles: bars per day (green up, red down, zero line) and the equity curve with its start, now and high */
+  function dkey(d) { return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function perDay(trades, days) { var m = {}; trades.forEach(function (t) { var k = dkey(new Date(t.closed_at)); m[k] = (m[k] || 0) + t.profit; }); return days.map(function (d) { return m[dkey(d)] || 0; }); }
+  function miniBars(vals, labels) {
+    var W = 100, H = 30, n = vals.length, mx = Math.max.apply(null, vals.map(Math.abs).concat([1])), up = Math.max.apply(null, vals.concat([0])), dn = Math.min.apply(null, vals.concat([0])), span = (up - dn) || 1, z = H * up / span, bw = W / n, o = '';
+    vals.forEach(function (v, i) { var h = Math.max(Math.abs(v) / span * H, v ? 1.6 : 0.8), y = v >= 0 ? z - h : z; o += '<rect x="' + (i * bw + bw * .14).toFixed(2) + '" y="' + y.toFixed(2) + '" width="' + (bw * .72).toFixed(2) + '" height="' + h.toFixed(2) + '" rx="1" fill="' + (v > 0 ? 'var(--mint,#0E9F6E)' : v < 0 ? 'var(--red,#E5484D)' : 'var(--muted,#8A93A8)') + '" opacity="' + (v ? 1 : .35) + '"/>'; });
+    return '<div class="mt-c"><svg viewBox="0 0 100 ' + H + '" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="100" y1="' + z.toFixed(2) + '" y2="' + z.toFixed(2) + '" stroke="var(--line-2,rgba(128,140,170,.4))" stroke-width=".6" vector-effect="non-scaling-stroke"/>' + o + '</svg><div class="mt-l">' + labels.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div></div>';
+  }
+  function miniLine(vals) {
+    var W = 100, H = 30, mn = Math.min.apply(null, vals.concat([0])), mxv = Math.max.apply(null, vals), sp = (mxv - mn) || 1, X = function (i) { return i / (vals.length - 1) * W; }, Y = function (v) { return H - 3 - (v - mn) / sp * (H - 6); }, pts = vals.map(function (v, i) { return X(i).toFixed(1) + ',' + Y(v).toFixed(1); }).join(' '), hi = vals.indexOf(mxv), last = vals.length - 1, up = vals[last] >= 0, col = up ? '#0E9F6E' : '#E5484D';
+    return '<div class="mt-c"><svg viewBox="0 0 100 ' + H + '" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="100" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="var(--line-2,rgba(128,140,170,.4))" stroke-width=".6" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/><polyline points="' + pts + '" fill="none" stroke="' + col + '" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>'
+      + '<i class="mt-d" style="left:' + X(last).toFixed(1) + '%;top:' + (Y(vals[last]) / H * 100).toFixed(1) + '%;background:' + col + '"></i>' + (hi !== last && hi > 0 ? '<i class="mt-d hi" style="left:' + X(hi).toFixed(1) + '%;top:' + (Y(vals[hi]) / H * 100).toFixed(1) + '%"></i>' : '')
+      + '<div class="mt-l"><span>start</span>' + (hi !== last && hi > 0 && X(hi) < 82 ? '<span class="mt-h" style="left:' + X(hi).toFixed(1) + '%">high</span>' : '') + '<span>now</span></div></div>';
+  }
   function tiles() {
     var m = M(), r = R(); if (!m || !r || !m.trades || !m.trades.length) return; var now = new Date(), t = m.trades;
     $$('#acct .hero-r .tile:not([data-mz])').forEach(function (el) {
       el.dataset.mz = '1'; var l = (($('.l', el) || {}).textContent || '').toLowerCase(), vals = null;
       if (l.indexOf('month') > -1) vals = dayCum(t, new Date(now.getFullYear(), now.getMonth(), 1).getTime()); else if (l.indexOf('7 days') > -1) vals = dayCum(t, Date.now() - 7 * 864e5); else if (l.indexOf('net result') > -1) vals = r.curve(t).map(function (p) { return p.c; });
-      if (vals && vals.length > 1) { var last = vals[vals.length - 1];  el.insertAdjacentHTML('beforeend', '<div class="mz-tsp">' + r.spark(vals, last >= 0 ? '#3EE09A' : '#FF6B78', 28) + '</div>'); }
+      var now0 = new Date(), days;
+      if (l.indexOf('month') > -1) { days = []; for (var d = 1; d <= now0.getDate(); d++) days.push(new Date(now0.getFullYear(), now0.getMonth(), d)); el.insertAdjacentHTML('beforeend', miniBars(perDay(t, days), ['1st', 'today'])); }
+      else if (l.indexOf('7 days') > -1) { days = []; for (var k = 6; k >= 0; k--) days.push(new Date(now0.getFullYear(), now0.getMonth(), now0.getDate() - k)); el.insertAdjacentHTML('beforeend', miniBars(perDay(t, days), days.map(function (x) { return 'SMTWTFS'.charAt(x.getDay()); }))); }
+      else if (l.indexOf('all time') > -1) { var cv = r.curve(t).map(function (p) { return p.c; }); if (cv.length > 1) el.insertAdjacentHTML('beforeend', miniLine(cv)); }
       else if (l.indexOf('win rate') > -1) { var s = r.stats(t); el.insertAdjacentHTML('beforeend', '<div class="mz-wr"><i style="width:' + Math.max(2, Math.min(100, s.win)) + '%"></i></div>'); }
     });
     var hero = $('#acct .hero'); if (hero) hero.classList.toggle('mz-live', !!(m.st && m.st.online));
