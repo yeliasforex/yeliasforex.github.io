@@ -234,7 +234,10 @@
     const mon = trades.filter(t => { const d = new Date(t.closed_at), n = new Date(); return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth(); }).reduce((a, t) => a + t.profit, 0);
     const prevMon = trades.filter(t => { const d = new Date(t.closed_at), n = new Date(), p = new Date(n.getFullYear(), n.getMonth() - 1, 1); return d.getFullYear() === p.getFullYear() && d.getMonth() === p.getMonth(); }).reduce((a, t) => a + t.profit, 0);
     const prevWeek = trades.filter(t => { const x = new Date(t.closed_at).getTime(); return x >= Date.now() - 14 * 864e5 && x < Date.now() - 7 * 864e5; }).reduce((a, t) => a + t.profit, 0);
-    const vs = (now, before, what) => `<div class="s cmp"><span>${what}</span> ${R.sgn(before)}</div>`;
+    const dnow = new Date().getDate(), prevMonSame = trades.filter(t => { const d = new Date(t.closed_at), n = new Date(), p = new Date(n.getFullYear(), n.getMonth() - 1, 1); return d.getFullYear() === p.getFullYear() && d.getMonth() === p.getMonth() && d.getDate() <= dnow; }).reduce((a, t) => a + t.profit, 0);
+    const vs = (now, before, what) => { const dl = now - before, up = dl >= 0; return `<div class="s cmp ${up ? 'up' : 'dn'}" title="${what}: ${R.sgn(before)}"><b>${up ? '\u25B2' : '\u25BC'} ${(dl < 0 ? '\u2212$' : '+$') + Math.abs(Math.round(dl)).toLocaleString('en-US')}</b> <span class="vl">${what}</span></div>`; };
+    const wins = trades.filter(t => t.profit > 0), loss = trades.filter(t => t.profit < 0), avgW = wins.length ? wins.reduce((a, t) => a + t.profit, 0) / wins.length : 0, avgL = loss.length ? loss.reduce((a, t) => a + t.profit, 0) / loss.length : 0;
+    const first = trades.length ? new Date(Math.min.apply(null, trades.map(t => new Date(t.closed_at)))) : null;
     const online = l.status === 'active' ? (st.online ? 'on' : 'off') : '';
     const fl = (st.equity != null && st.balance != null) ? st.equity - st.balance : null;
     return `<div class="hero hero-c">
@@ -243,10 +246,10 @@
         <div class="hc-eq"><div><div class="eyebrow">EQUITY</div><div class="eqbig"${st.equity != null ? ` data-cu="${st.equity}" data-f="usd"` : ''}>${st.equity != null ? usd(st.equity) : '-'}</div></div><div class="hint hc-bal">Balance<br><b>${st.balance != null ? usd(st.balance) : '-'}</b></div></div>
       </div>
       <div class="hero-r">
-        <div class="tile" data-sel="month" role="button" tabindex="0"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div>${vs(mon, prevMon, 'Last month')}</div>
-        <div class="tile" data-sel="week" role="button" tabindex="0"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div>${vs(week, prevWeek, 'Week before')}</div>
-        <div class="tile" data-sel="allnet" role="button" tabindex="0"><div class="l">All time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} trades</div></div>
-        <div class="tile" data-sel="win" role="button" tabindex="0"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.n ? s.wins + ' won · ' + s.losses + ' lost' : ''}</div></div>
+        <div class="tile" data-sel="month" role="button" tabindex="0"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div>${vs(mon, prevMonSame, 'vs last mo.')}</div>
+        <div class="tile" data-sel="week" role="button" tabindex="0"><div class="l">Last 7 days</div><div class="v" style="color:${R.col(week)}" data-cu="${week}" data-f="sgn">${R.sgn(week)}</div>${vs(week, prevWeek, 'vs last wk')}</div>
+        <div class="tile" data-sel="allnet" role="button" tabindex="0"><div class="l">All time</div><div class="v" style="color:${R.col(s.net)}"${s.n ? ` data-cu="${s.net}" data-f="sgn"` : ''}>${s.n ? R.sgn(s.net) : '-'}</div><div class="s">${s.n} closed trades</div></div>
+        <div class="tile" data-sel="win" role="button" tabindex="0"><div class="l">Win rate</div><div class="v"${s.n ? ` data-cu="${s.win}" data-f="pct"` : ''}>${s.n ? s.win.toFixed(0) + '%' : '-'}</div><div class="s">${s.n ? s.wins + ' won \u00b7 ' + s.losses + ' lost' : ''}</div></div>
       </div>
       <div class="hero-f">
         <button class="btn sm" data-copy="${esc(l.key)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:15px;height:15px;margin-right:6px;vertical-align:-2px"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/></svg>Copy key</button>

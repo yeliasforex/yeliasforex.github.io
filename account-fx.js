@@ -50,7 +50,7 @@
       A.insertBefore(h, A.firstChild); $('#mcq').onclick = openPalette;
     } else if (h !== A.firstChild) A.insertBefore(h, A.firstChild);
     var d = new Date(), hr = d.getHours(), g = hr < 5 ? 'Working late' : hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening', nm = (($('#manm') || {}).textContent || '').trim().split(/\s+/)[0];
-    setT($('#mck'), (g + (nm && nm !== '·' ? ', ' + nm : '') + ' · ' + d.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'})).toUpperCase());
+    setT($('#mck'), (g + (nm && nm !== '·' ? ', ' + nm : '') + (innerWidth < 520 ? '' : ' · ' + d.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'}))).toUpperCase());
     setT($('#mct'), tabName()); setT($('#mcs'), DESC[tabKey()] || '');
   }
 
@@ -212,31 +212,60 @@
 
   /* tiles get a small trend line drawn from the customer's own closed trades */
   function dayCum(trades, from) { var m = {}; trades.forEach(function (t) { var d = new Date(t.closed_at); if (d.getTime() >= from) { var k = d.toISOString().slice(0, 10); m[k] = (m[k] || 0) + t.profit; } }); var ks = Object.keys(m).sort(), c = 0; return ks.map(function (k) { c += m[k]; return c; }); }
-  /* small labelled charts inside the overview tiles: bars per day (green up, red down, zero line) and the equity curve with its start, now and high */
+  /* small charts inside the overview tiles. Touch or hover a bar / the line to read that day or trade; the label row turns into the readout. */
   function dkey(d) { return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
   function perDay(trades, days) { var m = {}; trades.forEach(function (t) { var k = dkey(new Date(t.closed_at)); m[k] = (m[k] || 0) + t.profit; }); return days.map(function (d) { return m[dkey(d)] || 0; }); }
-  function miniBars(vals, labels) {
-    var W = 100, H = 30, n = vals.length, mx = Math.max.apply(null, vals.map(Math.abs).concat([1])), up = Math.max.apply(null, vals.concat([0])), dn = Math.min.apply(null, vals.concat([0])), span = (up - dn) || 1, z = H * up / span, bw = W / n, o = '';
-    vals.forEach(function (v, i) { var h = Math.max(Math.abs(v) / span * H, v ? 1.6 : 0.8), y = v >= 0 ? z - h : z; o += '<rect x="' + (i * bw + bw * .14).toFixed(2) + '" y="' + y.toFixed(2) + '" width="' + (bw * .72).toFixed(2) + '" height="' + h.toFixed(2) + '" rx="1" fill="' + (v > 0 ? 'var(--mint,#0E9F6E)' : v < 0 ? 'var(--red,#E5484D)' : 'var(--muted,#8A93A8)') + '" opacity="' + (v ? 1 : .35) + '"/>'; });
-    return '<div class="mt-c"><svg viewBox="0 0 100 ' + H + '" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="100" y1="' + z.toFixed(2) + '" y2="' + z.toFixed(2) + '" stroke="var(--line-2,rgba(128,140,170,.4))" stroke-width=".6" vector-effect="non-scaling-stroke"/>' + o + '</svg><div class="mt-l">' + labels.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div></div>';
+  function fd(d) { return d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }); }
+  function usd0(v) { return (v < 0 ? '\u2212$' : '+$') + Math.abs(v).toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+  function scrub(box, n, tips, line) {
+    var lab = box.querySelector('.mt-l'), base = lab.innerHTML, dot = box.querySelector('.mt-cur'), bars = box.querySelectorAll('rect');
+    function at(e) { var r = box.getBoundingClientRect(), f = Math.max(0, Math.min(.9999, (e.clientX - r.left) / r.width)); var i = line ? Math.round(f * (n - 1)) : Math.floor(f * n); box.classList.add('sc'); lab.innerHTML = '<b class="mt-t">' + tips[i] + '</b>'; bars.forEach(function (x, k) { x.classList.toggle('on', k === i); }); if (dot) { dot.style.left = (i / (n - 1) * 100) + '%'; dot.style.top = dot.dataset['y' + i] || dot.style.top; } }
+    function off() { box.classList.remove('sc'); lab.innerHTML = base; bars.forEach(function (x) { x.classList.remove('on'); }); if (dot) dot.style.display = 'none'; }
+    box.addEventListener('pointermove', function (e) { if (dot) dot.style.display = 'block'; at(e); });
+    box.addEventListener('pointerdown', function (e) { e.stopPropagation(); if (dot) dot.style.display = 'block'; at(e); });
+    box.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); });
+    box.addEventListener('pointerleave', off); box.addEventListener('pointercancel', off);
   }
-  function miniLine(vals) {
-    var W = 100, H = 30, mn = Math.min.apply(null, vals.concat([0])), mxv = Math.max.apply(null, vals), sp = (mxv - mn) || 1, X = function (i) { return i / (vals.length - 1) * W; }, Y = function (v) { return H - 3 - (v - mn) / sp * (H - 6); }, pts = vals.map(function (v, i) { return X(i).toFixed(1) + ',' + Y(v).toFixed(1); }).join(' '), hi = vals.indexOf(mxv), last = vals.length - 1, up = vals[last] >= 0, col = up ? '#0E9F6E' : '#E5484D';
-    return '<div class="mt-c"><svg viewBox="0 0 100 ' + H + '" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="100" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="var(--line-2,rgba(128,140,170,.4))" stroke-width=".6" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/><polyline points="' + pts + '" fill="none" stroke="' + col + '" stroke-width="1.6" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>'
-      + '<i class="mt-d" style="left:' + X(last).toFixed(1) + '%;top:' + (Y(vals[last]) / H * 100).toFixed(1) + '%;background:' + col + '"></i>' + (hi !== last && hi > 0 ? '<i class="mt-d hi" style="left:' + X(hi).toFixed(1) + '%;top:' + (Y(vals[hi]) / H * 100).toFixed(1) + '%"></i>' : '')
-      + '<div class="mt-l"><span>start</span>' + (hi !== last && hi > 0 && X(hi) < 82 ? '<span class="mt-h" style="left:' + X(hi).toFixed(1) + '%">high</span>' : '') + '<span>now</span></div></div>';
+  function miniBars(vals, labels, tips) {
+    var W = 100, H = 36, n = vals.length, up = Math.max.apply(null, vals.concat([0])), dn = Math.min.apply(null, vals.concat([0])), span = (up - dn) || 1, z = H * up / span, bw = W / n, o = '';
+    vals.forEach(function (v, i) { var h = Math.max(Math.abs(v) / span * H, v ? 2 : .8), y = v >= 0 ? z - h : z; o += '<rect style="animation-delay:' + (i * 28) + 'ms" x="' + (i * bw + bw * .16).toFixed(2) + '" y="' + y.toFixed(2) + '" width="' + (bw * .68).toFixed(2) + '" height="' + h.toFixed(2) + '" rx="1.2" fill="' + (v > 0 ? 'var(--mint,#0E9F6E)' : v < 0 ? 'var(--red,#E5484D)' : 'var(--muted,#8A93A8)') + '"' + (v ? '' : ' opacity=".35"') + '/>'; });
+    var box = document.createElement('div'); box.className = 'mt-c';
+    box.innerHTML = '<svg viewBox="0 0 100 ' + H + '" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="100" y1="' + z.toFixed(2) + '" y2="' + z.toFixed(2) + '" stroke="var(--line-2,rgba(128,140,170,.45))" stroke-width=".7" vector-effect="non-scaling-stroke"/>' + o + '</svg><div class="mt-l">' + labels.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>';
+    scrub(box, n, tips, false); return box;
+  }
+  function miniLine(vals, tips) {
+    var W = 100, H = 36, n = vals.length, mn = Math.min.apply(null, vals.concat([0])), mx = Math.max.apply(null, vals), sp = (mx - mn) || 1, X = function (i) { return i / (n - 1) * W; }, Y = function (v) { return H - 3 - (v - mn) / sp * (H - 7); };
+    var pts = vals.map(function (v, i) { return X(i).toFixed(1) + ',' + Y(v).toFixed(1); }).join(' '), hi = vals.indexOf(mx), last = n - 1, col = vals[last] >= 0 ? '#0E9F6E' : '#E5484D', id = 'mg' + Math.floor(Math.random() * 1e6);
+    var box = document.createElement('div'); box.className = 'mt-c ln';
+    box.innerHTML = '<svg viewBox="0 0 100 ' + H + '" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="' + id + '" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="' + col + '" stop-opacity=".32"/><stop offset="1" stop-color="' + col + '" stop-opacity="0"/></linearGradient></defs>'
+      + '<line x1="0" x2="100" y1="' + Y(0).toFixed(1) + '" y2="' + Y(0).toFixed(1) + '" stroke="var(--line-2,rgba(128,140,170,.45))" stroke-width=".7" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/>'
+      + '<polygon points="0,' + H + ' ' + pts + ' 100,' + H + '" fill="url(#' + id + ')" stroke="none"/><polyline points="' + pts + '" fill="none" stroke="' + col + '" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>'
+      + '<i class="mt-d" style="left:100%;top:' + (Y(vals[last]) / H * 100).toFixed(1) + '%;background:' + col + '"></i>' + (hi !== last && mx > 0 ? '<i class="mt-d hi" style="left:' + X(hi).toFixed(1) + '%;top:' + (Y(mx) / H * 100).toFixed(1) + '%"></i>' : '')
+      + '<i class="mt-cur" style="display:none;background:' + col + '"></i>'
+      + '<div class="mt-l"><span>start</span>' + (hi !== last && mx > 0 && X(hi) < 68 && X(hi) > 22 ? '<span class="mt-h" style="left:' + X(hi).toFixed(1) + '%">high</span>' : '') + '<span>now</span></div>';
+    var cur = box.querySelector('.mt-cur'); vals.forEach(function (v, i) { cur.dataset['y' + i] = (Y(v) / H * 100).toFixed(1) + '%'; });
+    scrub(box, n, tips, true); return box;
+  }
+  function recent(trades, k) {
+    var L = trades.slice().sort(function (a, b) { return new Date(a.closed_at) - new Date(b.closed_at); }).slice(-k), mx = Math.max.apply(null, L.map(function (t) { return Math.abs(t.profit); }).concat([1])), o = '';
+    L.forEach(function (t, i) { var h = 22 + Math.abs(t.profit) / mx * 78; o += '<i class="' + (t.profit > 0 ? 'w' : t.profit < 0 ? 'l' : 'z') + '" style="height:' + h.toFixed(0) + '%;animation-delay:' + (i * 22) + 'ms" data-t="' + fd(new Date(t.closed_at)) + ' \u00b7 ' + usd0(t.profit) + '"></i>'; });
+    var box = document.createElement('div'); box.className = 'mt-c rc'; box.innerHTML = '<div class="mt-k">' + o + '</div><div class="mt-l"><span>last ' + L.length + '</span><span>latest</span></div>';
+    var lab = box.querySelector('.mt-l'), base = lab.innerHTML, ks = box.querySelectorAll('.mt-k i');
+    function show(e) { var r = box.getBoundingClientRect(), i = Math.max(0, Math.min(ks.length - 1, Math.floor((e.clientX - r.left) / r.width * ks.length))); lab.innerHTML = '<b class="mt-t">' + ks[i].dataset.t + '</b>'; ks.forEach(function (x, k) { x.classList.toggle('on', k === i); }); box.classList.add('sc'); }
+    function off() { box.classList.remove('sc'); lab.innerHTML = base; ks.forEach(function (x) { x.classList.remove('on'); }); }
+    box.addEventListener('pointermove', show); box.addEventListener('pointerdown', function (e) { e.stopPropagation(); show(e); }); box.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); }); box.addEventListener('pointerleave', off); box.addEventListener('pointercancel', off);
+    return box;
   }
   function tiles() {
     var m = M(), r = R(); if (!m || !r || !m.trades || !m.trades.length) return; var now = new Date(), t = m.trades;
     $$('#acct .hero-r .tile:not([data-mz])').forEach(function (el) {
       el.dataset.mz = '1'; var l = (($('.l', el) || {}).textContent || '').toLowerCase(), vals = null;
       if (l.indexOf('month') > -1) vals = dayCum(t, new Date(now.getFullYear(), now.getMonth(), 1).getTime()); else if (l.indexOf('7 days') > -1) vals = dayCum(t, Date.now() - 7 * 864e5); else if (l.indexOf('net result') > -1) vals = r.curve(t).map(function (p) { return p.c; });
-      var now0 = new Date(), days;
-      if (l.indexOf('month') > -1) { days = []; for (var d = 1; d <= now0.getDate(); d++) days.push(new Date(now0.getFullYear(), now0.getMonth(), d)); el.insertAdjacentHTML('beforeend', miniBars(perDay(t, days), ['1st', 'today'])); }
-      else if (l.indexOf('7 days') > -1) { days = []; for (var k = 6; k >= 0; k--) days.push(new Date(now0.getFullYear(), now0.getMonth(), now0.getDate() - k)); el.insertAdjacentHTML('beforeend', miniBars(perDay(t, days), days.map(function (x) { return 'SMTWTFS'.charAt(x.getDay()); }))); }
-      else if (l.indexOf('all time') > -1) { var cv = r.curve(t).map(function (p) { return p.c; }); if (cv.length > 1) el.insertAdjacentHTML('beforeend', miniLine(cv)); }
-      else if (l.indexOf('win rate') > -1) { var s = r.stats(t); el.insertAdjacentHTML('beforeend', '<div class="mz-wr"><i style="width:' + Math.max(2, Math.min(100, s.win)) + '%"></i></div>'); }
-    });
+      var now0 = new Date(), days, t0 = now0.getTime();
+      if (l.indexOf('month') > -1) { days = []; for (var d = 1; d <= now0.getDate(); d++) days.push(new Date(now0.getFullYear(), now0.getMonth(), d)); var mv = perDay(t, days); el.appendChild(miniBars(mv, ['1st', 'today'], mv.map(function (v, i) { return fd(days[i]) + ' \u00b7 ' + usd0(v); }))); }
+      else if (l.indexOf('7 days') > -1) { days = []; for (var k = 6; k >= 0; k--) days.push(new Date(now0.getFullYear(), now0.getMonth(), now0.getDate() - k)); var wv = perDay(t, days); el.appendChild(miniBars(wv, days.map(function (x) { return 'SMTWTFS'.charAt(x.getDay()); }), wv.map(function (v, i) { return fd(days[i]) + ' \u00b7 ' + usd0(v); }))); }
+      else if (l.indexOf('all time') > -1) { var srt = t.slice().sort(function (a, b) { return new Date(a.closed_at) - new Date(b.closed_at); }), c = 0, cv = [0], tp = ['Start \u00b7 $0']; srt.forEach(function (x) { c += x.profit; cv.push(c); tp.push(fd(new Date(x.closed_at)) + ' \u00b7 ' + usd0(c) + ' total'); }); if (cv.length > 2) el.appendChild(miniLine(cv, tp)); }
+      else if (l.indexOf('win rate') > -1) { el.appendChild(recent(t, 24)); }    });
     var hero = $('#acct .hero'); if (hero) hero.classList.toggle('mz-live', !!(m.st && m.st.online));
   }
 
