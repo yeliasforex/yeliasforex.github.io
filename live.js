@@ -130,6 +130,13 @@
     return { st: st, fl: fl, m: m, online: m.s === 'trade' || m.s === 'wait' || m.s === 'rest' || m.s === 'warn' };
   }
   var STATES = [['Online, trade open', 'A report arrived and at least one trade is running.'], ['Online, watching gold', 'No trade now. Normal between signals.'], ['Market closed', 'Weekend: gold does not trade.'], ['Offline', 'No report for longer than the limit. Open trades keep their stop loss.'], ['Needs attention', 'The EA reported a problem, with what to do about it.']];
+  function dayRange() {                                                  // the highest and lowest floating result of today, from the EA's reports (one about every 5 minutes)
+    var L = (D && D.log) || [], v = L.map(function (x) { return { t: x.at, f: x.equity - x.balance }; }).filter(function (x) { return isFinite(x.f); });
+    if (D && D.st && D.st.equity != null && D.st.balance != null) v.push({ t: new Date().toISOString(), f: D.st.equity - D.st.balance });
+    if (v.length < 3) return [];
+    var hi = v.reduce(function (a, x) { return x.f > a.f ? x : a; }), lo = v.reduce(function (a, x) { return x.f < a.f ? x : a; }), hm = function (x) { return new Date(x).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
+    return [['Highest today', D.sgn(hi.f) + ' at ' + hm(hi.t), D.col(hi.f)], ['Lowest today', D.sgn(lo.f) + ' at ' + hm(lo.t), D.col(lo.f)], ['Reports today', String(v.length - 1)]];
+  }
   function actions(a) {
     if (!D) return; var f = figs(), st = f.st, usd = D.usd || function (n) { return '$' + Number(n).toFixed(2); };
     if (a === 'status') {
@@ -141,13 +148,21 @@
     } else if (a === 'version') {
       sheet('EA version', D.upd ? 'An update is available' : 'You are up to date', D.upd ? 'A newer version is ready. Download it, replace the file in MT5 and attach it to the chart again. Your key stays the same.' : 'This is the newest version we have published.',
         [['Installed on MT5', st.ea_version ? 'v' + st.ea_version : 'unknown yet'], ['Latest published', D.upd ? 'v' + D.upd : (st.ea_version ? 'v' + st.ea_version : '-')]], D.upd ? [['', 'Download the latest EA', 'download.html']] : [['', 'See what changed', 'changelog.html']]);
-    } else if (a === 'open') {
-      var n = st.open_positions || 0;
-      sheet('Open trades', f.online ? (n ? n + ' running right now' : 'None running right now') : 'Last known', 'These are trades the EA is managing on your MT5 account at this moment. Every trade has a stop loss from the moment it opens, and nothing is closed by hand.' + (f.online ? '' : ' The EA is not reporting, so this is the last known number.'),
-        [['Open positions', String(n)], ['Floating result', f.fl == null ? '-' : D.sgn(f.fl), f.fl == null ? null : D.col(f.fl)], ['Equity', st.equity != null ? usd(st.equity) : '-'], ['Balance', st.balance != null ? usd(st.balance) : '-']], [['trades', 'Open the Trades tab']]);
-    } else if (a === 'float') {
-      sheet('Floating result', 'Profit or loss on trades that are still open', 'Floating is equity minus balance. It moves with the gold price while a trade is open and becomes a real result only when the trade closes.',
-        [['Equity', st.equity != null ? usd(st.equity) : '-'], ['Balance', st.balance != null ? usd(st.balance) : '-'], ['Floating', f.fl == null ? '-' : D.sgn(f.fl), f.fl == null ? null : D.col(f.fl)], ['Open positions', String(st.open_positions || 0)]]);
+    } else if (a === 'open' || a === 'float') {
+      var n = st.open_positions || 0, state = st.engine_state ? String(st.engine_state) : '-', asof = st.last_heartbeat ? when(st.last_heartbeat) + (f.m.ago ? ' (' + f.m.ago + ')' : '') : 'no report yet';
+      var pct = (f.fl != null && st.balance) ? (f.fl / st.balance * 100) : null, fc = f.fl == null ? null : D.col(f.fl);
+      var base = [['Last report from the EA', asof]];
+      if (a === 'open') {
+        sheet('Open trades', f.online ? (n ? n + ' open in the last report' : 'None open in the last report') : 'Last known: ' + n + ' open',
+          (n ? 'The EA reported ' + n + ' open position' + (n === 1 ? '' : 's') + ' on this MT5 account.' : 'The EA reported no open position.') + ' It sends totals every few minutes, not each position, so a trade shows up under Trades with its full story once it has closed.' + (f.online ? '' : ' The EA is not reporting right now, so this is the last known state.'),
+          base.concat([['Open positions', String(n)], ['Engine state', state], ['Floating result', f.fl == null ? '-' : D.sgn(f.fl), fc], ['Equity', st.equity != null ? usd(st.equity) : '-'], ['Balance', st.balance != null ? usd(st.balance) : '-']]),
+          [['today', 'Trades closed today'], ['trades', 'All closed trades']]);
+      } else {
+        sheet('Floating result', 'Profit or loss on what is still open',
+          'Floating is equity minus balance: what every open position on this MT5 account would make or lose if it closed this moment. It moves with the gold price and becomes a real result only when a trade closes. The EA reports it every few minutes, so it can lag the chart.' + (f.online ? '' : ' The EA is not reporting right now, so this is the last known value.'),
+          base.concat([['Equity', st.equity != null ? usd(st.equity) : '-'], ['Balance', st.balance != null ? usd(st.balance) : '-'], ['Floating (equity \u2212 balance)', f.fl == null ? '-' : D.sgn(f.fl), fc], ['As a share of the balance', pct == null ? '-' : (pct >= 0 ? '+' : '\u2212') + Math.abs(pct).toFixed(2) + '%', fc], ['Open positions', String(n)]].concat(dayRange())),
+          [['open', 'Open trades']]);
+      }
     } else if (a === 'today') {
       var tr = D.todayTrades || [];
       if (tr.length && window.gteSheet.sel) { window.gteSheet.sel('cday:' + dkey(tr[0].closed_at)); return; }

@@ -66,6 +66,11 @@
     if (INJ) return (window.__inj && window.__inj.pending) || [];
     try { const {data, error} = await c.from('ea_pending').select('*').eq('license_id', id).order('placed_at', {ascending: false}).limit(60); return error ? [] : (data || []).map(o => { ['order_price', 'sl', 'price_at_place', 'end_price', 'closest_price', 'lots'].forEach(k => { if (o[k] != null) o[k] = Number(o[k]); }); return o; }); } catch (e) { return []; }
   }
+  async function eqLogFor(id) {                                      // equity and balance samples since midnight (local); empty until the database has the table
+    if (DEMO) { const out = []; let v = 20; for (let i = 0; i < 40; i++) { v += Math.sin(i / 4) * 14 + 3; out.push({at: new Date(Date.now() - (40 - i) * 18e4).toISOString(), equity: 6120.4 + v, balance: 6120.4}); } return out; }
+    if (INJ) return [];
+    try { const d0 = new Date(); d0.setHours(0, 0, 0, 0); const {data, error} = await c.from('license_equity_log').select('at,equity,balance').eq('license_id', id).gte('at', d0.toISOString()).order('at').limit(400); return error ? [] : (data || []).map(r => ({at: r.at, equity: Number(r.equity), balance: Number(r.balance)})); } catch (e) { return []; }
+  }
   async function tradesFor(id) {
     const hit = tradeCache[id]; if (hit && Date.now() - hit.at < 55000) return hit.rows;
     if (hit && hit.rows.length && !INJ && !DEMO) {                      // background refresh: fetch only the trades closed since the last one we have
@@ -190,10 +195,11 @@
     if (!lic) { parts.push(emptyPanel(), claimPanel(), ordersPanel()); A.innerHTML = parts.join(''); wire(); return; }
     let trades = []; try { trades = await tradesFor(lic.id); } catch (e) { toast('Could not load your trades: ' + e.message, true); }
     let pending = []; try { pending = await pendingFor(lic.id); } catch (e) {}
+    let eqlog = []; try { eqlog = await eqLogFor(lic.id); } catch (e) {}
     if (window.gteLive) {
       const lst = stOf(lic.id), lprobs = problems(lic, lst), td = trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()).reduce((a, x) => a + x.profit, 0);
       const fs = DEMO ? new URLSearchParams(location.search).get('state') : null;
-      parts.push(gteLive.html({upd: (S.settings.latestVersion && stOf(lic.id).ea_version && lic.status === 'active' && (x => { const p = String(S.settings.latestVersion).split('.').map(Number), q = String(stOf(lic.id).ea_version).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d > 0; } return false; })() ) ? S.settings.latestVersion : null, l: lic, st: lst, today: td, err: lprobs.find(p => (p.severity === 'error' || p.severity === 'warning') && p.code !== 'HEARTBEAT_MISSING') || null, update: null, force: fs, offMin: Number(S.settings.offlineMinutes) || 15, beatMin: Number(S.settings.heartbeatMinutes) || 5, at: Date.now(), R, todayTrades: trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()), usd, sgn: R.sgn, col: R.col, fill}));
+      parts.push(gteLive.html({upd: (S.settings.latestVersion && stOf(lic.id).ea_version && lic.status === 'active' && (x => { const p = String(S.settings.latestVersion).split('.').map(Number), q = String(stOf(lic.id).ea_version).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d > 0; } return false; })() ) ? S.settings.latestVersion : null, l: lic, st: lst, today: td, err: lprobs.find(p => (p.severity === 'error' || p.severity === 'warning') && p.code !== 'HEARTBEAT_MISSING') || null, update: null, force: fs, offMin: Number(S.settings.offlineMinutes) || 15, beatMin: Number(S.settings.heartbeatMinutes) || 5, at: Date.now(), R, log: eqlog, todayTrades: trades.filter(x => new Date(x.closed_at).toDateString() === new Date().toDateString()), usd, sgn: R.sgn, col: R.col, fill}));
     }
     if (S.licenses.length > 1) parts.push(`<div class="row" style="margin-bottom:6px"><span class="hint">License</span><select id="licSel" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${S.licenses.map(l => `<option value="${l.id}" ${l.id === cur ? 'selected' : ''}>${esc(planOf(l.plan_id).name)} · …${esc(String(l.key).slice(-4))}</option>`).join('')}</select></div>`);
     const lv = S.settings.latestVersion, cv = stOf(lic.id).ea_version, vc = (x, y) => { const p = String(x).split('.').map(Number), q = String(y).split('.').map(Number); for (let i = 0; i < Math.max(p.length, q.length); i++) { const d = (p[i] || 0) - (q[i] || 0); if (d) return d; } return 0; };
@@ -220,37 +226,6 @@
     const top = rows.reduce((a, x) => x.n > a.n ? x : a);
     return `<p class="acg-plain"><b>In plain words</b>${R.ENG[top.e]} earned the most: ${R.sgn(top.n)}, which is ${Math.round(Math.max(0, top.n) / tot * 100)}% of what the profitable engines made. The three engines trade different setups, so one quiet engine is normal.</p>`;
   }
-  function heroChart(trades) {
-    const cv = R.curve(trades); if (cv.length < 2) return '';
-    const mn = Math.min(0, ...cv.map(p => p.c)), mx = Math.max(0, ...cv.map(p => p.c)), rg = (mx - mn) || 1, t0 = cv[0].t, t1 = cv[cv.length - 1].t, tr = (t1 - t0) || 1;
-    const X = p => (p.t - t0) / tr * 100, Y = p => 6 + (1 - (p.c - mn) / rg) * 88, zero = 6 + (1 - (0 - mn) / rg) * 88;
-    const d = cv.map((p, i) => (i ? 'L' : 'M') + X(p).toFixed(2) + ' ' + Y(p).toFixed(2)).join(' '), last = cv[cv.length - 1], up = last.c >= 0, col = up ? '#3EE09A' : '#FF6B78';
-    const dd = x => new Date(x).toLocaleDateString([], {month: 'short', day: 'numeric'});
-    return `<div class="hc" data-hc><div class="hc-w" style="--c:${col}"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Cumulative result of closed trades" role="img"><defs><linearGradient id="hcg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
-        <line x1="0" x2="100" y1="${zero.toFixed(2)}" y2="${zero.toFixed(2)}" stroke="currentColor" stroke-opacity=".28" stroke-dasharray="2 2" vector-effect="non-scaling-stroke"/>
-        <path d="${d} L100 ${zero.toFixed(2)} L0 ${zero.toFixed(2)} Z" fill="url(#hcg)"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
-        <i class="hc-st"></i><i class="hc-dt" style="left:100%;top:${Y(last).toFixed(2)}%"></i><div class="hc-tip"></div>
-</div>
-</div>`;
-  }
-  function bindHero(trades) {
-    const root = document.querySelector('[data-hc]'); if (!root) return; const cv = R.curve(trades), w = root.querySelector('.hc-w'), tip = root.querySelector('.hc-tip'), dt = root.querySelector('.hc-dt'), st = root.querySelector('.hc-st');
-    const mn = Math.min(0, ...cv.map(p => p.c)), mx = Math.max(0, ...cv.map(p => p.c)), rg = (mx - mn) || 1, t0 = cv[0].t, tr = (cv[cv.length - 1].t - t0) || 1; let cur = null;
-    const at = (cx) => { const r = w.getBoundingClientRect(), f = Math.max(0, Math.min(1, (cx - r.left) / r.width)), tt = t0 + f * tr; let b = 0, bd = 1e30; cv.forEach((p, i) => { const q = Math.abs(p.t - tt); if (q < bd) { bd = q; b = i; } }); return b; };
-    const show = (i) => {
-      const p = cv[i], r = w.getBoundingClientRect(), x = (p.t - t0) / tr * r.width, y = (6 + (1 - (p.c - mn) / rg) * 88) / 100 * r.height; cur = p;
-      dt.style.left = x + 'px'; dt.style.top = y + 'px'; dt.style.opacity = 1;
-      const x2 = p.tr, lab = new Date(p.t).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'});
-      tip.innerHTML = '<b style="color:' + R.col(p.c) + '">' + R.sgn(p.c) + '</b><span>' + lab + '</span>' + (x2 ? '<span>' + esc(R.ENG[x2.engine] || '') + ' ' + (x2.dir > 0 ? 'Buy' : 'Sell') + ' <em style="color:' + R.col(x2.profit) + '">' + R.sgn(x2.profit) + '</em></span><small>Tap to open this trade</small>' : '<span>Start</span>');
-      tip.classList.add('on'); const tw = tip.offsetWidth, th = tip.offsetHeight, below = y - th - 22 < -4; tip.style.left = Math.max(2, Math.min(r.width - tw - 2, x - tw / 2)) + 'px'; tip.style.top = (below ? y + 18 : y - th - 18) + 'px';
-      st.style.left = x + 'px'; st.style.top = (below ? y : y - 18) + 'px'; st.style.height = '18px'; st.style.opacity = 1;
-    };
-    const move = e => { if (e.pointerType === 'touch' && e.type === 'pointermove' && !w.__drag) return; show(at(e.clientX)); };
-    w.addEventListener('pointermove', move); w.addEventListener('pointerdown', e => { w.__drag = 1; show(at(e.clientX)); });
-    ['pointerup', 'pointercancel'].forEach(n => w.addEventListener(n, () => { w.__drag = 0; }));
-    w.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') { tip.classList.remove('on'); st.style.opacity = 0; dt.style.left = '100%'; dt.style.top = (6 + (1 - (cv[cv.length - 1].c - mn) / rg) * 88) + '%'; } });
-    w.addEventListener('click', () => { if (cur && cur.tr && window.gteSheet) window.gteSheet.trade(cur.tr); });
-  }
   function hero(l, trades) {
     const st = stOf(l.id), pl = planOf(l.plan_id), [pc, pt] = statePill(l.status), s = R.stats(trades);
     const days = l.expires_at ? Math.ceil((new Date(l.expires_at) - Date.now()) / 864e5) : null, pct = days == null ? 0 : Math.max(0, Math.min(100, days / 365 * 100));
@@ -267,8 +242,7 @@
         <div class="row"><span class="plan-chip">${esc(pl.name)}</span><span class="pill ${pc}">${pt}</span><span class="pill ${l.bound_is_demo ? 'info' : ''}">${l.bound_account ? (l.bound_is_demo ? 'Demo account' : 'Real account') : 'Not bound'}</span></div>
         <div class="eyebrow">EQUITY</div>
         <div class="eqbig"${st.equity != null ? ` data-cu="${st.equity}" data-f="usd"` : ''}>${st.equity != null ? usd(st.equity) : '-'}</div>
-        <div class="hint">Balance ${st.balance != null ? usd(st.balance) : '-'}${fl != null ? ' · Floating <b style="color:' + R.col(fl) + '">' + R.sgn(fl) + '</b>' : ''} · ${st.open_positions ?? 0} open position${(st.open_positions ?? 0) === 1 ? '' : 's'}</div>
-        ${heroChart(trades)}
+        <div class="hint">Balance ${st.balance != null ? usd(st.balance) : '-'}</div>
       </div>
       <div class="hero-r">
         <div class="tile" data-sel="month" role="button" tabindex="0"><div class="l">This month</div><div class="v" style="color:${R.col(mon)}" data-cu="${mon}" data-f="sgn">${R.sgn(mon)}</div>${vs(mon, prevMon, 'Last month')}</div>
@@ -381,7 +355,6 @@
       const el = document.getElementById(host); if (!el) continue;
       el.innerHTML = R.lineChart(host + 'c', pts, key, color, neg); R.bindHover(el, host + 'c', pts, key, neg);
     }
-    bindHero(all);
     A.querySelectorAll('tr.ct').forEach(r => { const tb = r.closest('table'); if (tb) tb.classList.add('tcards'); });
     const eqr = document.getElementById('eq-rng');
     if (eqr) {
