@@ -130,6 +130,23 @@
     return { st: st, fl: fl, m: m, online: m.s === 'trade' || m.s === 'wait' || m.s === 'rest' || m.s === 'warn' };
   }
   var STATES = [['Online, trade open', 'A report arrived and at least one trade is running.'], ['Online, watching gold', 'No trade now. Normal between signals.'], ['Market closed', 'Weekend: gold does not trade.'], ['Offline', 'No report for longer than the limit. Open trades keep their stop loss.'], ['Needs attention', 'The EA reported a problem, with what to do about it.']];
+  var ENGC = { Alpha: '#7FA6FF', Beta: '#4BE3A6', Gamma: '#F2B84B', Momentum: '#7FA6FF', Intraday: '#4BE3A6', DayFlow: '#F2B84B' };
+  function posSheet(P, st, f, asof, state, usd) {                         // one card per running position, from the EA report
+    var tot = 0, now = Date.now();
+    var cards = P.map(function (p) {
+      var pl = Number(p.pl) || 0, dir = Number(p.dir) > 0 ? 1 : -1, risk = Math.abs(p.entry - p.stop), mv = (p.now - p.entry) * dir, r = risk > 0 && p.stop ? mv / risk : null, ec = ENGC[p.engine] || '#7FA6FF';
+      var open = p.opened ? Math.max(0, now / 1000 - p.opened) : 0, held = open >= 3600 ? Math.floor(open / 3600) + 'h ' + Math.floor(open % 3600 / 60) + 'm' : Math.max(1, Math.floor(open / 60)) + 'm';
+      var w = r == null ? 0 : Math.min(100, Math.abs(r) / 2 * 50), bar = r == null ? '' : '<div class="lv-rail"><i class="' + (r >= 0 ? 'g' : 'r') + '" style="' + (r >= 0 ? 'left:50%' : 'right:50%') + ';width:' + w.toFixed(1) + '%"></i></div>';
+      tot += pl;
+      var c = D.col(pl);
+      return '<div class="lv-pos"><div class="lv-p1"><span class="lv-sd ' + (dir > 0 ? 'b' : 's') + '">' + (dir > 0 ? 'BUY' : 'SELL') + '</span><span class="lv-en" style="--c:' + ec + '">' + esc(p.engine || '') + '</span><span class="lv-lt">' + Number(p.lots).toFixed(2) + ' lot</span><b style="color:' + c + '">' + D.sgn(pl) + '</b></div>'
+        + '<div class="lv-p2"><div><span>Entry</span><b>' + Number(p.entry).toFixed(2) + '</b></div><div><span>Now</span><b>' + Number(p.now).toFixed(2) + '</b></div><div><span>Stop</span><b>' + (p.stop ? Number(p.stop).toFixed(2) : 'none') + '</b></div><div><span>Open</span><b>' + held + '</b></div></div>' + bar + '</div>';
+    }).join('');
+    var css = '<style>.lv-pos{border:1px solid var(--line,rgba(128,140,170,.28));border-radius:14px;padding:12px 14px;margin:0 0 10px;background:var(--card,rgba(128,140,170,.08))}.lv-p1{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lv-p1 b{margin-left:auto;font-size:18px}.lv-sd{font:800 11px/1 inherit;padding:4px 8px;border-radius:999px;letter-spacing:.06em}.lv-sd.b{background:rgba(14,159,110,.16);color:#0E9F6E}.lv-sd.s{background:rgba(229,72,77,.16);color:#E5484D}.lv-en{font-size:12px;font-weight:700;padding:4px 9px;border-radius:999px;color:var(--c);background:color-mix(in srgb,var(--c) 16%,transparent)}.lv-lt{font-size:13px;opacity:.75}.lv-p2{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}.lv-p2 span{display:block;font-size:11px;opacity:.65}.lv-p2 b{font-size:14px}.lv-rail{position:relative;height:6px;border-radius:3px;margin-top:10px;background:rgba(128,140,170,.22)}.lv-rail:before{content:"";position:absolute;left:50%;top:-3px;width:2px;height:12px;background:rgba(128,140,170,.6)}.lv-rail i{position:absolute;top:0;height:6px;border-radius:3px}.lv-rail i.g{background:#0E9F6E}.lv-rail i.r{background:#E5484D}.lv-tot{display:flex;justify-content:space-between;padding:8px 2px 0;font-weight:600}</style>';
+    var h = css + cards + '<div class="lv-tot"><span>Floating total</span><b style="color:' + D.col(tot) + '">' + D.sgn(tot) + '</b></div><p class="gs-lead" style="font-size:12px;opacity:.7;margin-top:8px">Last report ' + esc(asof) + '. Bar: distance from entry in risk units (full = 2R).</p>'
+      + '<a class="gs-more" href="#" data-lv="trades" onclick="return false">All closed trades</a>';
+    window.gteSheet.open({ k: 'explain', title: 'Open trades', sub: P.length + ' running', html: h });
+  }
   function dayRange() {                                                  // the highest and lowest floating result of today, from the EA's reports (one about every 5 minutes)
     var L = (D && D.log) || [], v = L.map(function (x) { return { t: x.at, f: x.equity - x.balance }; }).filter(function (x) { return isFinite(x.f); });
     if (D && D.st && D.st.equity != null && D.st.balance != null) v.push({ t: new Date().toISOString(), f: D.st.equity - D.st.balance });
@@ -141,10 +158,10 @@
     if (!D) return; var f = figs(), st = f.st, usd = D.usd || function (n) { return '$' + Number(n).toFixed(2); };
     if (a === 'status') {
       var t = f.m.s === 'warn' && D.err ? D.fill(D.err.explanation) + (D.err.solution ? ' What to do: ' + D.fill(D.err.solution) : '') : f.m.sub;
-      sheet(f.m.title, 'Live status of your EA', esc(t), [['Last report', st.last_heartbeat ? when(st.last_heartbeat) + (f.m.ago ? ' (' + f.m.ago + ')' : '') : 'none yet'], ['Reports arrive', 'about every ' + D.beatMin + ' min'], ['Marked offline after', D.offMin + ' min without a report'], ['MT5 account', D.l && D.l.bound_account ? String(D.l.bound_account) : 'not attached yet'], ['Broker', D.l && D.l.bound_broker ? D.l.bound_broker : '-']].concat(STATES.map(function (x) { return [x[0], x[1]]; })), [['fresh', 'How fresh is this?']]);
+      sheet(f.m.title, 'Live status of your EA', esc(t), [['Last report', st.last_heartbeat ? when(st.last_heartbeat) + (f.m.ago ? ' (' + f.m.ago + ')' : '') : 'none yet'], ['Reports arrive', 'about every ' + D.beatMin + ' min'], ['Marked offline after', D.offMin + ' min without a report'], ['MT5 account', D.l && D.l.bound_account ? String(D.l.bound_account) : 'not attached yet'], ['Broker', D.l && D.l.bound_broker ? D.l.bound_broker : '-']], [['fresh', 'How fresh is this?']]);
     } else if (a === 'fresh') {
-      sheet('How fresh is this?', 'The ring and the heartbeat line', 'Your EA sends a short report from MT5 on a schedule. The ring around the icon is full right after a report and empties as time passes. If no report arrives for ' + D.offMin + ' minutes the status changes to offline. Open trades keep their stop loss either way.',
-        [['Last report', st.last_heartbeat ? when(st.last_heartbeat) : 'none yet'], ['Age of that report', f.m.ago || '-'], ['Page last checked', Math.max(0, Math.floor((Date.now() - D.at) / 1000)) + ' s ago'], ['Reports arrive', 'about every ' + D.beatMin + ' min'], ['Offline after', D.offMin + ' min']]);
+      sheet('How fresh is this?', 'The ring and the heartbeat line', 'The ring is full right after a report and empties as time passes. Open trades keep their stop loss if the EA goes offline.',
+        [['Last report', st.last_heartbeat ? when(st.last_heartbeat) : 'none yet'], ['Age', f.m.ago || '-'], ['Page checked', Math.max(0, Math.floor((Date.now() - D.at) / 1000)) + ' s ago'], ['Reports arrive', 'about every ' + D.beatMin + ' min'], ['Offline after', D.offMin + ' min']]);
     } else if (a === 'version') {
       sheet('EA version', D.upd ? 'An update is available' : 'You are up to date', D.upd ? 'A newer version is ready. Download it, replace the file in MT5 and attach it to the chart again. Your key stays the same.' : 'This is the newest version we have published.',
         [['Installed on MT5', st.ea_version ? 'v' + st.ea_version : 'unknown yet'], ['Latest published', D.upd ? 'v' + D.upd : (st.ea_version ? 'v' + st.ea_version : '-')]], D.upd ? [['', 'Download the latest EA', 'download.html']] : [['', 'See what changed', 'changelog.html']]);
@@ -152,21 +169,23 @@
       var n = st.open_positions || 0, state = st.engine_state ? String(st.engine_state) : '-', asof = st.last_heartbeat ? when(st.last_heartbeat) + (f.m.ago ? ' (' + f.m.ago + ')' : '') : 'no report yet';
       var pct = (f.fl != null && st.balance) ? (f.fl / st.balance * 100) : null, fc = f.fl == null ? null : D.col(f.fl);
       var base = [['Last report from the EA', asof]];
+      var P = Array.isArray(st.positions) ? st.positions : [];
+      if (a === 'open' && P.length && f.online) { posSheet(P, st, f, asof, state, usd); return; }
       if (a === 'open') {
         sheet('Open trades', f.online ? (n ? n + ' open in the last report' : 'None open in the last report') : 'Last known: ' + n + ' open',
-          (n ? 'The EA reported ' + n + ' open position' + (n === 1 ? '' : 's') + ' on this MT5 account.' : 'The EA reported no open position.') + ' It sends totals every few minutes, not each position, so a trade shows up under Trades with its full story once it has closed.' + (f.online ? '' : ' The EA is not reporting right now, so this is the last known state.'),
+          (f.online ? '' : 'EA not reporting: last known state.'),
           base.concat([['Open positions', String(n)], ['Engine state', state], ['Floating result', f.fl == null ? '-' : D.sgn(f.fl), fc], ['Equity', st.equity != null ? usd(st.equity) : '-'], ['Balance', st.balance != null ? usd(st.balance) : '-']]),
           [['today', 'Trades closed today'], ['trades', 'All closed trades']]);
       } else {
         sheet('Floating result', 'Profit or loss on what is still open',
-          'Floating is equity minus balance: what every open position on this MT5 account would make or lose if it closed this moment. It moves with the gold price and becomes a real result only when a trade closes. The EA reports it every few minutes, so it can lag the chart.' + (f.online ? '' : ' The EA is not reporting right now, so this is the last known value.'),
+          'Equity minus balance: what open trades would make or lose if closed now.' + (f.online ? '' : ' EA not reporting: last known value.'),
           base.concat([['Equity', st.equity != null ? usd(st.equity) : '-'], ['Balance', st.balance != null ? usd(st.balance) : '-'], ['Floating (equity \u2212 balance)', f.fl == null ? '-' : D.sgn(f.fl), fc], ['As a share of the balance', pct == null ? '-' : (pct >= 0 ? '+' : '\u2212') + Math.abs(pct).toFixed(2) + '%', fc], ['Open positions', String(n)]].concat(dayRange())),
           [['open', 'Open trades']]);
       }
     } else if (a === 'today') {
       var tr = D.todayTrades || [];
       if (tr.length && window.gteSheet.sel) { window.gteSheet.sel('cday:' + dkey(tr[0].closed_at)); return; }
-      sheet('Today, closed', 'Result of trades that closed today', 'Only trades that have already closed count here. Open trades are shown separately as floating.', [['Closed today', String(tr.length)], ['Result', D.sgn(D.today || 0), D.col(D.today || 0)]], [['trades', 'Open the Trades tab']]);
+      sheet('Today, closed', 'Result of trades that closed today', '', [['Closed today', String(tr.length)], ['Result', D.sgn(D.today || 0), D.col(D.today || 0)]], [['trades', 'Open the Trades tab']]);
     } else if (a === 'trades') {
       var t = document.querySelector('#subnav a[data-tab="trades"]'); if (window.gteSheet.close) window.gteSheet.close(); if (t) t.click();
     }

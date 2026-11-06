@@ -21,7 +21,7 @@
     bell: 'M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0', key: 'M21 2l-2 2m-7.6 7.6a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4', moon: 'M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z'
   };
   function ic(k) { return '<svg class="maz-i" viewBox="0 0 24 24" aria-hidden="true"><path d="' + (ICON[k] || ICON.overview) + '"/></svg>'; }
-  var DESC = {overview: 'Live status, equity and anything that needs you', results: 'Charts, calendar and statistics of every closed trade', trades: 'Every trade the EA made, newest first', billing: 'Your license keys, orders and invoices'};
+  var DESC = {overview: '', results: '', trades: 'Newest first', billing: ''};
   var SHORT = [['download.html', 'Download EA', 'dl'], ['apps.html', 'Get the app', 'app'], ['free-backtest.html', 'Free backtest', 'bt'], ['pricing.html', 'Plans', 'plans'], ['https://t.me/GoldTriEngine_Support', 'Support', 'help']];
   function tabKey() { var on = $('#subnav a[data-tab].on'); return on ? on.dataset.tab : 'overview'; }
   function tabName() { var on = $('#subnav a[data-tab].on'); return on ? on.textContent.replace(/\d+$/, '').trim() : 'Overview'; }

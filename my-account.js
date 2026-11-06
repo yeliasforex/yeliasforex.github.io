@@ -98,7 +98,7 @@
     const d = n => new Date(Date.now() + n * 864e5).toISOString();
     return {profile: {email: 'amina@example.com', telegram_chat_id: null, notify_prefs: {}},
       licenses: [{id: '1', key: 'GTE-7QK2-XM9A-D4PF', plan_id: 'investor', status: 'active', activated_at: d(-30), expires_at: d(335), bound_account: 51234567, bound_broker: 'IC Markets', bound_is_demo: false, extra_allowance_usd: 0}, {id: '2', key: 'GTE-NEW1-ABCD-EFGH', plan_id: 'tycoon', status: 'unused', activated_at: null, expires_at: null, bound_account: null, bound_broker: null, bound_is_demo: false, extra_allowance_usd: 0}],
-      statuses: [{license_id: '1', online: true, last_heartbeat: d(-0.002), balance: 6120.4, equity: 6188.9, open_positions: 1, engine_state: 'IN TRADE', funded_usd: 5900, over_limit: true, ea_version: '1.08', problems: ['OVER_LIMIT', 'TELEGRAM_NOT_CONNECTED']}],
+      statuses: [{license_id: '1', online: true, last_heartbeat: d(-0.002), balance: 6120.4, equity: 6188.9, open_positions: 2, engine_state: 'IN TRADE', positions: [{engine:'Alpha',dir:-1,lots:0.03,entry:3928.76,now:3920.10,stop:3918.40,opened:Math.floor(Date.now()/1000)-7800,pl:31.20},{engine:'Gamma',dir:1,lots:0.01,entry:3924.61,now:3920.10,stop:3904.80,opened:Math.floor(Date.now()/1000)-2100,pl:-6.40}], funded_usd: 5900, over_limit: true, ea_version: '1.08', problems: ['OVER_LIMIT', 'TELEGRAM_NOT_CONNECTED']}],
       plans: gte.fallbackPlans.map((p, i) => ({...p, sort: i, active: true})),
       catalog: [{code: 'OVER_LIMIT', severity: 'warning', title: 'Deposits above your plan limit', explanation: 'The money deposited on this account is above your plan size. New trades are paused; open trades are still managed and nothing is closed.', solution: 'Upgrade your plan on your account page, or withdraw the excess. Trading resumes by itself within minutes.'},
         {code: 'TELEGRAM_NOT_CONNECTED', severity: 'info', title: 'Telegram not connected', explanation: 'You will not get notifications on Telegram.', solution: 'Open your account page and tap Connect Telegram.'}],
@@ -224,7 +224,7 @@
     const rows = ['M', 'I', 'D'].map(e => ({e, n: R.stats(trades.filter(y => y.engine === e)).net})), tot = rows.reduce((a, x) => a + Math.max(0, x.n), 0);
     if (!tot) return '';
     const top = rows.reduce((a, x) => x.n > a.n ? x : a);
-    return `<p class="acg-plain"><b>In plain words</b>${R.ENG[top.e]} earned the most: ${R.sgn(top.n)}, which is ${Math.round(Math.max(0, top.n) / tot * 100)}% of what the profitable engines made. The three engines trade different setups, so one quiet engine is normal.</p>`;
+    return `<p class="acg-plain"><b>In plain words</b>${R.ENG[top.e]} earned the most: ${R.sgn(top.n)}, which is ${Math.round(Math.max(0, top.n) / tot * 100)}% of what the profitable engines made. </p>`;
   }
   function hero(l, trades) {
     const st = stOf(l.id), pl = planOf(l.plan_id), [pc, pt] = statePill(l.status), s = R.stats(trades);
@@ -263,7 +263,7 @@
   }
   function keysPanel(cur) {
     if (!S.licenses.length) return '';
-    return `<div class="panel"><h2>Your license keys</h2><p class="sub">Each key works on one MT5 account. Paste a key into the EA's only setting.</p>
+    return `<div class="panel"><h2>Your license keys</h2><p class="sub">One key per MT5 account.</p>
       <div style="overflow-x:auto"><table class="tbl2"><tr><th>Key</th><th>Plan</th><th>Status</th><th>MT5 account</th><th>Valid until</th><th></th></tr>
       ${S.licenses.map(l => { const [pc, pt] = statePill(l.status); return `<tr class="ct" data-lk="${l.id}" role="button" tabindex="0"><td><span class="key" style="font-size:.85rem;padding:3px 7px">${esc(l.key)}</span> <button class="btn sm" data-copy="${esc(l.key)}">Copy</button></td><td>${esc(planOf(l.plan_id).name)}</td><td><span class="pill ${pc}">${pt}</span></td><td>${l.bound_account ? esc(l.bound_account) + (l.bound_is_demo ? ' (demo)' : '') : 'Not used yet'}</td><td>${l.expires_at ? date(l.expires_at) : 'Starts when first used'}</td><td>${l.id === cur ? '<span class="hint">shown above</span>' : `<button class="btn sm" data-lic="${l.id}">View</button>`}</td></tr>`; }).join('')}</table></div></div>`;
   }
@@ -273,20 +273,20 @@
     const funded = Number(st.funded_usd || 0), pct = allowed ? Math.min(100, funded / allowed * 100) : 0, mark = allowed ? Math.min(100, lim / allowed * 100) : 0, over = st.over_limit, near = allowed && funded > lim * 0.9;
     const recent = trades.slice().sort((a, b) => new Date(b.closed_at) - new Date(a.closed_at)).slice(0, 6);
     return `<div class="grid2">
-      <div class="panel"><h2>Status</h2><p class="sub">What the EA reports for this license.</p>
+      <div class="panel"><h2>Status</h2>
         ${probs.length ? '<div class="prob">' + probs.map(p => `<div class="it ${p.severity}"><div class="t">${esc(p.title)}</div><div class="e">${esc(fill(p.explanation))}</div><div class="s">What to do: ${esc(fill(p.solution))}</div></div>`).join('') + '</div>' : '<div class="allgood">&#10003; Everything looks good. No problems reported.</div>'}</div>
-      <div class="panel"><h2>Account &amp; limit</h2><p class="sub">The account this key is bound to.</p>
+      <div class="panel"><h2>Account &amp; limit</h2>
         <div class="kv"><span>MT5 account</span><b>${l.bound_account ? esc(l.bound_account) : 'Not bound yet'}</b></div>
         <div class="kv"><span>Broker</span><b>${esc(l.bound_broker || '-')}</b></div>
         <div class="kv"><span>Plan covers</span><b>${lim == null ? 'No deposit limit' : usd(lim, 0)}</b></div>
         <div class="kv" data-sel="limit" role="button" tabindex="0"><span>Deposited minus withdrawn</span><b>${usd(funded)}</b></div>
         ${lim == null ? '' : `<div class="meter ${over ? 'bad' : near ? 'warn' : ''}"><i style="width:${pct}%"></i><b style="left:${mark}%"></b></div><div class="hint">Limit ${usd(lim, 0)} + ${tol}% tolerance${Number(l.extra_allowance_usd) ? ' + ' + usd(l.extra_allowance_usd, 0) + ' allowance' : ''}. Profits never count.</div>`}
         ${over ? '<div class="msg err" style="margin-top:12px">Deposits are above your plan. New trades are paused until you upgrade or withdraw the excess. Open trades keep being managed.</div><div class="row" style="margin-top:10px"><a class="btn sm mint" href="#tab=billing" data-go="billing">Upgrade plan</a></div>' : ''}</div></div>
-      <div class="panel"><div class="row sp"><div><h2>Equity curve</h2><p class="sub" style="margin:0">Your result after every closed trade. Tap or hover a point to see that trade.</p></div><a class="btn sm" href="#tab=results" data-go="results">All charts</a></div><div class="eq-rng" id="eq-rng" role="group" aria-label="Range"><button type="button" data-eqr="1w">1 week</button><button type="button" data-eqr="1m">1 month</button><button type="button" data-eqr="3m">3 months</button><button type="button" data-eqr="all">All</button></div><div id="ov-eq"></div><div class="eq-chips" id="ov-eqs"></div></div>
-      <div class="panel"><div class="row sp"><div><h2>Recent trades</h2><p class="sub" style="margin:0">Times in your local time.</p></div><a class="btn sm" href="#tab=trades" data-go="trades">All trades</a></div>
+      <div class="panel"><div class="row sp"><div><h2>Equity curve</h2><p class="sub" style="margin:0">Tap a point for its trade.</p></div><a class="btn sm" href="#tab=results" data-go="results">All charts</a></div><div class="eq-rng" id="eq-rng" role="group" aria-label="Range"><button type="button" data-eqr="1w">1 week</button><button type="button" data-eqr="1m">1 month</button><button type="button" data-eqr="3m">3 months</button><button type="button" data-eqr="all">All</button></div><div id="ov-eq"></div><div class="eq-chips" id="ov-eqs"></div></div>
+      <div class="panel"><div class="row sp"><div><h2>Recent trades</h2></div><a class="btn sm" href="#tab=trades" data-go="trades">All trades</a></div>
         ${recent.length ? `<div style="overflow-x:auto"><table class="tbl2 rec"><tr><th>Closed</th><th>Engine</th><th>Side</th><th>Lots</th><th>Open</th><th>Close</th><th>Held</th><th>Result</th></tr>${R.tradeRows(recent)}</table></div>` : '<div class="empty">The EA has not closed a trade on this account yet. Charts and history appear here automatically.</div>'}</div>
-      ${trades.length ? `<div class="panel"><div class="row sp"><div><h2>Last 14 days</h2><p class="sub" style="margin:0">Result per day, amounts in USD.</p></div><a class="btn sm" href="#tab=results" data-go="results">Profit calendar</a></div>${R.bars(R.dayItems(trades, 14), 190)}${chips14(trades)}</div>
-      <div class="panel"><h2>By engine</h2><p class="sub">Which part of the strategy earned what. Tap an engine for its trades.</p>${R.engineBars(trades)}${engineLine(trades)}</div>` : ''}`;
+      ${trades.length ? `<div class="panel"><div class="row sp"><div><h2>Last 14 days</h2></div><a class="btn sm" href="#tab=results" data-go="results">Profit calendar</a></div>${R.bars(R.dayItems(trades, 14), 190)}${chips14(trades)}</div>
+      <div class="panel"><h2>By engine</h2><p class="sub">Tap an engine for its trades.</p>${R.engineBars(trades)}${engineLine(trades)}</div>` : ''}`;
   }
 
   // approved partners (and people who applied) get a button to the partner dashboard; everyone else sees nothing
@@ -310,7 +310,7 @@
     const dv = Object.entries(dayTot), bestD = dv.length ? dv.reduce((a, b) => b[1] > a[1] ? b : a) : null, worstD = dv.length ? dv.reduce((a, b) => b[1] < a[1] ? b : a) : null;
     const dshort = d => new Date(d).toLocaleDateString([], {month: 'short', day: 'numeric'});
     const stk = s.streak > 0 ? s.streak + ' win' + (s.streak > 1 ? 's' : '') + ' in a row' : s.streak < 0 ? -s.streak + ' loss' + (s.streak < -1 ? 'es' : '') + ' in a row' : '-';
-    return `<div class="panel"><div class="row sp"><div><h2>Results</h2><p class="sub" style="margin:0">Closed trades recorded by the EA on your account. Source: your own trade records. Times in your local time.</p></div>${rangeTabs()}</div>
+    return `<div class="panel"><div class="row sp"><div><h2>Results</h2><p class="sub" style="margin:0">Closed trades on your account, in your local time.</p></div>${rangeTabs()}</div>
       <div class="tiles">${k('Net result', s.n ? R.sgn(s.net) : '-', s.n + ' closed trades' + R.spark(R.curve(t).map(p => p.c), s.net >= 0 ? '#3EE09A' : '#FF6B78', 26), R.col(s.net), s.n ? s.net : null, 'sgn', 'net')}${k('Win rate', s.win.toFixed(0) + '%', s.wins + ' wins · ' + s.losses + ' losses', '', s.win, 'pct', 'win')}${k('Profit factor', s.pf == null ? '-' : s.pf.toFixed(2), 'gross profit / gross loss', '', s.pf, 'dec', 'pf')}${k('Largest drawdown', usd(s.maxDD, 2), 'below a result peak', 'var(--red)', s.maxDD, 'usd', 'dd')}
         ${k('Average win', R.sgn(s.avgWin), 'per winning trade', 'var(--mint)', s.avgWin, 'sgn', 'avgwin')}${k('Average loss', R.sgn(s.avgLoss), 'per losing trade', 'var(--red)', s.avgLoss, 'sgn', 'avgloss')}${k('Best trade', R.sgn(s.best), '', 'var(--mint)', s.best, 'sgn', 'best')}${k('Worst trade', R.sgn(s.worst), '', 'var(--red)', s.worst, 'sgn', 'worst')}
         ${k('Expectancy', R.sgn(s.expectancy), 'average result per trade', R.col(s.expectancy), s.expectancy, 'sgn', 'exp')}${k('Payoff ratio', s.payoff == null ? '-' : s.payoff.toFixed(2), 'average win / average loss', '', s.payoff, 'dec', 'payoff')}
@@ -318,11 +318,11 @@
       <div class="grid2"><div class="panel"><h3 class="rh" style="margin-top:0">Wins and losses</h3><div class="winbox">${R.donut(s.wins, s.losses)}
           <div class="wfacts"><div class="kv" data-sel="wins" role="button" tabindex="0"><span>Winning trades</span><b style="color:var(--mint)">${s.wins}</b></div><div class="kv" data-sel="losses" role="button" tabindex="0"><span>Losing trades</span><b style="color:var(--red)">${s.losses}</b></div><div class="kv" data-sel="streakwin" role="button" tabindex="0"><span>Longest win streak</span><b>${s.maxWinStreak}</b></div><div class="kv" data-sel="streakloss" role="button" tabindex="0"><span>Longest loss streak</span><b>${s.maxLossStreak}</b></div><div class="kv" data-sel="streaknow" role="button" tabindex="0"><span>Right now</span><b>${stk}</b></div><div class="kv" data-sel="hold" role="button" tabindex="0"><span>Average time in a trade</span><b>${s.avgHold == null ? '-' : R.fmtMin(s.avgHold)}</b></div></div></div></div>
         <div class="panel"><h3 class="rh" style="margin-top:0">By engine</h3>${R.engineBars(t)}</div></div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">Equity curve <span class="hint">tap a point to see its trade</span></h3><div id="rs-eq"></div></div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">Drawdown <span class="hint">distance below the highest result so far</span></h3><div id="rs-dd"></div></div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">Profit calendar <span class="hint">tap a day to see its trades</span></h3><div id="calhost">${R.calendar(all, calM.y, calM.m)}</div></div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">Daily result <span class="hint">last 30 days, amounts in USD</span></h3>${R.bars(R.dayItems(all, 30), 210)}</div>
-      <div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">closing day, tap one</span></h3>${R.weekdayBars(t)}</div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Equity curve <span class="hint">tap a point</span></h3><div id="rs-eq"></div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Drawdown <span class="hint">below the peak</span></h3><div id="rs-dd"></div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Profit calendar <span class="hint">tap a day</span></h3><div id="calhost">${R.calendar(all, calM.y, calM.m)}</div></div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">Daily result <span class="hint">last 30 days</span></h3>${R.bars(R.dayItems(all, 30), 210)}</div>
+      <div class="panel"><h3 class="rh" style="margin-top:0">By weekday <span class="hint">tap one</span></h3>${R.weekdayBars(t)}</div>
       <div class="panel"><h3 class="rh" style="margin-top:0">Monthly result</h3>${R.bars(R.monthItems(t), 230, {full: true})}<p class="fine">Past results do not guarantee future results. Gold trading carries a high risk of loss. See the <a href="risk.html">risk disclaimer</a>.</p></div>`;
   }
   function tTrades(l, all) {
@@ -340,14 +340,14 @@
   }
   function tBilling(l) {
     const pl = planOf(l.plan_id), higher = S.plans.filter(p => p.active && Number(p.price_usd) > Number(pl.price_usd)), days = l.expires_at ? Math.ceil((new Date(l.expires_at) - Date.now()) / 864e5) : null;
-    return `${keysPanel(l.id)}<div class="panel"><h2>Upgrade or renew</h2><p class="sub">Upgrading costs the price difference and keeps your expiry date. Renewing adds a year. Payments are confirmed by us, usually within a few hours.</p>
+    return `${keysPanel(l.id)}<div class="panel"><h2>Upgrade or renew</h2><p class="sub">Upgrade pays the difference and keeps your expiry. Renew adds a year. We confirm payments within a few hours.</p>
       <div class="row">${higher.length ? `<select id="up-${l.id}" class="btn sm" style="background:var(--panel-2);color:var(--fg)">${higher.map(p => `<option value="${p.id}">Upgrade to ${esc(p.name)} (+${usd(Number(p.price_usd) - Number(pl.price_usd))})</option>`).join('')}</select><button class="btn sm mint" data-upgrade="${l.id}">Upgrade</button>` : '<span class="hint">You are on the highest plan.</span>'}
       <button class="btn sm ${days != null && (days <= 45 || l.status === 'expired') ? 'mint' : ''}" data-renew="${l.id}">Renew for ${usd(pl.price_usd)}</button></div></div>
       ${claimPanel()}
-      <div class="panel"><h2>Move this key to another account</h2><p class="sub">A key is bound to the first MT5 account it was used on, demo or real. Moving it is not self-service: it costs <b>${usd(S.settings.unbindFeeUsd ?? 100)}</b>. Start a request, pay the fee, then <b>contact support</b> on Telegram (<a href="${esc(S.settings.supportUrl || 'https://t.me/GoldTriEngine_Support')}" rel="noopener">@GoldTriEngine_Support</a>) and we unbind the key.</p>
+      <div class="panel"><h2>Move this key to another account</h2><p class="sub">Moving a key costs <b>${usd(S.settings.unbindFeeUsd ?? 100)}</b>. Start a request, pay, then message us on Telegram (<a href="${esc(S.settings.supportUrl || 'https://t.me/GoldTriEngine_Support')}" rel="noopener">@GoldTriEngine_Support</a>).</p>
         ${l.bound_account ? `<button class="btn sm danger" data-unbind="${l.id}">Start unbind request (${usd(S.settings.unbindFeeUsd ?? 100)})</button>` : '<span class="hint">This key is not bound yet, so there is nothing to move.</span>'}</div>
       ${ordersPanel()}
-      <div class="panel"><h2>Need help?</h2><p class="sub">Write to us about your license, the EA or an order. We answer here and on Telegram.</p><a class="btn sm" href="contact.html">Contact support</a> <a class="btn sm" href="support.html">My requests</a></div>`;
+      <div class="panel"><h2>Need help?</h2><p class="sub">Questions about your license, EA or an order.</p><a class="btn sm" href="contact.html">Contact support</a> <a class="btn sm" href="support.html">My requests</a></div>`;
   }
   function afterDraw(l, all) {
     const t = inRange(all, range), cv = R.curve(t), cvAll = R.curve(eqSlice(all, eqRange));
@@ -396,7 +396,7 @@
     const done = () => { (S.notices || []).forEach(n => { if (!n.read_at) n.read_at = stamp; }); const b = A.querySelector('#subnav [data-tab="inbox"] .nb'); if (b) b.remove(); paintBell(); };
     if (now) done(); else setTimeout(done, 2500);
   }
-  function emptyPanel() { return `<div class="panel"><h2>You don't have a license yet</h2><p class="sub">Choose a plan by the account size you trade. If we sent you a key, add it below.</p><a class="btn mint" href="pricing.html">See plans</a></div>`; }
+  function emptyPanel() { return `<div class="panel"><h2>You don't have a license yet</h2><p class="sub">Pick a plan by account size, or add a key below.</p><a class="btn mint" href="pricing.html">See plans</a></div>`; }
   function orderPanel(o) {
     const pl = planOf(o.plan_id), kind = {purchase: 'New license', renewal: 'Renewal', upgrade: 'Upgrade', unbind: 'Unbind fee'}[o.kind], claimed = o.status === 'paid_claimed';
     return `<div class="paybox"><div class="row sp"><div><b>Order ${esc(o.ref)}</b> <span class="hint">${esc(kind)} · ${esc(pl.name || '')}</span></div><span class="pill ${claimed ? 'warn' : 'info'}">${claimed ? 'Confirming payment' : 'Waiting for payment'}</span></div>
@@ -406,7 +406,7 @@
       : `<div class="f" style="margin-top:14px"><label for="pr-${o.id}">After paying, enter your transaction ID or a note</label><input id="pr-${o.id}" placeholder="Transaction ID / reference"><div class="row"><button class="btn mint" data-paid="${o.id}">I have paid</button><button class="btn" data-cancel="${o.id}" type="button">Cancel this order</button></div></div>`}
       ${o.kind === 'unbind' ? '<p class="fine"><b>Next:</b> after paying, contact support on Telegram so we can unbind the key.</p>' : ''}</div>`;
   }
-  function claimPanel() { return `<div class="panel"><h2>Add a license key</h2><p class="sub">If we gave you a key (a gift or a manual sale), add it to your account here.</p><div class="f"><input id="ck" placeholder="GTE-XXXX-XXXX-XXXX" autocapitalize="characters"><button class="btn" id="ckGo">Add key</button></div></div>`; }
+  function claimPanel() { return `<div class="panel"><h2>Add a license key</h2><p class="sub">Got a key from us? Add it here.</p><div class="f"><input id="ck" placeholder="GTE-XXXX-XXXX-XXXX" autocapitalize="characters"><button class="btn" id="ckGo">Add key</button></div></div>`; }
   function ordersPanel() {
     if (!S.orders.length) return '';
     return `<div class="panel"><h2>Orders</h2><div style="overflow-x:auto"><table class="tbl2"><tr><th>Reference</th><th>Type</th><th>Amount</th><th>Status</th><th>Date</th></tr>${S.orders.map(o => `<tr class="ct" data-ord="${o.id}" role="button" tabindex="0"><td class="key" style="font-size:.85rem;padding:2px 6px">${esc(o.ref)}</td><td>${esc(o.kind)}</td><td>${usd(o.amount_usd)}</td><td>${esc(o.status.replace('_', ' '))}</td><td>${date(o.created_at)}</td></tr>`).join('')}</table></div></div>`;
@@ -521,15 +521,15 @@
       </section>
       <section class="st-s"><h3>${sic('bell')}Alerts</h3>
         ${window.gteDevice ? gteDevice.rowsPhone() : ''}
-        <div class="st-r"><div class="st-t"><b>Telegram</b><span class="hint" id="tgHint">${on ? 'Connected' : 'Trade alerts, daily report and warnings.'}</span></div>${on ? '<button class="btn sm" id="tgOff" type="button">Disconnect</button>' : '<button class="btn sm mint" id="tgOn" type="button">Connect</button>'}</div>
+        <div class="st-r"><div class="st-t"><b>Telegram</b><span class="hint" id="tgHint">${on ? 'Connected' : 'Alerts and daily report.'}</span></div>${on ? '<button class="btn sm" id="tgOff" type="button">Disconnect</button>' : '<button class="btn sm mint" id="tgOn" type="button">Connect</button>'}</div>
         <details class="st-d" open><summary>Choose what I get</summary>
           <div class="al-all"><button class="btn sm" id="alAll" type="button">Turn all on</button><button class="btn sm" id="alNone" type="button">Turn all off</button></div>
           ${['Trading', 'EA status', 'Reports and warnings'].map(g => `<h4 class="al-g">${g}</h4>` + NOTIFY.filter(n => n[2] === g).map(([k, label]) => `<div class="st-r"><div class="st-t"><b>${label}</b></div><label class="sw"><input type="checkbox" data-pref="${k}" ${prefs[k] === false || prefs[k] === 'false' ? '' : 'checked'}><span></span></label></div>`).join('')).join('')}
-          <p class="hint">Applies to Telegram, phone alerts and this page. Always sent, because they protect your account: license and renewal warnings, deposit-limit warnings, payments and support answers.</p></details>
-        <div class="st-r"><div class="st-t"><b>Notifications on this page</b><span class="hint">Remove everything shown under the bell.</span></div><button class="btn sm" id="clrAll" type="button">Clear all</button></div>
+          <p class="hint">Always sent: license, renewal, limit, payment and support alerts.</p></details>
+        <div class="st-r"><div class="st-t"><b>Notifications on this page</b><span class="hint">Empties the bell list.</span></div><button class="btn sm" id="clrAll" type="button">Clear all</button></div>
       </section>
       ${prof.terms_version === undefined ? '' : `<section class="st-s"><h3>${sic('user')}Proof Wall</h3>
-        <div class="st-r"><div class="st-t"><b>Show my results publicly</b><span class="hint">${prof.wall_on ? 'Your results are on the public Proof Wall.' : 'You are not shown on the Proof Wall.'} Never your email, key or account number.</span></div><label class="sw"><input type="checkbox" id="pwon" ${prof.wall_on ? 'checked' : ''}><span></span></label></div>
+        <div class="st-r"><div class="st-t"><b>Show my results publicly</b><span class="hint">${prof.wall_on ? 'On the public Proof Wall.' : 'Not on the Proof Wall.'} Never shows your email, key or account number.</span></div><label class="sw"><input type="checkbox" id="pwon" ${prof.wall_on ? 'checked' : ''}><span></span></label></div>
         <div class="st-pf" style="margin-top:8px"><label for="pwname">Display name</label><input id="pwname" type="text" maxlength="30" placeholder="First name or nickname" value="${esc(prof.wall_name || '')}">
           <label for="pwcountry" style="margin-top:8px">Country (found automatically; type another, or - to hide)</label><input id="pwcountry" type="text" maxlength="40" placeholder="${esc(prof.auto_country ? (() => { try { return new Intl.DisplayNames(['en'], {type: 'region'}).of(prof.auto_country); } catch (e) { return prof.auto_country; } })() : 'Not detected')}" value="${esc(prof.wall_country || '')}">
           <label for="pwquote" style="margin-top:8px">One line about your experience (optional)</label><input id="pwquote" type="text" maxlength="240" value="${esc(prof.wall_quote || '')}">
