@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Connecting Meta</title>
+<style>body{font-family:Arial,sans-serif;background:#0b0f1a;color:#e8ecf5;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0;padding:16px}
+.c{max-width:520px;text-align:center}code{display:block;word-break:break-all;background:#151b2c;padding:10px;border-radius:8px;margin-top:10px;user-select:all}</style></head>
+<body><div class="c"><h2>Connecting GoldTriEngine to Meta ...</h2>
+<p id="m">Sending you back to the bot on this computer.</p><div id="f" hidden><p>If nothing happens, the bot is not waiting on this computer. Copy this code into the bot window:</p><code id="code"></code></div></div>
+<script>
+// Meta sends the login result here. The page only hands the query string to the login tool on the SAME computer
+// (http://localhost:8765/callback/). It holds no secret and stores nothing.
+(function(){var q=location.search,p=new URLSearchParams(q);
+if(!q){document.getElementById("m").textContent="Nothing to connect. You can close this page.";return;}
+document.getElementById("code").textContent=p.get("code")||p.get("error_description")||p.get("error")||"";
+setTimeout(function(){document.getElementById("f").hidden=false;},3500);
+location.replace("http://localhost:8765/callback/"+q);})();
+</script></body></html>
