@@ -42,7 +42,13 @@ window.gteEvent = window.gteEvent || function () {};          // other scripts c
     var plan = el.closest('[id^="plan-"]'); if (plan && host === location.hostname.replace(/^www\./, '')) return ev('plan_click', plan.id.replace('plan-', ''), null, true);
     if (host === location.hostname.replace(/^www\./, '')) return;
     if (/youtube\.com|youtu\.be/.test(host)) return ev('out:youtube', /live/.test(path) ? 'live' : 'channel', null, true);
-    if (host === 't.me' || /telegram/.test(host)) return ev('out:telegram', /support/i.test(path) ? 'support' : 'channel', null, true);
+    if (host === 't.me' || /telegram/.test(host)) {
+      var isSup = /support/i.test(path), from = ({ youtube: 'YouTube', facebook: 'Facebook', instagram: 'Instagram', tiktok: 'TikTok', telegram: 'Telegram' })[String(src.s || '').toLowerCase()] || (src.ref ? src.ref : '');
+      if (isSup) {            /* the first message the person sends says where they came from (the owner sees it in Telegram) */
+        try { var base = u.origin + u.pathname; el.setAttribute('href', base + '?text=' + encodeURIComponent('Hi, I found GoldTriEngine on ' + (from || 'the website') + '.')); } catch (x) {}
+      }
+      return ev('out:telegram', (isSup ? 'support' : 'channel') + (from ? ' from ' + from : ''), null, true);
+    }
     if (/myfxbook/.test(host)) return ev('out:myfxbook', 'profile', null, true);
     if (/tiktok/.test(host)) return ev('out:tiktok', 'profile', null, true);
     if (/fusionmarkets/.test(host)) return ev('out:broker', 'fusion', null, true);
