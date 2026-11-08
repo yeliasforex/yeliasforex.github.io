@@ -460,6 +460,7 @@ button.pri{background:var(--brand)}
       <label>Email</label><input id="email" type="email" style="width:100%" autocomplete="email">
       <div class="row" style="margin-top:12px"><button class="b pri" id="sendLink">Email me a sign-in link</button></div>
       <div class="mute" style="margin:14px 0 6px;text-align:center">or</div>
+      <div id="agWrap" class="hide" style="display:flex;justify-content:center"><div id="agBtn"></div></div>
       <div class="row"><button class="b" id="gLogin" style="width:100%">Continue with Google</button></div>
     </div>
     <div id="stepMfa" class="hide">
@@ -521,7 +522,7 @@ async function start() {
   if (DEMO) { sb = demoClient(); return enter(); }
   sb = supabase.createClient(SB_URL, SB_KEY, {auth: {detectSessionInUrl: true, persistSession: true}});
   const {data: {session}} = await sb.auth.getSession();
-  if (!session) { $('#login').classList.remove('hide'); return; }
+  if (!session) { $('#login').classList.remove('hide'); adminGoogleButton(); return; }
   await mfaGate();
 }
 async function mfaGate() {
@@ -540,6 +541,23 @@ $('#gLogin').onclick = async () => {
   const {error} = await sb.auth.signInWithOAuth({provider: 'google', options: {redirectTo: location.origin + location.pathname}});
   if (error) say('#loginMsg', error.message, true);
 };
+/* Google's own button: the Google window then shows goldtriengine.com instead of the Supabase address (same client id and method as the customer sign-in).
+   If it cannot load, the button above stays and works as before. */
+async function adminGoogleButton() {                                  // runs only on the sign-in screen: once you are signed in, Google's script is never loaded on this page
+  const GCID = '978552389659-l27rvj4pefeggo4pi8oe711fhiru4i9h.apps.googleusercontent.com';
+  try {
+    await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+    if (!window.google || !google.accounts || !google.accounts.id) throw new Error('no gsi');
+    const raw = [...crypto.getRandomValues(new Uint8Array(16))].map(x => x.toString(16).padStart(2, '0')).join('');
+    const hashed = [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw)))].map(x => x.toString(16).padStart(2, '0')).join('');
+    google.accounts.id.initialize({client_id: GCID, nonce: hashed, auto_select: false, itp_support: true, callback: async r => {
+      const {error} = await sb.auth.signInWithIdToken({provider: 'google', token: r.credential, nonce: raw});
+      if (error) say('#loginMsg', error.message, true); else location.reload();   // the page then finds the session and asks for the Telegram code as before
+    }});
+    google.accounts.id.renderButton($('#agBtn'), {type: 'standard', theme: 'outline', size: 'large', text: 'continue_with', shape: 'pill', logo_alignment: 'left', width: 300});
+    $('#agWrap').classList.remove('hide'); $('#gLogin').classList.add('hide');
+  } catch (e) { /* the redirect button stays */ }
+}
 $('#sendTg').onclick = async () => {
   const {error} = await sb.rpc('admin_otp_request');
   say('#loginMsg', error ? error.message : 'Code sent. Open Telegram and type the 6 digits here.', !!error);
