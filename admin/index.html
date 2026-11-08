@@ -1230,7 +1230,7 @@ async function vAi(auto) {
   if (auto === true && prevBox && sigNow === aiSig) { aiTimer = setInterval(() => aiTick(), 4000); return; }     // nothing changed: do not redraw (it would replay the fade-in)
   aiSig = sigNow;
   const tasks = aiThread === 'new' ? [] : (st.tasks || []);
-  const secs = st.seen ? Math.max(0, Math.round((Date.now() - new Date(st.seen).getTime()) / 1000)) : null, alive = secs !== null && secs <= 25;
+  const secs = st.seen ? Math.max(0, Math.round((Date.now() - new Date(st.seen).getTime()) / 1000)) : null, alive = (secs !== null && secs <= 25) || tasks.some(t => t.status === 'planning' || t.status === 'running');   // busy answering = alive (a long answer blocks the 5 s check-in)
   const TIER = {read: ['reads only', '#3fb27f'], act: ['changes something', '#d9822b'], sensitive: ['goes public or downloads', '#e5534b']};
   const BUSY = ['queued', 'planning', 'approved', 'running'];
   const when = t => new Date(t).toLocaleString([], {day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'});
@@ -1244,7 +1244,7 @@ async function vAi(auto) {
       ${!busy && !t.say && !plan.length && t.status !== 'awaiting' ? `<div class="mute">${stTxt || 'done'}</div>` : ''}
       ${plan.length ? `<div style="margin-top:8px">${plan.map((p, i) => `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:5px 0;border-top:1px solid var(--line)"><b>${i + 1}. ${esc(p.tool)}${p.arg ? ' <span class="mute">' + esc(p.arg) + '</span>' : ''}</b><span class="pill" style="font-size:11px;color:${(TIER[p.tier] || [])[1] || '#8b95a3'};border-color:${(TIER[p.tier] || [])[1] || '#8b95a3'}">${(TIER[p.tier] || [p.tier])[0]}</span></div>`).join('')}</div>` : ''}
       ${t.status === 'awaiting' ? `<div class="row" style="gap:10px;margin-top:8px"><button class="b pri" data-ok="${t.id}">Approve and run</button><button class="b dng" data-no="${t.id}">Reject</button><button class="b" data-cx="${t.id}">Cancel</button></div>` : ''}
-      ${t.status === 'queued' ? `<div class="row" style="margin-top:6px"><button class="b" data-cx="${t.id}">Cancel</button></div>` : ''}
+      ${t.status === 'queued' || (t.status === 'planning' && Date.now() - new Date(t.created_at).getTime() > 120000) ? `<div class="row" style="margin-top:6px"><button class="b" data-cx="${t.id}">${t.status === 'planning' ? 'Cancel (stuck)' : 'Cancel'}</button></div>` : ''}
       ${res.length ? `<details style="margin-top:8px"><summary class="mute" style="cursor:pointer;font-size:12px">What the tools returned (the facts behind the answer)</summary>${res.map(r => `<div style="padding:6px 8px;margin-top:4px;border-radius:8px;border:1px solid ${r.ok ? 'var(--line)' : '#e5534b'}"><b>${esc(r.tool)}</b> ${r.ok ? '' : '<span style="color:#e5534b">failed</span>'}<div style="font-size:13px;white-space:pre-wrap">${esc(r.text)}</div></div>`).join('')}</details>` : ''}
       ${t.error ? `<div class="msg err" style="margin-top:8px">${esc(t.error)}</div>` : ''}
       <div class="mute" style="font-size:11px;margin-top:5px">${t.model ? esc(t.model) : 'keyword matching'}${t.say && !res.length ? ' · own words, not checked against data' : ''}</div></div></div>`;
