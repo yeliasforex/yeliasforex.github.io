@@ -1,7 +1,7 @@
 /* GoldTriEngine app shell.
    Pages: network first (4 s limit), then the saved copy. Versioned files (?v=...) and images: saved copy first, so the app opens fast.
    Live data (Supabase, YouTube) is never saved. */
-const V = 'gte-app-v43';
+const V = 'gte-app-v45';
 const SHELL = ['offline.html', 'icon-192.png', 'icon-512.png', 'manifest.webmanifest'];
 const FONTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 self.addEventListener('install', e => {
@@ -42,7 +42,7 @@ self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (x) { d = { title: 'GoldTriEngine', body: e.data ? e.data.text() : '' }; }
   e.waitUntil(self.registration.showNotification(d.title || 'GoldTriEngine', {
-    body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.kind || 'gte', renotify: true, data: { url: d.url || 'my-account.html' }
+    body: d.body || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: (d.kind || 'gte') + '-' + (d.id || Date.now()), renotify: true, data: { url: d.url || 'my-account.html' }
   }));
 });
 self.addEventListener('notificationclick', e => {

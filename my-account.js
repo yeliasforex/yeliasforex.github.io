@@ -262,6 +262,20 @@
     A.classList.toggle('still', quiet);
     body.innerHTML = ({overview: tOverview, results: tResults, trades: tTrades, billing: tBilling}[tab] || tOverview)(lic, trades);
     wire(); afterDraw(lic, trades); countUp(body);
+    window.__gteTrades = trades; deepLink(trades);
+  }
+  /* a phone alert opens its own thing: #go=open the Open trades sheet, #trade=latest the newest closed trade (the alert link is built by the database) */
+  let dlT = 0;
+  function deepLink(trades) {
+    const h = location.hash || '', go = (h.match(/[#&]go=(\w+)/) || [])[1], tr = /[#&]trade=latest/.test(h);
+    if (!go && !tr) return;
+    history.replaceState(null, '', location.pathname + location.search + '#tab=' + tab);   // once: a redraw must not reopen it
+    clearTimeout(dlT);
+    dlT = setTimeout(() => {
+      if (tr) { const t = (trades || []).slice().sort((x, y) => new Date(y.closed_at) - new Date(x.closed_at))[0]; if (t && window.gteSheet && window.gteSheet.trade) window.gteSheet.trade(t); return; }
+      const c = document.querySelectorAll('#lv .lv-stats > div'), pick = {open: 1, today: 0, float: 2}[go];
+      if (pick != null && c[pick]) c[pick].click();
+    }, 900);
   }
   function keysPanel(cur) {
     if (!S.licenses.length) return '';
@@ -644,7 +658,7 @@
     d.addEventListener('keydown', e => { if (e.key === 'Escape') d.querySelector('#pwlater').click(); });
     go.onclick = async () => { go.disabled = true; try { await c.rpc('accept_terms', {p_version: V, p_wall: true}); d.remove(); await refresh(); toast('Thank you. Saved.'); } catch (e) { go.disabled = false; toast('Could not save: ' + (e.message || e)); } };
   })();
-  addEventListener('hashchange', () => { const k = (location.hash.match(/tab=(\w+)/) || [])[1]; if (k && k !== tab) { const a = $('#subnav a[data-tab="' + k + '"]'); if (a) a.click(); } });
+  addEventListener('hashchange', () => { const k = (location.hash.match(/tab=(\w+)/) || [])[1]; if (k && k !== tab) { const a = $('#subnav a[data-tab="' + k + '"]'); if (a) a.click(); } else if (/[#&](go|trade)=/.test(location.hash) && window.__gteTrades) deepLink(window.__gteTrades); });
   (async () => {                                              // first-visit source from the sign-in link (new accounts only; the database ignores everyone else)
     if (DEMO || AS) return;
     try {
