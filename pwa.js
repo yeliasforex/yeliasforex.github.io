@@ -1,7 +1,7 @@
 /* GoldTriEngine app: service worker, install prompt, platform detection. */
 (function () {
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+    window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
   }
   var mq = function (q) { try { return window.matchMedia(q).matches; } catch (e) { return false; } }, twa = false;
   try { if ((document.referrer || '').indexOf('android-app://') === 0) sessionStorage.setItem('gte_twa', '1'); twa = sessionStorage.getItem('gte_twa') === '1'; } catch (e) {}
@@ -26,7 +26,7 @@
     if (standalone || /apps\.html/.test(location.pathname) || document.querySelector('.app-chip')) return;
     try { var x = +localStorage.getItem('gte_chip_x'); if (x && Date.now() - x < 7 * 864e5) return; } catch (e) {}
     var c = document.createElement('div'); c.className = 'app-chip'; c.setAttribute('role', 'region'); c.setAttribute('aria-label', 'Install the app');
-    c.innerHTML = '<img src="icon-192.png" alt="" width="36" height="36"><span><b>Get the app</b><small>Alerts and your account, one tap away</small></span><button type="button" class="go">Install</button><button type="button" class="x" aria-label="Not now">&times;</button>';
+    c.innerHTML = '<img src="/icon-192.png" alt="" width="36" height="36"><span><b>Get the app</b><small>Alerts and your account, one tap away</small></span><button type="button" class="go">Install</button><button type="button" class="x" aria-label="Not now">&times;</button>';
     c.querySelector('.go').onclick = function () { c.remove(); window.gteApp.install(); };
     c.querySelector('.x').onclick = function () { c.remove(); try { localStorage.setItem('gte_chip_x', String(Date.now())); } catch (e) {} };
     document.body.appendChild(c);
@@ -73,7 +73,7 @@
   function welcome() {
     if (document.getElementById('gte-welcome')) return;
     var o = document.createElement('div'); o.id = 'gte-welcome'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Welcome');
-    o.innerHTML = '<div class="wl-card"><img src="icon-192.png" alt="" width="56" height="56"><h2>Welcome to GoldTriEngine</h2><p>Three steps to get going:</p>'
+    o.innerHTML = '<div class="wl-card"><img src="/icon-192.png" alt="" width="56" height="56"><h2>Welcome to GoldTriEngine</h2><p>Three steps to get going:</p>'
       + '<ol><li><b>Get the EA on your PC.</b> <a href="download.html">Download and set up</a> (MetaTrader 5 on Windows).</li><li><b>Paste your key</b> and attach it to a gold chart. Your status turns green here.</li><li><b>Turn on phone alerts</b> in <a href="my-account.html#settings">Settings</a>.</li></ol>'
       + '<button type="button" class="wl-ok">Got it</button></div>';
     o.querySelector('.wl-ok').onclick = function () { try { localStorage.setItem('gte_welcome', '1'); } catch (e) {} o.remove(); };

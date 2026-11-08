@@ -1,0 +1,36 @@
+/* Blog pro layer (loads after blog.css). One 4px spacing scale, readable chart text on phones, touch readouts, odds bars, host robot. */
+.bl-prog{position:fixed;left:0;right:0;top:0;height:3px;z-index:9990;pointer-events:none;background:transparent}
+.bl-prog i{display:block;height:100%;transform-origin:0 50%;transform:scaleX(0);background:linear-gradient(90deg,var(--gold,#E3B95F),var(--mint,#3EE09A));box-shadow:0 0 10px color-mix(in srgb,var(--mint,#3EE09A) 60%,transparent)}
+
+/* host robot beside the title */
+.bl-head{position:relative}
+.bl-host{position:absolute;right:-8px;top:clamp(8px,2vw,24px);width:clamp(150px,24vw,250px);height:auto;pointer-events:none;z-index:0;filter:drop-shadow(0 18px 30px rgba(10,20,50,.28));-webkit-mask-image:linear-gradient(#000 80%,transparent);mask-image:linear-gradient(#000 80%,transparent);animation:blHost 6s ease-in-out infinite}
+.bl-head>*:not(.bl-host){position:relative;z-index:1}
+@keyframes blHost{50%{transform:translateY(-6px)}}
+@media (max-width:820px){.bl-host{width:84px;right:0;top:0}.bl-head h1{max-width:none}.bl-crumbs{padding-right:92px}}
+
+/* readable chart text on phones (the drawing is scaled to about half size) */
+@media (max-width:560px){
+  .bl-svg .bl-yt,.bl-svg .bl-xt,.bl-svg .bl-cl{font-size:17px}
+  .bl-svg .bl-lt{font-size:11px}
+  .bl-svg .bl-bv{font-size:17px}
+  .bl-fig{padding:16px 12px 14px}
+}
+
+/* readout */
+.bl-svg.bl-touch{touch-action:pan-y;cursor:crosshair}
+.bl-xh line{stroke:var(--fg,#0d1426);stroke-opacity:.35;stroke-width:1;stroke-dasharray:3 3}
+.bl-xh circle{fill:var(--mint,#0E9F6E);stroke:var(--panel,#fff);stroke-width:2.5}
+.bl-tip{position:absolute;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:10px;border:1px solid var(--line-2,rgba(120,140,190,.4));background:color-mix(in srgb,var(--panel,#fff) 92%,transparent);backdrop-filter:blur(8px);box-shadow:0 10px 24px -12px rgba(10,20,50,.45);white-space:nowrap}
+.bl-tip[hidden]{display:none}
+.bl-tip b{font:600 .95rem/1 var(--mono,monospace);color:var(--fg)}
+.bl-tip span{font:500 .62rem/1 var(--mono,monospace);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.bl-svg rect.bl-bar{transition:filter .15s,opacity .15s}
+.bl-svg.bl-touch:has(rect.bl-bar.on) rect.bl-bar:not(.on){opacity:.45}
+
+/* odds table bars */
+.bl-tw td.pb{position:relative;padding-bottom:16px}
+.bl-tw td.pb::after{content:"";position:absolute;left:12px;right:12px;bottom:7px;height:4px;border-radius:3px;background:currentColor;opacity:.55;transform:scaleX(0);transform-origin:0 50%;width:calc(var(--w) * 1% - 24px * var(--w) / 100)}
+.bl-tw.pb-in td.pb::after,.bl-tw table.pb-in td.pb::after{transform:scaleX(1);transition:transform 1s cubic-bezier(.2,.8,.2,1) calc(var(--i) * .12s + .1s)}
+.bl-tw td.h1.pb::after{background:var(--mint,#0E9F6E)}.bl-tw td.h3.pb::after{background:var(--red,#E5484D)}.bl-tw td.h2.pb::after{background:var(--blue-hi,#3B66E8)}
+@media (prefers-reduced-motion:reduce){.bl-host{animation:none}.bl-tw td.pb::after{transform:scaleX(1)!important;transition:none!important}}
