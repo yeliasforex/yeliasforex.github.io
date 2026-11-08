@@ -1247,7 +1247,7 @@ async function vAi(auto) {
       ${t.status === 'queued' || (t.status === 'planning' && Date.now() - new Date(t.created_at).getTime() > 120000) ? `<div class="row" style="margin-top:6px"><button class="b" data-cx="${t.id}">${t.status === 'planning' ? 'Cancel (stuck)' : 'Cancel'}</button></div>` : ''}
       ${res.length ? `<details style="margin-top:8px"><summary class="mute" style="cursor:pointer;font-size:12px">What the tools returned (the facts behind the answer)</summary>${res.map(r => `<div style="padding:6px 8px;margin-top:4px;border-radius:8px;border:1px solid ${r.ok ? 'var(--line)' : '#e5534b'}"><b>${esc(r.tool)}</b> ${r.ok ? '' : '<span style="color:#e5534b">failed</span>'}<div style="font-size:13px;white-space:pre-wrap">${esc(r.text)}</div></div>`).join('')}</details>` : ''}
       ${t.error ? `<div class="msg err" style="margin-top:8px">${esc(t.error)}</div>` : ''}
-      <div class="mute" style="font-size:11px;margin-top:5px">${t.model ? esc(t.model) : 'keyword matching'}${t.say && !res.length ? ' · own words, not checked against data' : ''}</div></div></div>`;
+      <div class="mute" style="font-size:11px;margin-top:5px">${t.model ? esc(t.model) : 'keyword matching'}${t.say && !res.length && !plan.length ? ' · own words, not checked against data' : ''}</div></div></div>`;
   };
   view.innerHTML = `
   <style>.aidots{letter-spacing:2px;animation:aipulse 1.2s infinite;display:inline-block}@keyframes aipulse{50%{opacity:.25}}#aichat{max-height:min(58vh,560px);overflow-y:auto;padding:2px 4px}.aithr{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px}.aithr button{white-space:nowrap}</style>
