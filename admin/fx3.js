@@ -6,7 +6,7 @@
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---- 1. side menu: groups, collapse button ---- */
-  var GROUPS = [['Act now', ['orders', 'support', 'health']], ['Money', ['revenue', 'licenses', 'affiliates']], ['Audience', ['customers', 'visitors', 'funnel', 'marketing', 'blog', 'proof', 'email']], ['Tools', ['settings', 'backtest', 'videos', 'audit']]];
+  var GROUPS = [['Act now', ['orders', 'support', 'health']], ['Money', ['revenue', 'licenses', 'affiliates']], ['Audience', ['customers', 'visitors', 'funnel', 'marketing', 'blog', 'social', 'proof', 'email']], ['Tools', ['ai', 'team', 'settings', 'backtest', 'videos', 'audit']]];
   function groups() {
     var nav = $('#tabs'); if (!nav || nav.querySelector('.ng')) return;
     GROUPS.forEach(function (g, gi) {
