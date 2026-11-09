@@ -678,6 +678,7 @@ const TILE = {
   orders: {'To check': 'o:check', 'Started, not paid': 'o:notpaid', 'Money received': 'o:paid', 'Orders in total': 'o:all'},
   licenses: {'Licenses': 'l:all', 'Active': 'l:active', 'Over plan limit': 'l:over', 'Disabled or expired': 'l:bad'},
   health: {'Active licenses': 'L:active', 'Online': 'L:online', 'Offline': 'L:offline', 'Over plan limit': 'L:over'},
+  social: {'Total audience': 'z:aud', 'Today': 'z:day', 'Last 7 days': 'z:week', 'Total views': 'z:views', 'Total likes': 'z:likes', 'Total comments': 'z:comments'},
   customers: {'People': 'c:all', 'With a license': 'c:license', 'Telegram connected': 'c:telegram'},
   funnel: {'Sign-ups': 's:all', 'EA downloads': 's:dl', 'Have a license': 's:lic', 'To follow up now': 's:todo'},
   visitors: {'Visitors today': 'v:Visitors per day', 'Visitors,': 'v:Visitors per day', 'Avg time on a page': 'v:Most viewed pages', 'Left after one page': 'v:Most viewed pages', 'Opened in the app': 'v:App and alerts'}};
@@ -701,6 +702,7 @@ function runAct(a) {
   else if (g === 'L') { window._lf = v; tab = 'licenses'; render(); jumpTo($('#view .tblw')); }
   else if (g === 'c') { window._cf = v; vCustomers(); markTiles(); jumpTo($('#view .tblw')); }
   else if (g === 's') { crm.view = v; crmDraw(); markTiles(); jumpTo($('#view button.gt') ? $('#view button.gt').parentElement : null); }
+  else if (g === 'z') { window._socSel = {t: 'kpi', k: v}; vSocial(); }
   else if (g === 'v') jumpTo([...document.querySelectorAll('#view .card')].find(c => { const b = c.querySelector('b'); return b && b.textContent.trim().startsWith(v); }));
 }
 (function () {
@@ -1300,7 +1302,7 @@ async function vSocial() {
     if (now != null) { total += now; totalDay += d1; totalWeek += d7; anyData = true; }
     return {k, name, clr, unit, l, now, d1, d7};
   });
-  const card = r => `<div class="card" style="border-top:3px solid ${r.clr};margin:0">
+  const card = r => `<div class="card soc-card" data-soc-card="${r.k}" style="border-top:3px solid ${r.clr};margin:0;cursor:pointer;${window._socSel && window._socSel.t === 'plat' && window._socSel.k === r.k ? 'box-shadow:0 0 0 2px ' + r.clr : ''}">
     <div class="row" style="justify-content:space-between;align-items:baseline"><b>${r.name}</b><span class="mute" style="font-size:11px">${r.l ? (r.l.source === 'manual' ? 'typed in ' : 'checked ') + ago(r.l.at) : (MANUAL[r.k] ? 'type it in below' : 'no data yet')}</span></div>
     <div style="font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:4px">${num(r.now)}</div><div class="mute" style="font-size:12px;margin-top:-2px">${r.unit}</div>
     <div class="row" style="gap:14px;margin:8px 0 4px;font-size:13px"><span>Today <b style="color:${col(r.d1)}">${sgn(r.d1)}</b></span><span>7 days <b style="color:${col(r.d7)}">${sgn(r.d7)}</b></span></div>
@@ -1313,29 +1315,99 @@ async function vSocial() {
     const out = []; for (let i = 0; i < 7; i++) {
       const key = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
       let tot = 0, prev = 0, any = false; PLAT.forEach(([k]) => { const a = valAt(k, i), b = valAt(k, i + 1); if (a != null) { any = true; tot += a; prev += (b ?? a); } });
-      if (any) out.push(`<tr><td>${key === todayKey ? 'Today' : key}</td><td style="text-align:right">${num(tot)}</td><td style="text-align:right;color:${col(tot - prev)}">${sgn(tot - prev)}</td></tr>`);
+      if (any) out.push(`<tr data-soc-day="${i}" style="cursor:pointer"><td>${key === todayKey ? 'Today' : key}</td><td style="text-align:right">${num(tot)}</td><td style="text-align:right;color:${col(tot - prev)}">${sgn(tot - prev)}</td></tr>`);
     } return out.join('');
   })();
-  const wk = PLAT.map(([k, name]) => { const n = valAt(k, 0), a = valAt(k, 7), b = valAt(k, 14); return n == null ? '' : `<tr><td>${name}</td><td style="text-align:right;color:${col(n - a)}">${sgn(n - a)}</td><td style="text-align:right;color:${col(a - b)}">${sgn(a - b)}</td></tr>`; }).join('');
+  const wk = PLAT.map(([k, name]) => { const n = valAt(k, 0), a = valAt(k, 7), b = valAt(k, 14); return n == null ? '' : `<tr data-soc-plat="${k}" style="cursor:pointer"><td>${name}</td><td style="text-align:right;color:${col(n - a)}">${sgn(n - a)}</td><td style="text-align:right;color:${col(a - b)}">${sgn(a - b)}</td></tr>`; }).join('');
   const PN = Object.fromEntries(PLAT.map(([k, n]) => [k, n]));
   const topPosts = (st.posts || []).slice().sort((a, b) => ((b.views || 0) + (b.likes || 0) * 20 + (b.comments || 0) * 40) - ((a.views || 0) + (a.likes || 0) * 20 + (a.comments || 0) * 40) || String(b.published_at).localeCompare(String(a.published_at))).slice(0, 10);
-  const postRows = topPosts.map(p => `<tr><td>${esc(PN[p.platform] || p.platform)}</td><td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title || '(untitled)')}</a>` : esc(p.title || '(untitled)')}</td><td class="mute" style="white-space:nowrap">${p.published_at ? new Date(p.published_at).toLocaleDateString([], {day: 'numeric', month: 'short'}) : ''}</td><td style="text-align:right">${num(p.views)}</td><td style="text-align:right">${num(p.likes)}</td><td style="text-align:right">${num(p.comments)}</td></tr>`).join('');
+  const postRows = topPosts.map(p => `<tr class="soc-post" data-soc-post="${esc(p.platform + '|' + p.ext_id)}" style="cursor:pointer"><td>${esc(PN[p.platform] || p.platform)}</td><td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.url ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title || '(untitled)')}</a>` : esc(p.title || '(untitled)')}</td><td class="mute" style="white-space:nowrap">${p.published_at ? new Date(p.published_at).toLocaleDateString([], {day: 'numeric', month: 'short'}) : ''}</td><td style="text-align:right">${num(p.views)}</td><td style="text-align:right">${num(p.likes)}</td><td style="text-align:right">${num(p.comments)}</td></tr>`).join('');
+  const sel = window._socSel || null;
+  const PC = Object.fromEntries(PLAT.map(([k, , c]) => [k, c]));
+  const chg = (p, n) => { const a = valAt(p, 0), b = valAt(p, n); return a == null ? null : a - (b ?? a); };
+  const bar = (f, c) => `<div style="height:6px;border-radius:4px;background:var(--line);margin-top:4px"><i style="display:block;height:100%;width:${Math.max(2, Math.round(Math.max(0, Math.min(1, f)) * 100))}%;border-radius:4px;background:${c}"></i></div>`;
+  const big = (p, c) => {
+    const arr = (days[p] || []).slice(-30).filter(d => d.followers != null); if (arr.length < 2) return '<div class="mute" style="font-size:12px;padding:8px 0">The chart appears once there are two days of numbers.</div>';
+    const mn = Math.min(...arr.map(d => d.followers)), mx = Math.max(...arr.map(d => d.followers)), sp = (mx - mn) || 1, W = 300, H = 90;
+    const xy = (d, i) => [(i / (arr.length - 1) * W), (H - 8 - (d.followers - mn) / sp * (H - 16))];
+    const pts = arr.map((d, i) => xy(d, i).map(v => v.toFixed(1)).join(',')).join(' ');
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:110px;display:block;margin-top:6px"><polygon points="0,${H} ${pts} ${W},${H}" fill="${c}" opacity=".13"/><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>${arr.map((d, i) => { const [x, y] = xy(d, i); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="${c}" opacity="0"><title>${d.day}: ${num(d.followers)}</title></circle>`; }).join('')}</svg>
+      <div class="mute" style="display:flex;justify-content:space-between;font-size:11px"><span>${arr[0].day} · ${num(arr[0].followers)}</span><span>low ${num(mn)} · high ${num(mx)}</span><span>${arr[arr.length - 1].day} · ${num(arr[arr.length - 1].followers)}</span></div>`;
+  };
+  const tbl = (head, body) => `<div style="overflow-x:auto"><table class="tbl" style="width:100%;margin-top:6px"><tr>${head.map((t, i) => `<th style="text-align:${i ? 'right' : 'left'}">${t}</th>`).join('')}</tr>${body}</table></div>`;
+  const drillHtml = () => {
+    if (!sel) return '';
+    const x = `<button class="b" data-soc-x="1">Close</button>`, hd = t => `<div class="row" style="justify-content:space-between;align-items:center;gap:8px"><b>${t}</b>${x}</div>`;
+    let body = '', c = 'var(--gold)';
+    if (sel.t === 'plat') {
+      const r = rows.find(z => z.k === sel.k); if (!r) return ''; c = r.clr;
+      const l = r.l, tot = (l && l.details || []).filter(d => d.kind === 'total').slice(0, 3);
+      const d30 = chg(r.k, 30);
+      const hist = (days[r.k] || []).slice(-14).reverse().map((d, i, a) => { const prev = a[i + 1]; const ch = prev && d.followers != null && prev.followers != null ? d.followers - prev.followers : null;
+        return `<tr><td>${String(d.day) === todayKey ? 'Today' : d.day}</td><td style="text-align:right">${num(d.followers)}</td><td style="text-align:right;color:${col(ch)}">${sgn(ch)}</td>${tot.map(t => `<td style="text-align:right">${num(((d.details || []).find(e => e.k === t.k) || {}).value)}</td>`).join('')}</tr>`; }).join('');
+      const mets = (l && l.details || []).map(d => { const t = d.kind === 'total', a1 = t ? d.value - (dval(r.k, d.k, 1) ?? d.value) : null, a7 = t ? d.value - (dval(r.k, d.k, 7) ?? d.value) : null, a30 = t ? d.value - (dval(r.k, d.k, 30) ?? d.value) : null;
+        return `<tr><td>${esc(d.label)}</td><td style="text-align:right"><b>${num(d.value)}</b></td><td style="text-align:right;color:${col(a1)}">${t ? sgn(a1) : ''}</td><td style="text-align:right;color:${col(a7)}">${t ? sgn(a7) : ''}</td><td style="text-align:right;color:${col(a30)}">${t ? sgn(a30) : ''}</td></tr>`; }).join('');
+      const pl = (st.posts || []).filter(q => q.platform === r.k).sort((a, b) => (b.views || 0) - (a.views || 0) || String(b.published_at).localeCompare(String(a.published_at))).slice(0, 15);
+      const T = tr[r.k];
+      body = `${hd(r.name + ' in detail')}
+        <div class="row" style="gap:18px;flex-wrap:wrap;margin-top:6px;align-items:baseline"><span style="font-size:26px;font-weight:700">${num(r.now)}</span><span class="mute">${r.unit}</span><span>Today <b style="color:${col(r.d1)}">${sgn(r.d1)}</b></span><span>7 days <b style="color:${col(r.d7)}">${sgn(r.d7)}</b></span><span>30 days <b style="color:${col(d30)}">${sgn(d30)}</b></span></div>
+        ${big(r.k, r.clr)}
+        ${hist ? `<div style="margin-top:12px"><b style="font-size:13px">Day by day</b>${tbl(['Day', r.unit].concat(['Change'], tot.map(t => esc(t.label))), hist)}</div>` : ''}
+        ${mets ? `<div style="margin-top:12px"><b style="font-size:13px">Every number we collect</b>${tbl(['Number', 'Now', 'Today', '7 days', '30 days'], mets)}</div>` : ''}
+        ${T ? `<div style="margin-top:12px"><b style="font-size:13px">What it sends to the website</b>${tbl(['', 'Today', '7 days', 'Before'], [['Visits', T.visits], ['Clicks on its link', T.clicks]].map(([n, v]) => `<tr><td>${n}</td><td style="text-align:right">${num(v && v.today)}</td><td style="text-align:right"><b>${num(v && v.d7)}</b></td><td style="text-align:right">${num(v && v.prev7)}</td></tr>`).join(''))}${T.support ? `<div class="mute" style="font-size:12px;margin-top:4px">${num(T.support)} support chats started from it (7 days)</div>` : ''}</div>` : ''}
+        ${pl.length ? `<div style="margin-top:12px"><b style="font-size:13px">Its posts and videos</b>${tbl(['Title', 'Views', 'Likes', 'Comments'], pl.map(q => `<tr><td style="text-align:left;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.url ? `<a href="${esc(q.url)}" target="_blank" rel="noopener">${esc(q.title || '(untitled)')}</a>` : esc(q.title || '(untitled)')} <span class="mute" style="font-size:11px">${q.published_at ? new Date(q.published_at).toLocaleDateString([], {day: 'numeric', month: 'short'}) : ''}</span></td><td style="text-align:right">${num(q.views)}</td><td style="text-align:right">${num(q.likes)}</td><td style="text-align:right">${num(q.comments)}</td></tr>`).join(''))}</div>` : ''}`;
+    } else if (sel.t === 'kpi') {
+      const names = {aud: 'Total audience', day: 'Change today', week: 'Change in 7 days', views: 'Total views', likes: 'Total likes', comments: 'Total comments'};
+      const M = ['views', 'likes', 'comments'].includes(sel.k);
+      const list = PLAT.map(([k, name, clr]) => { let now = null, d1 = null, d7 = null;
+        if (M) { const l = latest[k], e = l && (l.details || []).find(z => z.k === sel.k && z.kind === 'total'); if (e) { now = e.value; d1 = e.value - (dval(k, sel.k, 1) ?? e.value); d7 = e.value - (dval(k, sel.k, 7) ?? e.value); } }
+        else { const r = rows.find(z => z.k === k); now = r.now; d1 = r.d1; d7 = r.d7; }
+        return {k, name, clr, now, d1, d7, v: sel.k === 'day' ? d1 : sel.k === 'week' ? d7 : now}; }).filter(z => z.now != null).sort((a, b) => Math.abs(b.v) - Math.abs(a.v));
+      const mx = Math.max(1, ...list.map(z => Math.abs(z.v)));
+      body = `${hd(names[sel.k] + ' by platform')}<div class="mute" style="font-size:12px">Tap a platform to open it.</div>` + list.map(z => `<div data-soc-plat="${z.k}" style="padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer"><div class="row" style="justify-content:space-between;gap:8px"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${z.clr};margin-right:7px"></i>${z.name}</span><span><b style="color:${sel.k === 'day' || sel.k === 'week' ? col(z.v) : 'inherit'}">${sel.k === 'day' || sel.k === 'week' ? sgn(z.v) : num(z.v)}</b> <span class="mute" style="font-size:11px">now ${num(z.now)} · today ${sgn(z.d1)} · 7d ${sgn(z.d7)}</span></span></div>${bar(Math.abs(z.v) / mx, z.clr)}</div>`).join('') || '<div class="mute" style="padding:8px 0">No numbers for this yet.</div>';
+    } else if (sel.t === 'day') {
+      const i = +sel.k, key = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10);
+      const list = PLAT.map(([k, name, clr]) => { const a = valAt(k, i), b = valAt(k, i + 1); return a == null ? null : {k, name, clr, a, ch: a - (b ?? a)}; }).filter(Boolean);
+      const mx = Math.max(1, ...list.map(z => z.a));
+      body = `${hd((i === 0 ? 'Today' : key) + ' by platform')}<div class="mute" style="font-size:12px">Tap a platform to open it.</div>` + list.map(z => `<div data-soc-plat="${z.k}" style="padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer"><div class="row" style="justify-content:space-between;gap:8px"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${z.clr};margin-right:7px"></i>${z.name}</span><span><b>${num(z.a)}</b> <span style="color:${col(z.ch)};font-size:12px">${sgn(z.ch)}</span></span></div>${bar(z.a / mx, z.clr)}</div>`).join('');
+    }
+    return `<div class="card" id="socDrillCard" style="margin-top:12px;border-left:3px solid ${c}">${body}</div>`;
+  };
+  const postOpen = id => {
+    const q = (st.posts || []).find(z => z.platform + '|' + z.ext_id === id); if (!q) return '';
+    const same = (st.posts || []).filter(z => z.platform === q.platform && z.views != null), avg = same.length ? Math.round(same.reduce((s, z) => s + z.views, 0) / same.length) : null;
+    const rank = same.length ? same.slice().sort((a, b) => b.views - a.views).findIndex(z => z.ext_id === q.ext_id) + 1 : null;
+    const eng = q.views ? ((q.likes || 0) + (q.comments || 0)) / q.views * 100 : null;
+    return `<tr class="soc-open"><td colspan="6" style="padding:10px 12px;background:color-mix(in srgb,${PC[q.platform] || 'var(--gold)'} 8%,transparent)"><div style="white-space:normal"><b>${esc(q.title || '(untitled)')}</b></div>
+      <div class="mute" style="font-size:12px;margin:4px 0">${esc(PN[q.platform] || q.platform)}${q.published_at ? ' · published ' + new Date(q.published_at).toLocaleDateString([], {day: 'numeric', month: 'long', year: 'numeric'}) : ''}${q.published_at ? ' · ' + Math.max(0, Math.round((Date.now() - new Date(q.published_at)) / 864e5)) + ' days ago' : ''}</div>
+      <div class="row" style="gap:16px;flex-wrap:wrap;font-size:13px"><span>${num(q.views)} views</span><span>${num(q.likes)} likes</span><span>${num(q.comments)} comments</span>${eng != null ? `<span>${eng.toFixed(1)}% of viewers reacted</span>` : ''}${avg != null ? `<span>${esc(PN[q.platform])} average ${num(avg)} views · this is #${rank} of ${same.length}</span>` : ''}</div>
+      ${q.url ? `<div style="margin-top:8px"><a class="b" href="${esc(q.url)}" target="_blank" rel="noopener">Open it on ${esc(PN[q.platform] || q.platform)}</a></div>` : ''}</td></tr>`;
+  };
   view.innerHTML = `
   <div class="card"><div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px;align-items:baseline"><b>Social growth</b>
       <span class="mute" style="font-size:12px">YouTube, Facebook, Instagram and Telegram update by themselves about every 30 minutes while the PC is on. TikTok: type the number in below until its stats permission is enabled.</span></div>
     ${anyData ? `<div class="grid" style="margin-top:10px">${kx('Total audience', total, 'all platforms')}${kx('Today', totalDay, 'since yesterday', col(totalDay))}${kx('Last 7 days', totalWeek, 'since a week ago', col(totalWeek))}${['views', 'likes', 'comments'].map(k => { const t = kpi(k); return t ? kx('Total ' + k, t.now, 'today ' + sgn(t.d1) + ' · 7 days ' + sgn(t.d7)) : ''; }).join('')}</div>` : '<div class="msg" style="margin-top:10px">No numbers yet. The PC adds them on its next 15-minute check (run the latest database update first).</div>'}
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:12px">${rows.map(card).join('')}</div>
+  <div id="socDrill">${drillHtml()}</div>
   ${dayRows ? `<div class="grid2" style="margin-top:12px"><div class="card"><b>Daily</b> <span class="mute" style="font-size:12px">total audience, last 7 days</span><table class="tbl" style="width:100%;margin-top:8px"><tr><th style="text-align:left">Day</th><th style="text-align:right">Audience</th><th style="text-align:right">Change</th></tr>${dayRows}</table></div>
     <div class="card"><b>Weekly</b> <span class="mute" style="font-size:12px">growth per platform</span><table class="tbl" style="width:100%;margin-top:8px"><tr><th style="text-align:left">Platform</th><th style="text-align:right">This week</th><th style="text-align:right">Last week</th></tr>${wk}</table></div></div>` : ''}`;
-  if (postRows) view.insertAdjacentHTML('beforeend', `<div class="card" style="margin-top:12px"><b>Top content</b> <span class="mute" style="font-size:12px">your best posts and videos by views, likes and comments</span><div style="overflow-x:auto"><table class="tbl" style="width:100%;margin-top:8px;min-width:480px"><tr><th style="text-align:left">Where</th><th style="text-align:left">Title</th><th style="text-align:left">Date</th><th style="text-align:right">Views</th><th style="text-align:right">Likes</th><th style="text-align:right">Comments</th></tr>${postRows}</table></div></div>`);
+  if (postRows) view.insertAdjacentHTML('beforeend', `<div class="card" style="margin-top:12px"><b>Top content</b> <span class="mute" style="font-size:12px">tap a row for its details</span><div style="overflow-x:auto"><table class="tbl" style="width:100%;margin-top:8px;min-width:480px"><tr><th style="text-align:left">Where</th><th style="text-align:left">Title</th><th style="text-align:left">Date</th><th style="text-align:right">Views</th><th style="text-align:right">Likes</th><th style="text-align:right">Comments</th></tr>${postRows}</table></div></div>`);
+  const open = o => { window._socSel = o; vSocial().then(() => { const el = document.getElementById('socDrillCard'); if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'}); }); };
+  view.querySelectorAll('[data-soc-card]').forEach(c => c.onclick = e => { if (e.target.closest('input,button,a,select')) return; const k = c.dataset.socCard; if (sel && sel.t === 'plat' && sel.k === k) { window._socSel = null; vSocial(); } else open({t: 'plat', k}); });
+  view.querySelectorAll('[data-soc-plat]').forEach(c => c.onclick = () => open({t: 'plat', k: c.dataset.socPlat}));
+  view.querySelectorAll('[data-soc-day]').forEach(c => c.onclick = () => open({t: 'day', k: c.dataset.socDay}));
+  view.querySelectorAll('[data-soc-x]').forEach(b => b.onclick = () => { window._socSel = null; vSocial(); });
+  const togglePost = tr => { const nx = tr.nextElementSibling; if (nx && nx.classList.contains('soc-open')) { nx.remove(); window._socPost = null; return; } view.querySelectorAll('.soc-open').forEach(z => z.remove()); tr.insertAdjacentHTML('afterend', postOpen(tr.dataset.socPost)); window._socPost = tr.dataset.socPost; };
+  view.querySelectorAll('[data-soc-post]').forEach(tr => tr.onclick = e => { if (e.target.closest('a')) return; togglePost(tr); });
+  if (window._socPost) { const tr = view.querySelector('[data-soc-post="' + window._socPost.replace(/"/g, '\\"') + '"]'); if (tr) tr.insertAdjacentHTML('afterend', postOpen(window._socPost)); }
   view.querySelectorAll('[data-soc-save]').forEach(b => b.onclick = async () => {
     const k = b.dataset.socSave, v = view.querySelector(`[data-soc-in="${k}"]`).value;
     if (v === '' || +v < 0) return toast('Type a number first', true);
     try { await call('admin_social_add', {p_platform: k, p_followers: +v}); toast('Saved'); } catch (e) { toast(e.message || String(e), true); return; }
     vSocial();
   });
-  socTimer = setInterval(() => { if (tab !== 'social') { clearInterval(socTimer); return; } if (document.activeElement && document.activeElement.matches && document.activeElement.matches('[data-soc-in]')) return; vSocial(); }, 60000);
+  socTimer = setInterval(() => { if (tab !== 'social') { clearInterval(socTimer); return; } if (window._socSel || window._socPost) return; if (document.activeElement && document.activeElement.matches && document.activeElement.matches('[data-soc-in]')) return; vSocial(); }, 60000);
 }
 
 // ---------- AI command center: a chat with the local AI on the PC. It remembers the chat, picks actions from a fixed list, you approve before anything changes ----------
