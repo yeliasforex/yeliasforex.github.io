@@ -125,6 +125,7 @@
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<script src="welcome-fx.js?v=1"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -215,7 +216,7 @@
     try { gteEvent(error ? 'signin_error' : 'signin_link', error ? String(error.message).slice(0, 80) : null); } catch (e) {}
     say(error ? error.message : 'Check your email and open the link on this device. It can take a minute.', !!error);
   };
-  c.auth.onAuthStateChange((ev, s) => { if (s) location.replace(safe); });
+  c.auth.onAuthStateChange((ev, s) => { if (s) { if (window.GTEWelcome) GTEWelcome.play(() => location.replace(safe)); else location.replace(safe); } });
 })();
 </script>
 <script src="wow.js?v=20261021app5" defer></script>
@@ -250,7 +251,7 @@
   var R = {x: -200, y: 200, tx: 0, ty: 0, mode: 'idle', flyAt: 0, until: 0, hold: 0, bob: 0}, last = 0, ready = false, sayT, typeT, lastLook = 0, busyUntil = 0, lastHi = 0, face = 1;
   function post(m) { try { fr.contentWindow.postMessage(m, '*'); } catch (e) {} }
   function size() { var r = roam.getBoundingClientRect(); W = roam.offsetWidth; H = roam.offsetHeight; }
-  function place() { roam.style.transform = 'translate3d(' + Math.round(R.x - FX * W) + 'px,' + Math.round(R.y - FY * H + R.bob) + 'px,0)'; }
+  function place() { if (window.__gateTakeover) return; roam.style.transform = 'translate3d(' + Math.round(R.x - FX * W) + 'px,' + Math.round(R.y - FY * H + R.bob) + 'px,0)'; }
   function floorY() { return innerHeight - 18; }
   function rand(a, b) { return a + Math.random() * (b - a); }
   function talk(t, ms) {

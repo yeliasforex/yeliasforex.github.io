@@ -382,6 +382,7 @@ function part(base, mesh, mat, t, s, r, tex) {
   return m;
 }
 function flush() {
+  if (EXPL) explodeDraws();
   gl.uniform1f(U.uTime, performance.now() / 1000); gl.uniform1f(U.uGoldY, goldLvl); gl.uniformMatrix4fv(U.uPV, false, PV); gl.uniform3fv(U.uCam, CAM); gl.uniform3fv(U.uGlowCol, glowCol);
   gl.uniform1i(U.uAlb, 0); gl.uniform1i(U.uGlo, 1); gl.uniform1f(U.uDis, DIS);
   for (const d of draws) {
@@ -641,7 +642,7 @@ function frame(now) {
   lastFrameAt = performance.now();
   const dt = Math.min(.05, (now - lastT) / 1000); lastT = now; const t = now / 1000;
   // sharp on the website too: draw at 2.5-3x the frame size (the picture is scaled down by the browser = smooth edges, fine detail), capped so a phone GPU copes (~1.1 M pixels)
-  const ss = Math.min(3, Math.max(window.devicePixelRatio || 1, 2.5)), cap = Math.min(1, Math.sqrt(1.1e6 / Math.max(1, glc.clientWidth * glc.clientHeight * ss * ss)));
+  const LQ = TEST.has("lq"), ss = LQ ? Math.min(2, Math.max(window.devicePixelRatio || 1, 1.25)) : Math.min(3, Math.max(window.devicePixelRatio || 1, 2.5)), cap = Math.min(1, Math.sqrt((LQ ? 4.5e5 : 1.1e6) / Math.max(1, glc.clientWidth * glc.clientHeight * ss * ss)));      // lq=1: the sign-in scenes use a lighter picture so every PC runs them smoothly
   const W = SNAP ? 1200 : Math.max(2, Math.round(glc.clientWidth * ss * cap)), Hh = SNAP ? 1600 : Math.max(2, Math.round(glc.clientHeight * ss * cap));
   if (glc.width !== W || glc.height !== Hh) { glc.width = W; glc.height = Hh; }
   // ---- what the body does now ----
@@ -788,6 +789,7 @@ function frame(now) {
   let Ht = (yb - ya) / frac, yc = ya + Ht / 2, xc = (TEST.has("full") ? 0 : .15) * Ht;      // the stream puts him to one side; the website's full-body view centres him, so a reaching arm has room on both sides
   if (TEST.has("full")) yc -= .32 * Ht * frameAmt;      // room under the feet for the jet flames
   if (TEST.has("face")) { Ht = .5; yc = 1.82; xc = 0; }
+  window.__zoom += (window.__zoomT - window.__zoom) * Math.min(1, dt * 4); Ht *= window.__zoom;
   camPunch *= Math.exp(-dt * 3.2); camShake *= Math.exp(-dt * 6); bodyKick *= Math.exp(-dt * 4.5);
   Ht *= 1 - .055 * camPunch; xc += (Math.random() - .5) * .014 * camShake; yc += (Math.random() - .5) * .014 * camShake;      // a little push-in and shake on the big moments
   const fov = .36, dist = Ht / 2 / Math.tan(fov / 2);
@@ -852,9 +854,33 @@ const ATL = canvasTex(1024, 128), ATL_I = {};
     a.font = e === "HA" ? "900 70px 'Segoe UI', Arial" : "92px 'Segoe UI Emoji'"; a.fillStyle = "#ffd23f";
     a.shadowColor = "rgba(0,0,0,.5)"; a.shadowBlur = 8; a.fillText(e, i * 128 + 64, 68); });
   ATL.push(); })();
-let P3 = [], BOLTS = [], EMIT = [], EMO3 = [], TELE = null;
+let P3 = [], BOLTS = [], EMIT = [], EMO3 = [], TELE = null, EXPL = null;
+window.__zoom = 1; window.__zoomT = 1;
 const rnd = (a, b) => a + Math.random() * (b - a);
 function spawn(p, v, life, size, col, kind, grav, trail) { P3.push({p: p.slice(), v: v.slice(), life, age: 0, size, col, kind, grav: grav || 0, trail: !!trail}); }
+/* the sign-in page can blow the robot up: every part of the model flies off on its own path, spinning, some trailing fire */
+function hsh(i, k) { const s = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return s - Math.floor(s); }
+function startExplode() {
+  const now = performance.now(), c = (A3.chest || [0, 1.3, 0]).slice(), fl = Math.min(A3.footL ? A3.footL[1] : 0, A3.footR ? A3.footR[1] : 0);
+  EXPL = {t0: now, c, floor: fl};
+  burst3(c, 90, [1, .72, .25], 4.2, .022, 1.4); burst3(c, 40, [1, 1, .9], 6.5, .016, .9);
+  ring3(c, [1, .65, .25], 72, 3.4, .03); ring3(c, [1, .9, .6], 48, 5, .02);
+  for (let i = 0; i < 14; i++) spawn(V.add(c, [rnd(-.15, .15), rnd(-.15, .15), rnd(-.1, .1)]), [rnd(-1.5, 1.5), rnd(-.6, 1.7), rnd(-.9, .9)], rnd(.7, 1.3), rnd(.28, .55), [1, rnd(.4, .7), .12], "glow");
+  try { kick(1, 1); } catch (e) {}
+}
+function explodeDraws() {
+  const now = performance.now(), t = (now - EXPL.t0) / 1000, tau = t < 1.3 ? t * .5 : .65 + (t - 1.3) * .85, c0 = EXPL.c;      // slow motion for the first moment
+  for (let i = 0; i < draws.length; i++) {
+    const d = draws[i], m = d.m, cx = m[12], cy = m[13], cz = m[14];
+    const dx = cx - c0[0] + (hsh(i, 1) - .5) * .5, dy = cy - c0[1] + .25 + hsh(i, 2) * .6, dz = cz - c0[2] + (hsh(i, 3) - .5) * .6;
+    const L = Math.hypot(dx, dy, dz) || 1, sp = 1.3 + hsh(i, 4) * 3.4;
+    const ox = dx / L * sp * tau, oz = dz / L * sp * tau * .8; let oy = dy / L * sp * tau - 3.2 * tau * tau;
+    if (cy + oy < EXPL.floor + .03) oy = EXPL.floor + .03 - cy;
+    const w = (hsh(i, 5) - .5) * 15 * tau;
+    d.m = M.chain(M.T(ox, oy, oz), M.T(cx, cy, cz), M.RY(w * (hsh(i, 6) + .3)), M.RX(w * (hsh(i, 7) - .2)), M.RZ(w * (hsh(i, 8) - .3)), M.T(-cx, -cy, -cz), m);
+    if (hsh(i, 9) < .12 && t < 2 && Math.random() < .4) spawn([cx + ox, cy + oy, cz + oz], [rnd(-.15, .15), rnd(.1, .5), rnd(-.15, .15)], rnd(.25, .55), rnd(.05, .1), null, "flame");
+  }
+}
 function bolt3(c, rad) {                                  // a jagged electric arc in the air around the body
   const a = rnd(0, 6.283), b = rnd(-.8, .8); let x = [c[0] + Math.cos(a) * rad, c[1] + b * rad * .9, c[2] + Math.sin(a) * rad * .7];
   const pts = [x.slice()], n = 6 + (Math.random() * 6 | 0);
@@ -1063,6 +1089,9 @@ addEventListener('message',function(e){var d=e.data||{};
   if(d.fx&&typeof doReact==='function'){doReact(d.fx);}
   if(d.paused!==undefined){window.__paused=!!d.paused;}
   if(d.fxStop){EMIT=[];react={name:'',until:0};}
+  if(d.explode){startExplode();}
+  if(d.explodeStop){EXPL=null;}
+  if(d.zoom!==undefined){window.__zoomT=+d.zoom||1;}
   if(d.yaw!==undefined){window.__yaw=d.yaw;}
   if(d.vx!==undefined){window.__flyVx=Math.max(-1,Math.min(1,+d.vx||0));window.__flyVxUntil=performance.now()+600;}
 });
