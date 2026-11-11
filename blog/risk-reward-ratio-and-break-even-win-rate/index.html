@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Risk-Reward Ratio and the Win Rate You Need to Break Even | GoldTriEngine</title>
+<meta name="description" content="How reward-to-risk and win rate work together. With a 2-to-1 reward, you break even winning only one trade in three. See the formula and a full table.">
+<link rel="canonical" href="https://goldtriengine.com/blog/risk-reward-ratio-and-break-even-win-rate/">
+<meta name="author" content="Yelias">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GoldTriEngine">
+<meta property="og:title" content="Risk-Reward Ratio and the Win Rate You Need to Break Even | GoldTriEngine">
+<meta property="og:description" content="How reward-to-risk and win rate work together. With a 2-to-1 reward, you break even winning only one trade in three. See the formula and a full table.">
+<meta property="og:url" content="https://goldtriengine.com/blog/risk-reward-ratio-and-break-even-win-rate/">
+<meta property="og:image" content="https://goldtriengine.com/blog/img/risk-reward-ratio-and-break-even-win-rate.png?v=20261108">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Risk-Reward Ratio and the Win Rate You Need to Break Even | GoldTriEngine">
+<meta name="twitter:description" content="How reward-to-risk and win rate work together. With a 2-to-1 reward, you break even winning only one trade in three. See the formula and a full table.">
+<meta name="twitter:image" content="https://goldtriengine.com/blog/img/risk-reward-ratio-and-break-even-win-rate.png?v=20261108">
+<link rel="alternate" type="application/rss+xml" title="GoldTriEngine blog" href="/blog/feed.xml">
+
+
+<meta name="theme-color" content="#F4F6FB">
+<meta property="og:site_name" content="GoldTriEngine">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="/style.css?v=20261101m2">
+<link rel="stylesheet" href="/wow.css?v=20261101m2">
+<link rel="stylesheet" href="/theme.css?v=20261021app5">
+<link rel="stylesheet" href="/blog.css?v=20261108bl4">
+<link rel="stylesheet" href="/blog-pro.css?v=20261108bl4">
+<script src="/theme.js?v=20261021app5"></script>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GoldTriEngine">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/pwa.js?v=20261108app9" defer></script><script src="/track.js?v=20261021app5" defer></script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
+<link rel="stylesheet" href="/pub-ds.css?v=12">
+<link rel="stylesheet" href="/pub-tone.css?v=2">
+<link rel="stylesheet" href="/pub-premium.css?v=7">
+<link rel="stylesheet" href="/pub-wow.css?v=35">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Risk-Reward Ratio and the Win Rate You Need to Break Even","description":"How reward-to-risk and win rate work together. With a 2-to-1 reward, you break even winning only one trade in three. See the formula and a full table.","image":["https://goldtriengine.com/blog/img/risk-reward-ratio-and-break-even-win-rate.png"],"datePublished":"2026-11-11","dateModified":"2026-11-11","author":{"@type":"Person","name":"Yelias"},"publisher":{"@type":"Organization","name":"GoldTriEngine","logo":{"@type":"ImageObject","url":"https://goldtriengine.com/icon-192.png"}},"mainEntityOfPage":"https://goldtriengine.com/blog/risk-reward-ratio-and-break-even-win-rate/","articleSection":"Risk & Money","wordCount":350,"inLanguage":"en"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://goldtriengine.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://goldtriengine.com/blog/"},{"@type":"ListItem","position":3,"name":"Risk & Money","item":"https://goldtriengine.com/blog/category/risk-money/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a good risk-reward ratio?","acceptedAnswer":{"@type":"Answer","text":"There is no universal answer. A higher ratio lets you be right less often, but it usually means targets that price reaches less often. The two have to be judged together through expectancy."}},{"@type":"Question","name":"Can I just set a 3 : 1 target and be profitable?","acceptedAnswer":{"@type":"Answer","text":"No. Price reaches a far target less often than a near one, so a wider target also lowers your win rate. The only test is the result over many trades."}},{"@type":"Question","name":"Does a high win rate mean a good robot?","acceptedAnswer":{"@type":"Answer","text":"Not by itself. Ask what the average win and the average loss are, and what the worst drawdown was."}}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/index.html" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
+    <nav class="nav" id="nav" aria-label="Main"><a href="/index.html#account">Live account</a><a href="/index.html#how">How it works</a><a href="/index.html#backtest">Backtest</a><a href="/free-backtest.html">Free EA</a><a href="/pricing.html">Pricing</a><a href="/guide.html">Guide</a><a href="/blog/">Blog</a><a href="/faq.html">FAQ</a><a href="/contact.html">Contact</a><a href="/my-account.html">My account</a><a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a></nav>
+  </div>
+</header>
+<main id="main">
+<div class="bl-wrap"><header class="bl-head"><nav class="bl-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/blog/">Blog</a> <span>/</span> <a href="/blog/category/risk-money/">Risk &amp; Money</a> <span>/</span> <span>Risk-Reward Ratio and the Win Rate You Need to Break Even</span></nav><a class="bl-chip" href="/blog/category/risk-money/"><i></i>Risk &amp; Money</a><h1>Risk-Reward Ratio and the Win Rate You Need to Break Even</h1><p class="bl-answer">The win rate you need to break even is 1 / (1 + R), where R is your average reward divided by your average risk. At 1-to-1 you must win half your trades, at 2-to-1 only a third, and at 0.5-to-1 two thirds. Costs push the real number higher.</p><div class="bl-meta"><span><b>Yelias</b></span><span>Published 11 November 2026</span><span>2 min read</span></div></header><div class="bl-grid"><article class="bl-body"><h2 id="two-numbers-that-only-make-sense-together">Two numbers that only make sense together</h2>
+<p>A trader says: &#x27;I win 70% of my trades.&#x27; Another says: &#x27;I only win 35%.&#x27; Without more information you cannot tell who is doing better. What matters is the <strong>size of the average win compared with the average loss</strong>. That ratio is called R, reward to risk.</p>
+<p>If you risk 100 to make 200, R is 2. If you risk 200 to make 100, R is 0.5. The break-even win rate, before any costs, is <strong>1 / (1 + R)</strong>.</p>
+<figure class="bl-fig"><h4>Win rate needed to break even</h4><p class="bl-sub">Percent of trades that must win, before costs</p><svg viewBox="0 0 640 300" class="bl-svg" role="img" aria-label="Break-even win rate by reward to risk"><line class="bl-gl z" x1="44" x2="628" y1="264.0" y2="264.0"/><text class="bl-yt" x="38" y="267.0" text-anchor="end">0</text><line class="bl-gl" x1="44" x2="628" y1="201.9" y2="201.9"/><text class="bl-yt" x="38" y="204.9" text-anchor="end">20</text><line class="bl-gl" x1="44" x2="628" y1="139.9" y2="139.9"/><text class="bl-yt" x="38" y="142.9" text-anchor="end">40</text><line class="bl-gl" x1="44" x2="628" y1="77.8" y2="77.8"/><text class="bl-yt" x="38" y="80.8" text-anchor="end">60</text><rect class="bl-bar pos" style="--i:0" x="79.4" y="57.0" width="46.0" height="207.0" rx="3"/><text class="bl-bv" x="102.4" y="51.0" text-anchor="middle" style="--i:0">67%</text><text class="bl-xt" x="102.4" y="286" text-anchor="middle">0.5 : 1</text><rect class="bl-bar gold" style="--i:1" x="196.2" y="108.9" width="46.0" height="155.1" rx="3"/><text class="bl-bv" x="219.2" y="102.9" text-anchor="middle" style="--i:1">50%</text><text class="bl-xt" x="219.2" y="286" text-anchor="middle">1 : 1</text><rect class="bl-bar pos" style="--i:2" x="313.0" y="139.9" width="46.0" height="124.1" rx="3"/><text class="bl-bv" x="336.0" y="133.9" text-anchor="middle" style="--i:2">40%</text><text class="bl-xt" x="336.0" y="286" text-anchor="middle">1.5 : 1</text><rect class="bl-bar pos" style="--i:3" x="429.8" y="160.7" width="46.0" height="103.3" rx="3"/><text class="bl-bv" x="452.8" y="154.7" text-anchor="middle" style="--i:3">33%</text><text class="bl-xt" x="452.8" y="286" text-anchor="middle">2 : 1</text><rect class="bl-bar pos" style="--i:4" x="546.6" y="186.4" width="46.0" height="77.6" rx="3"/><text class="bl-bv" x="569.6" y="180.4" text-anchor="middle" style="--i:4">25%</text><text class="bl-xt" x="569.6" y="286" text-anchor="middle">3 : 1</text></svg><figcaption>A bigger reward-to-risk ratio lowers the win rate you need. A small one makes you almost never wrong.</figcaption></figure>
+<div class="bl-tw"><table><thead><tr><th>Reward : risk</th><th>Win rate to break even</th><th>What that means</th></tr></thead><tbody><tr><td class="">0.5 : 1</td><td class="">66.7%</td><td class="">Win two trades in three just to stand still</td></tr><tr><td class="">1 : 1</td><td class="">50.0%</td><td class="">Win half of them</td></tr><tr><td class="">1.5 : 1</td><td class="">40.0%</td><td class="">Win two in five</td></tr><tr><td class="">2 : 1</td><td class="">33.3%</td><td class="">Win one in three</td></tr><tr><td class="">3 : 1</td><td class="">25.0%</td><td class="">Win one in four</td></tr></tbody></table></div><figcaption>Before spread, commission and slippage. Costs raise every number in the middle column.</figcaption>
+<h2 id="the-trap-on-both-sides">The trap on both sides</h2>
+<ul><li><strong>High win rate, small wins, big losses.</strong> Many traders feel safe because they win often, then one large loss erases weeks. The break-even rate at 0.5 : 1 is two thirds, so a 65% win rate is a losing system.</li><li><strong>Low win rate, big wins.</strong> This style is statistically sound but psychologically hard: long strings of small losses test discipline. Our lesson on handling a losing streak shows how long streaks really get.</li><li><strong>Neither is better in itself.</strong> The product of win rate and reward-to-risk is what counts. See expectancy explained.</li></ul>
+<aside class="bl-call warn"><b class="t">Costs change the picture</b><p>On a short-term gold strategy the spread can be a large share of a small stop. A system that breaks even on paper can lose after costs. Always use after-cost results when you compare strategies.</p></aside><h2 id="faq">Frequently asked questions</h2><div class="bl-faq"><details><summary>What is a good risk-reward ratio?</summary><p>There is no universal answer. A higher ratio lets you be right less often, but it usually means targets that price reaches less often. The two have to be judged together through expectancy.</p></details><details><summary>Can I just set a 3 : 1 target and be profitable?</summary><p>No. Price reaches a far target less often than a near one, so a wider target also lowers your win rate. The only test is the result over many trades.</p></details><details><summary>Does a high win rate mean a good robot?</summary><p>Not by itself. Ask what the average win and the average loss are, and what the worst drawdown was.</p></details></div><h2 id="sources">Sources and method</h2><ul class="bl-src"><li>Standard risk-management and statistics formulas. Every example in this lesson uses made-up round numbers to show how the maths works; none of them is a result or a forecast.</li></ul><div class="bl-author"><div class="av">Y</div><p><b>Yelias</b>, GoldTriEngine. We trade gold with an automated EA and publish every trade in public. Everything here is built from that live data. <a href="/index.html#account">See the live account</a> or <a href="/pricing.html">the EA</a>.</p></div><div class="bl-disc"><b>Not financial advice.</b> This is education and research, not a recommendation to buy or sell anything. Trading gold and CFDs carries a high risk of loss, and past results, back-tests and forecasts do not guarantee future results. Read our <a href="/risk.html">risk disclaimer</a>. Numbers in this article are computed by our own software from our own price data and trading account; drafting is assisted by AI. Written under the name Yelias.</div></article><aside class="bl-aside"><nav class="bl-toc" aria-label="On this page"><b>On this page</b><a href="#two-numbers-that-only-make-sense-together">Two numbers that only make sense together</a><a href="#the-trap-on-both-sides">The trap on both sides</a><a href="#faq">Frequently asked questions</a><a href="#sources">Sources and method</a></nav><div class="bl-side-cta"><p>Watch the same EA trade gold live, 24/5, with every entry and exit explained.</p><a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch live</a></div></aside></div></div><div class="bl-wrap"><section class="bl-related"><h2>Keep reading</h2><div class="bl-cards"><a class="bl-card" href="/blog/drawdown-recovery-maths-why-losses-hurt-more/"><span class="bl-chip"><i></i>Risk &amp; Money</span><h3>Drawdown Recovery Maths: Why a 50% Loss Needs a 100% Gain</h3><p>Losing 50% of an account needs a 100% gain to get back. See the simple formula, a table of recoveries and why keeping drawdowns small matters most.</p><div class="bl-meta"><span>6 Nov 2026</span><span>2 min read</span></div></a></div></section></div>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="/./"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+        <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
+      </div>
+      <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="/contact.html">Contact &amp; support</a></li><li><a href="/stream-bot.html">Stream software</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="/pricing.html">Pricing</a></li><li><a href="/partners.html">Partners</a></li><li><a href="/blog/">Blog &amp; Academy</a></li><li><a href="/guide.html">How to judge a gold EA</a></li><li><a href="/gold-ea-mt5.html">Gold EA for MT5</a></li><li><a href="/best-gold-ea-mt5.html">Best gold EA? 10 checks</a></li><li><a href="/goldtriengine-review.html">Review: is it legit?</a></li><li><a href="/fusion-markets-ic-markets-gold-ea.html">Fusion and IC Markets</a></li><li><a href="/faq.html">FAQ</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/apps.html">Get the app</a></li><li><a href="/terms.html">Terms</a></li><li><a href="/llms.txt">llms.txt</a></li></ul></div>
+    </div>
+    <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: <a href="/contact.html">contact page</a> or Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+  </div>
+</footer>
+<a class="fab" href="https://t.me/GoldTriEngine_Support" rel="noopener" aria-label="Message GoldTriEngine on Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg><span>Contact us</span></a>
+<script src="/site.js?v=20261021app5" defer></script><script src="/pwnav.js?v=20261030pw6" defer></script><script src="/growth.js?v=20261101m2" defer></script>
+<script src="/wow.js?v=20261021app5" defer></script>
+<script src="/chat.js?v=20261101m2" defer></script>
+<script src="/pub-ds-page.js?v=3" defer></script><script src="/partner-track.js?v=20261102p1" defer></script><script src="/pub-wow.js?v=8" defer></script>
+<script src="/pub-social.js?v=2" defer></script><script src="/blog.js?v=20261108bl4" defer></script>
+<script src="/blog-pro.js?v=20261108bl4" defer></script>
+</body>
+</html>
