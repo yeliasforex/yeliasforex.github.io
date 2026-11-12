@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to Read a Backtest Report: The Numbers That Matter | GoldTriEngine</title>
+<meta name="description" content="A backtest report is full of numbers. Learn which ones show real quality, which can mislead, and the questions to ask before you trust any robot&#x27;s results.">
+<link rel="canonical" href="https://goldtriengine.com/blog/how-to-read-a-backtest-report-the-numbers-that-matter/">
+<meta name="author" content="Yelias">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GoldTriEngine">
+<meta property="og:title" content="How to Read a Backtest Report: The Numbers That Matter | GoldTriEngine">
+<meta property="og:description" content="A backtest report is full of numbers. Learn which ones show real quality, which can mislead, and the questions to ask before you trust any robot&#x27;s results.">
+<meta property="og:url" content="https://goldtriengine.com/blog/how-to-read-a-backtest-report-the-numbers-that-matter/">
+<meta property="og:image" content="https://goldtriengine.com/blog/img/how-to-read-a-backtest-report-the-numbers-that-matter.png?v=20261108">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Read a Backtest Report: The Numbers That Matter | GoldTriEngine">
+<meta name="twitter:description" content="A backtest report is full of numbers. Learn which ones show real quality, which can mislead, and the questions to ask before you trust any robot&#x27;s results.">
+<meta name="twitter:image" content="https://goldtriengine.com/blog/img/how-to-read-a-backtest-report-the-numbers-that-matter.png?v=20261108">
+<link rel="alternate" type="application/rss+xml" title="GoldTriEngine blog" href="/blog/feed.xml">
+
+
+<meta name="theme-color" content="#F4F6FB">
+<meta property="og:site_name" content="GoldTriEngine">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="/style.css?v=20261101m2">
+<link rel="stylesheet" href="/wow.css?v=20261101m2">
+<link rel="stylesheet" href="/theme.css?v=20261021app5">
+<link rel="stylesheet" href="/blog.css?v=20261108bl4">
+<link rel="stylesheet" href="/blog-pro.css?v=20261108bl4">
+<script src="/theme.js?v=20261021app5"></script>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GoldTriEngine">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/pwa.js?v=20261108app9" defer></script><script src="/track.js?v=20261021app5" defer></script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
+<link rel="stylesheet" href="/pub-ds.css?v=12">
+<link rel="stylesheet" href="/pub-tone.css?v=2">
+<link rel="stylesheet" href="/pub-premium.css?v=7">
+<link rel="stylesheet" href="/pub-wow.css?v=35">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How to Read a Backtest Report: The Numbers That Matter","description":"A backtest report is full of numbers. Learn which ones show real quality, which can mislead, and the questions to ask before you trust any robot's results.","image":["https://goldtriengine.com/blog/img/how-to-read-a-backtest-report-the-numbers-that-matter.png"],"datePublished":"2026-11-12","dateModified":"2026-11-12","author":{"@type":"Person","name":"Yelias"},"publisher":{"@type":"Organization","name":"GoldTriEngine","logo":{"@type":"ImageObject","url":"https://goldtriengine.com/icon-192.png"}},"mainEntityOfPage":"https://goldtriengine.com/blog/how-to-read-a-backtest-report-the-numbers-that-matter/","articleSection":"EA Education","wordCount":331,"inLanguage":"en"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://goldtriengine.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://goldtriengine.com/blog/"},{"@type":"ListItem","position":3,"name":"EA Education","item":"https://goldtriengine.com/blog/category/ea-education/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How many trades do I need to trust a backtest?","acceptedAnswer":{"@type":"Answer","text":"More is better. As a loose guide, a few hundred trades across several market conditions gives far more confidence than a few dozen."}},{"@type":"Question","name":"Is a higher profit factor always better?","acceptedAnswer":{"@type":"Answer","text":"Not necessarily. Very high values from a small number of trades usually mean luck or over-fitting. Look for a moderate value with many trades."}},{"@type":"Question","name":"Can a backtest predict live results?","acceptedAnswer":{"@type":"Answer","text":"It can show how a strategy would have behaved on past data. Live results are usually worse because of costs, fills and changes in the market."}}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/index.html" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
+    <nav class="nav" id="nav" aria-label="Main"><a href="/index.html#account">Live account</a><a href="/index.html#how">How it works</a><a href="/index.html#backtest">Backtest</a><a href="/free-backtest.html">Free EA</a><a href="/pricing.html">Pricing</a><a href="/guide.html">Guide</a><a href="/blog/">Blog</a><a href="/faq.html">FAQ</a><a href="/contact.html">Contact</a><a href="/my-account.html">My account</a><a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a></nav>
+  </div>
+</header>
+<main id="main">
+<div class="bl-wrap"><header class="bl-head"><nav class="bl-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/blog/">Blog</a> <span>/</span> <a href="/blog/category/ea-education/">EA Education</a> <span>/</span> <span>How to Read a Backtest Report: The Numbers That Matter</span></nav><a class="bl-chip" href="/blog/category/ea-education/"><i></i>EA Education</a><h1>How to Read a Backtest Report: The Numbers That Matter</h1><p class="bl-answer">In a backtest report, look first at the period tested, the maximum drawdown, the number of trades, the profit factor and how the result was split across months and years. A large net profit with a small trade count, a short period or a deep drawdown is not a strong result.</p><div class="bl-meta"><span><b>Yelias</b></span><span>Published 12 November 2026</span><span>2 min read</span></div></header><div class="bl-grid"><article class="bl-body"><h2 id="start-with-the-setup-not-the-profit">Start with the setup, not the profit</h2>
+<p>The big green number at the top of a report is the least informative thing on it. Before you look at profit, check <strong>what was tested</strong>.</p>
+<ul><li><strong>Period:</strong> how many years, and did it include calm and wild markets? One good year proves little.</li><li><strong>Data quality:</strong> was it tested on real tick data or on approximated data? Real ticks are closer to what you will meet live.</li><li><strong>Costs:</strong> did the test include a realistic spread, commission and slippage? A test with perfect fills overstates results.</li><li><strong>Settings:</strong> were the inputs the same as the ones sold or published?</li></ul>
+<h2 id="the-numbers-that-matter">The numbers that matter</h2>
+<div class="bl-tw"><table><thead><tr><th>Number</th><th>What it tells you</th><th>What to watch for</th></tr></thead><tbody><tr><td class="">Maximum drawdown</td><td class="">The deepest fall from a peak</td><td class="">Can you live with it? See <a href="/blog/drawdown-recovery-maths-why-losses-hurt-more/">drawdown maths</a></td></tr><tr><td class="">Total trades</td><td class="">How much evidence there is</td><td class="">Under a few hundred is a thin sample</td></tr><tr><td class="">Profit factor</td><td class="">Gross profit divided by gross loss</td><td class="">Near 1 is fragile; very high with few trades is suspicious</td></tr><tr><td class="">Average win and loss</td><td class="">The shape of the results</td><td class="">A small average win with a big average loss is a warning</td></tr><tr><td class="">Longest losing streak</td><td class="">How hard it is to sit through</td><td class="">Would you keep running it?</td></tr><tr><td class="">Results by month</td><td class="">Whether profit is spread or concentrated</td><td class="">One huge month can carry the whole report</td></tr></tbody></table></div><figcaption>Read these together. Any single number can be made to look good.</figcaption>
+<h2 id="questions-that-expose-a-weak-report">Questions that expose a weak report</h2>
+<ol class="bl-steps"><li><strong>What happens if the spread doubles?</strong> A fragile system fails; a robust one slows down.</li><li><strong>What do the equity curve and the drawdown look like?</strong> Smooth lines from a short period can hide risk.</li><li><strong>Was it optimised on the same data it is shown on?</strong> If yes, read overfitting explained.</li><li><strong>Is there live proof?</strong> A verified live account over months is worth more than any simulation.</li></ol>
+<aside class="bl-call warn"><b class="t">The most common trick</b><p>Showing a short, perfect-looking window. Always ask for the full period and the monthly breakdown, and be cautious if either is missing.</p></aside><h2 id="faq">Frequently asked questions</h2><div class="bl-faq"><details><summary>How many trades do I need to trust a backtest?</summary><p>More is better. As a loose guide, a few hundred trades across several market conditions gives far more confidence than a few dozen.</p></details><details><summary>Is a higher profit factor always better?</summary><p>Not necessarily. Very high values from a small number of trades usually mean luck or over-fitting. Look for a moderate value with many trades.</p></details><details><summary>Can a backtest predict live results?</summary><p>It can show how a strategy would have behaved on past data. Live results are usually worse because of costs, fills and changes in the market.</p></details></div><h2 id="sources">Sources and method</h2><ul class="bl-src"><li>Standard risk-management and statistics formulas. Every example in this lesson uses made-up round numbers to show how the maths works; none of them is a result or a forecast.</li></ul><div class="bl-author"><div class="av">Y</div><p><b>Yelias</b>, GoldTriEngine. We trade gold with an automated EA and publish every trade in public. Everything here is built from that live data. <a href="/index.html#account">See the live account</a> or <a href="/pricing.html">the EA</a>.</p></div><div class="bl-disc"><b>Not financial advice.</b> This is education and research, not a recommendation to buy or sell anything. Trading gold and CFDs carries a high risk of loss, and past results, back-tests and forecasts do not guarantee future results. Read our <a href="/risk.html">risk disclaimer</a>. Numbers in this article are computed by our own software from our own price data and trading account; drafting is assisted by AI. Written under the name Yelias.</div></article><aside class="bl-aside"><nav class="bl-toc" aria-label="On this page"><b>On this page</b><a href="#start-with-the-setup-not-the-profit">Start with the setup, not the profit</a><a href="#the-numbers-that-matter">The numbers that matter</a><a href="#questions-that-expose-a-weak-report">Questions that expose a weak report</a><a href="#faq">Frequently asked questions</a><a href="#sources">Sources and method</a></nav><div class="bl-side-cta"><p>Watch the same EA trade gold live, 24/5, with every entry and exit explained.</p><a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch live</a></div></aside></div></div><div class="bl-wrap"><section class="bl-related"><h2>Keep reading</h2><div class="bl-cards"><a class="bl-card" href="/blog/backtest-vs-live-ea-results/"><span class="bl-chip"><i></i>EA Education</span><h3>Backtest vs Live: Why EA Results Differ and How to Check Them</h3><p>Why a great EA backtest often fails live: spreads, slippage, bad data, overfitting and execution. A checklist for judging any gold EA before you trust it with money.</p><div class="bl-meta"><span>4 Nov 2026</span><span>2 min read</span></div></a></div></section></div>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="/./"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+        <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
+      </div>
+      <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="/contact.html">Contact &amp; support</a></li><li><a href="/stream-bot.html">Stream software</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="/pricing.html">Pricing</a></li><li><a href="/partners.html">Partners</a></li><li><a href="/blog/">Blog &amp; Academy</a></li><li><a href="/guide.html">How to judge a gold EA</a></li><li><a href="/gold-ea-mt5.html">Gold EA for MT5</a></li><li><a href="/best-gold-ea-mt5.html">Best gold EA? 10 checks</a></li><li><a href="/goldtriengine-review.html">Review: is it legit?</a></li><li><a href="/fusion-markets-ic-markets-gold-ea.html">Fusion and IC Markets</a></li><li><a href="/faq.html">FAQ</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/apps.html">Get the app</a></li><li><a href="/terms.html">Terms</a></li><li><a href="/llms.txt">llms.txt</a></li></ul></div>
+    </div>
+    <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: <a href="/contact.html">contact page</a> or Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+  </div>
+</footer>
+<a class="fab" href="https://t.me/GoldTriEngine_Support" rel="noopener" aria-label="Message GoldTriEngine on Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg><span>Contact us</span></a>
+<script src="/site.js?v=20261021app5" defer></script><script src="/pwnav.js?v=20261030pw6" defer></script><script src="/growth.js?v=20261101m2" defer></script>
+<script src="/wow.js?v=20261021app5" defer></script>
+<script src="/chat.js?v=20261101m2" defer></script>
+<script src="/pub-ds-page.js?v=3" defer></script><script src="/partner-track.js?v=20261102p1" defer></script><script src="/pub-wow.js?v=8" defer></script>
+<script src="/pub-social.js?v=2" defer></script><script src="/blog.js?v=20261108bl4" defer></script>
+<script src="/blog-pro.js?v=20261108bl4" defer></script>
+</body>
+</html>
