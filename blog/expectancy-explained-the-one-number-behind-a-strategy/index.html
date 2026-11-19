@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Expectancy Explained: The One Number Behind Any Strategy | GoldTriEngine</title>
+<meta name="description" content="Expectancy tells you what a strategy earns per trade on average. Learn the formula, work through four examples and see why sample size matters.">
+<link rel="canonical" href="https://goldtriengine.com/blog/expectancy-explained-the-one-number-behind-a-strategy/">
+<meta name="author" content="Yelias">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GoldTriEngine">
+<meta property="og:title" content="Expectancy Explained: The One Number Behind Any Strategy | GoldTriEngine">
+<meta property="og:description" content="Expectancy tells you what a strategy earns per trade on average. Learn the formula, work through four examples and see why sample size matters.">
+<meta property="og:url" content="https://goldtriengine.com/blog/expectancy-explained-the-one-number-behind-a-strategy/">
+<meta property="og:image" content="https://goldtriengine.com/blog/img/expectancy-explained-the-one-number-behind-a-strategy.png?v=20261108">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Expectancy Explained: The One Number Behind Any Strategy | GoldTriEngine">
+<meta name="twitter:description" content="Expectancy tells you what a strategy earns per trade on average. Learn the formula, work through four examples and see why sample size matters.">
+<meta name="twitter:image" content="https://goldtriengine.com/blog/img/expectancy-explained-the-one-number-behind-a-strategy.png?v=20261108">
+<link rel="alternate" type="application/rss+xml" title="GoldTriEngine blog" href="/blog/feed.xml">
+
+
+<meta name="theme-color" content="#F4F6FB">
+<meta property="og:site_name" content="GoldTriEngine">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="/style.css?v=20261101m2">
+<link rel="stylesheet" href="/wow.css?v=20261101m2">
+<link rel="stylesheet" href="/theme.css?v=20261021app5">
+<link rel="stylesheet" href="/blog.css?v=20261108bl4">
+<link rel="stylesheet" href="/blog-pro.css?v=20261108bl4">
+<script src="/theme.js?v=20261021app5"></script>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GoldTriEngine">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/pwa.js?v=20261108app9" defer></script><script src="/track.js?v=20261021app5" defer></script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
+<link rel="stylesheet" href="/pub-ds.css?v=12">
+<link rel="stylesheet" href="/pub-tone.css?v=2">
+<link rel="stylesheet" href="/pub-premium.css?v=7">
+<link rel="stylesheet" href="/pub-wow.css?v=35">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Expectancy Explained: The One Number Behind Any Strategy","description":"Expectancy tells you what a strategy earns per trade on average. Learn the formula, work through four examples and see why sample size matters.","image":["https://goldtriengine.com/blog/img/expectancy-explained-the-one-number-behind-a-strategy.png"],"datePublished":"2026-11-19","dateModified":"2026-11-19","author":{"@type":"Person","name":"Yelias"},"publisher":{"@type":"Organization","name":"GoldTriEngine","logo":{"@type":"ImageObject","url":"https://goldtriengine.com/icon-192.png"}},"mainEntityOfPage":"https://goldtriengine.com/blog/expectancy-explained-the-one-number-behind-a-strategy/","articleSection":"Risk & Money","wordCount":324,"inLanguage":"en"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://goldtriengine.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://goldtriengine.com/blog/"},{"@type":"ListItem","position":3,"name":"Risk & Money","item":"https://goldtriengine.com/blog/category/risk-money/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What is a good expectancy?","acceptedAnswer":{"@type":"Answer","text":"Anything reliably above zero after costs is positive. Values like +0.1R to +0.3R are common for sound systems; much higher numbers from a short sample are usually luck or an error."}},{"@type":"Question","name":"Why can I lose money with positive expectancy?","acceptedAnswer":{"@type":"Answer","text":"Expectancy is an average. Any single trade, and any short run of trades, can lose. Position size decides whether you survive the bad stretches."}},{"@type":"Question","name":"Is expectancy the same as profit factor?","acceptedAnswer":{"@type":"Answer","text":"They are related. Profit factor is gross profit divided by gross loss; expectancy is the average per trade. Both should be read together with the drawdown."}}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/index.html" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
+    <nav class="nav" id="nav" aria-label="Main"><a href="/index.html#account">Live account</a><a href="/index.html#how">How it works</a><a href="/index.html#backtest">Backtest</a><a href="/free-backtest.html">Free EA</a><a href="/pricing.html">Pricing</a><a href="/guide.html">Guide</a><a href="/blog/">Blog</a><a href="/faq.html">FAQ</a><a href="/contact.html">Contact</a><a href="/my-account.html">My account</a><a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a></nav>
+  </div>
+</header>
+<main id="main">
+<div class="bl-wrap"><header class="bl-head"><nav class="bl-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/blog/">Blog</a> <span>/</span> <a href="/blog/category/risk-money/">Risk &amp; Money</a> <span>/</span> <span>Expectancy Explained: The One Number Behind Any Strategy</span></nav><a class="bl-chip" href="/blog/category/risk-money/"><i></i>Risk &amp; Money</a><h1>Expectancy Explained: The One Number Behind Any Strategy</h1><p class="bl-answer">Expectancy is the average result per trade: win rate times average win, minus loss rate times average loss. Measured in units of risk (R), a strategy that wins 40% of the time at 2-to-1 earns +0.2R per trade, while one that wins 60% at 0.5-to-1 loses 0.1R per trade.</p><div class="bl-meta"><span><b>Yelias</b></span><span>Published 19 November 2026</span><span>2 min read</span></div></header><div class="bl-grid"><article class="bl-body"><h2 id="the-formula">The formula</h2>
+<p><strong>Expectancy = (win rate x average win) - (loss rate x average loss).</strong> If you express wins and losses in multiples of what you risked (R), a loss is -1R and a win is +R. Then the expectancy is <strong>p x R - (1 - p)</strong>, where p is the win rate.</p>
+<p>Positive expectancy means that, if the future behaves like the sample, the strategy earns money on average. Negative means it does not, however good it feels.</p>
+<div class="bl-tw"><table><thead><tr><th>Win rate</th><th>Reward : risk</th><th>Expectancy per trade</th><th>Verdict</th></tr></thead><tbody><tr><td class="">40%</td><td class="">2 : 1</td><td class="">+0.20R</td><td class="">Positive: loses often, still earns</td></tr><tr><td class="">60%</td><td class="">0.5 : 1</td><td class="">-0.10R</td><td class="">Negative: wins often, still loses</td></tr><tr><td class="">50%</td><td class="">1 : 1</td><td class="">+0.00R</td><td class="">Zero before costs; negative after</td></tr><tr><td class="">35%</td><td class="">3 : 1</td><td class="">+0.40R</td><td class="">Positive, but hard to sit through</td></tr></tbody></table></div><figcaption>Examples with made-up numbers. R is the amount risked on each trade.</figcaption>
+<figure class="bl-fig"><h4>Expectancy of the four examples</h4><p class="bl-sub">Average result per trade, in R</p><svg viewBox="0 0 640 300" class="bl-svg" role="img" aria-label="Expectancy of the four examples"><line class="bl-gl z" x1="44" x2="628" y1="221.5" y2="221.5"/><text class="bl-yt" x="38" y="224.5" text-anchor="end">0</text><line class="bl-gl" x1="44" x2="628" y1="136.5" y2="136.5"/><text class="bl-yt" x="38" y="139.5" text-anchor="end">0.2</text><line class="bl-gl" x1="44" x2="628" y1="51.5" y2="51.5"/><text class="bl-yt" x="38" y="54.5" text-anchor="end">0.4</text><rect class="bl-bar pos" style="--i:0" x="94.0" y="136.5" width="46.0" height="85.0" rx="3"/><text class="bl-bv" x="117.0" y="130.5" text-anchor="middle" style="--i:0">0.2R</text><text class="bl-xt" x="117.0" y="286" text-anchor="middle">A</text><rect class="bl-bar neg dn" style="--i:1" x="240.0" y="221.5" width="46.0" height="42.5" rx="3"/><text class="bl-bv" x="263.0" y="278.0" text-anchor="middle" style="--i:1">-0.1R</text><text class="bl-xt" x="263.0" y="286" text-anchor="middle">B</text><rect class="bl-bar pos" style="--i:2" x="386.0" y="221.5" width="46.0" height="1.0" rx="3"/><text class="bl-bv" x="409.0" y="215.5" text-anchor="middle" style="--i:2">0R</text><text class="bl-xt" x="409.0" y="286" text-anchor="middle">C</text><rect class="bl-bar pos" style="--i:3" x="532.0" y="51.5" width="46.0" height="170.0" rx="3"/><text class="bl-bv" x="555.0" y="45.5" text-anchor="middle" style="--i:3">0.4R</text><text class="bl-xt" x="555.0" y="286" text-anchor="middle">D</text></svg><figcaption>A and D earn on average although they lose most trades. B loses on average although it wins most of them.</figcaption></figure>
+<h2 id="three-things-that-make-expectancy-misleading">Three things that make expectancy misleading</h2>
+<ul><li><strong>Small samples.</strong> Twenty trades say very little. The result of a short run is mostly luck. You want a few hundred trades before you trust the average.</li><li><strong>Costs left out.</strong> Spread, commission and slippage come off every trade. A strategy with +0.05R before costs can be negative after them.</li><li><strong>Changing conditions.</strong> An expectancy measured in a calm market can break in a wild one. This is why we test on many years, as in our lesson on <a href="/blog/backtest-vs-live-ea-results/">backtest versus live results</a>.</li></ul>
+<ol class="bl-steps"><li><strong>Record every trade</strong> in R, including the ones you wish you had not taken.</li><li><strong>Compute the average</strong> of all of them after costs.</li><li><strong>Look at the spread of results,</strong> not just the average: how large were the worst few?</li><li><strong>Wait for enough trades</strong> before changing anything based on the number.</li></ol><h2 id="faq">Frequently asked questions</h2><div class="bl-faq"><details><summary>What is a good expectancy?</summary><p>Anything reliably above zero after costs is positive. Values like +0.1R to +0.3R are common for sound systems; much higher numbers from a short sample are usually luck or an error.</p></details><details><summary>Why can I lose money with positive expectancy?</summary><p>Expectancy is an average. Any single trade, and any short run of trades, can lose. Position size decides whether you survive the bad stretches.</p></details><details><summary>Is expectancy the same as profit factor?</summary><p>They are related. Profit factor is gross profit divided by gross loss; expectancy is the average per trade. Both should be read together with the drawdown.</p></details></div><h2 id="sources">Sources and method</h2><ul class="bl-src"><li>Standard risk-management and statistics formulas. Every example in this lesson uses made-up round numbers to show how the maths works; none of them is a result or a forecast.</li></ul><div class="bl-author"><div class="av">Y</div><p><b>Yelias</b>, GoldTriEngine. We trade gold with an automated EA and publish every trade in public. Everything here is built from that live data. <a href="/index.html#account">See the live account</a> or <a href="/pricing.html">the EA</a>.</p></div><div class="bl-disc"><b>Not financial advice.</b> This is education and research, not a recommendation to buy or sell anything. Trading gold and CFDs carries a high risk of loss, and past results, back-tests and forecasts do not guarantee future results. Read our <a href="/risk.html">risk disclaimer</a>. Numbers in this article are computed by our own software from our own price data and trading account; drafting is assisted by AI. Written under the name Yelias.</div></article><aside class="bl-aside"><nav class="bl-toc" aria-label="On this page"><b>On this page</b><a href="#the-formula">The formula</a><a href="#three-things-that-make-expectancy-misleading">Three things that make expectancy misleading</a><a href="#faq">Frequently asked questions</a><a href="#sources">Sources and method</a></nav><div class="bl-side-cta"><p>Watch the same EA trade gold live, 24/5, with every entry and exit explained.</p><a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch live</a></div></aside></div></div><div class="bl-wrap"><section class="bl-related"><h2>Keep reading</h2><div class="bl-cards"><a class="bl-card" href="/blog/position-sizing-risk-of-ruin/"><span class="bl-chip"><i></i>Risk &amp; Money</span><h3>Position Sizing and Risk of Ruin: What 1%, 2% and 5% Risk Really Do</h3><p>We simulated 20,000 traders with a real edge. At 1% risk per trade almost none suffered a 30% drawdown; at 5% most did. See the numbers, the formula for gold lot size and why losses need bigger gains to recover.</p><div class="bl-meta"><span>1 Nov 2026</span><span>4 min read</span></div></a><a class="bl-card" href="/blog/risk-reward-ratio-and-break-even-win-rate/"><span class="bl-chip"><i></i>Risk &amp; Money</span><h3>Risk-Reward Ratio and the Win Rate You Need to Break Even</h3><p>How reward-to-risk and win rate work together. With a 2-to-1 reward, you break even winning only one trade in three. See the formula and a full table.</p><div class="bl-meta"><span>11 Nov 2026</span><span>2 min read</span></div></a></div></section></div>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="/./"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+        <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
+      </div>
+      <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="/contact.html">Contact &amp; support</a></li><li><a href="/stream-bot.html">Stream software</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="/pricing.html">Pricing</a></li><li><a href="/partners.html">Partners</a></li><li><a href="/blog/">Blog &amp; Academy</a></li><li><a href="/guide.html">How to judge a gold EA</a></li><li><a href="/gold-ea-mt5.html">Gold EA for MT5</a></li><li><a href="/best-gold-ea-mt5.html">Best gold EA? 10 checks</a></li><li><a href="/goldtriengine-review.html">Review: is it legit?</a></li><li><a href="/fusion-markets-ic-markets-gold-ea.html">Fusion and IC Markets</a></li><li><a href="/faq.html">FAQ</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/apps.html">Get the app</a></li><li><a href="/terms.html">Terms</a></li><li><a href="/llms.txt">llms.txt</a></li></ul></div>
+    </div>
+    <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: <a href="/contact.html">contact page</a> or Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+  </div>
+</footer>
+<a class="fab" href="https://t.me/GoldTriEngine_Support" rel="noopener" aria-label="Message GoldTriEngine on Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg><span>Contact us</span></a>
+<script src="/site.js?v=20261021app5" defer></script><script src="/pwnav.js?v=20261030pw6" defer></script><script src="/growth.js?v=20261101m2" defer></script>
+<script src="/wow.js?v=20261021app5" defer></script>
+<script src="/chat.js?v=20261101m2" defer></script>
+<script src="/pub-ds-page.js?v=3" defer></script><script src="/partner-track.js?v=20261102p1" defer></script><script src="/pub-wow.js?v=8" defer></script>
+<script src="/pub-social.js?v=2" defer></script><script src="/blog.js?v=20261108bl4" defer></script>
+<script src="/blog-pro.js?v=20261108bl4" defer></script>
+</body>
+</html>
