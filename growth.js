@@ -79,3 +79,5 @@
     }).catch(function () {});
   }
 })();
+/* 6. a quiet "see it before you pay" bar for first-time readers (funnel-bar.js decides where it may show) */
+(function () { try { var s = document.createElement('script'); s.src = '/funnel-bar.js?v=1'; s.defer = true; document.head.appendChild(s); } catch (e) {} })();

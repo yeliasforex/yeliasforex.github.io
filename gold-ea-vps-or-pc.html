@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Do you need a VPS to run a gold EA on MT5? PC vs VPS | GoldTriEngine</title>
+<meta name="description" content="What an MT5 Expert Advisor needs to run on gold: an always-on Windows computer and a stable connection. When a PC is enough, when a VPS is better, and a setup checklist.">
+<link rel="canonical" href="https://goldtriengine.com/gold-ea-vps-or-pc.html">
+<meta name="theme-color" content="#F4F6FB">
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="style.css?v=20261101m2">
+<link rel="stylesheet" href="app.css?v=20261101m3">
+<link rel="stylesheet" href="wow.css?v=20261101m2">
+<link rel="stylesheet" href="theme.css?v=20261021app5">
+<script src="theme.js?v=20261021app5"></script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GoldTriEngine">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="pwa.js?v=20261108app9" defer></script><script src="track.js?v=20261021app5" defer></script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "@id": "https://goldtriengine.com/gold-ea-vps-or-pc.html#page", "url": "https://goldtriengine.com/gold-ea-vps-or-pc.html", "name": "Do you need a VPS to run a gold EA on MT5? PC vs VPS", "description": "What an MT5 Expert Advisor needs to run on gold: an always-on Windows computer and a stable connection. When a PC is enough, when a VPS is better, and a setup checklist.", "inLanguage": "en", "isPartOf": {"@id": "https://goldtriengine.com/#site"}, "about": {"@id": "https://goldtriengine.com/#ea"}, "dateModified": "2026-11-23"}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "GoldTriEngine", "item": "https://goldtriengine.com/"}, {"@type": "ListItem", "position": 2, "name": "Do you need a VPS to run a gold EA on MT5? PC vs VPS", "item": "https://goldtriengine.com/gold-ea-vps-or-pc.html"}]}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can I run a gold EA on my laptop?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, if MetaTrader 5 stays open, the laptop does not sleep, and the connection is stable. For a live account that must run all week, many people prefer a VPS."}}, {"@type": "Question", "name": "Does an EA work if my computer is off?", "acceptedAnswer": {"@type": "Answer", "text": "No. An MT5 Expert Advisor only runs while MetaTrader 5 is open and connected, so open trades are not managed while the computer is off."}}, {"@type": "Question", "name": "Can I run MT5 EAs on a phone or MT4?", "acceptedAnswer": {"@type": "Answer", "text": "No. MT5 Expert Advisors need MetaTrader 5 on Windows. Phones cannot run Expert Advisors and MT4 uses a different format."}}, {"@type": "Question", "name": "Does GoldTriEngine need a VPS?", "acceptedAnswer": {"@type": "Answer", "text": "No VPS is required. It needs MetaTrader 5 on Windows that stays on Monday to Friday, which can be your PC or a Windows VPS."}}]}]}</script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap"><a class="brand" href="index.html" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a><button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button><nav class="nav" id="nav" aria-label="Main"><a href="index.html#account" aria-current="page">Live account</a><a href="index.html#how">How it works</a><a href="index.html#backtest">Backtest</a><a href="free-backtest.html">Free EA</a><a href="pricing.html">Pricing</a><a href="guide.html">Guide</a><a href="blog/">Blog</a><a href="faq.html">FAQ</a><a href="contact.html">Contact</a><a href="my-account.html">My account</a><a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a></nav></div></header>
+<main id="main">
+<section class="pg"><div class="narrow"><span class="kicker">Running an EA</span><h1>Do you need a VPS to run a gold EA on MT5?</h1><p class="lead">An Expert Advisor only trades while MetaTrader 5 is open, logged in and connected. So you need a computer that stays on while the gold market is open, which is 24 hours a day from Monday to Friday. That can be your own PC or a rented Windows VPS.</p>
+<h2>PC or VPS?</h2>
+<table><thead><tr><th></th><th>Your own PC</th><th>Windows VPS</th></tr></thead><tbody>
+<tr><td>Cost</td><td>No extra rent, but electricity</td><td>A monthly fee</td></tr>
+<tr><td>Always on</td><td>Only if you never shut it down or let it sleep</td><td>Yes, that is the point</td></tr>
+<tr><td>Power or internet cuts</td><td>The EA stops until you are back</td><td>Rare, the data centre has backup</td></tr>
+<tr><td>Updates and restarts</td><td>Windows may restart on its own</td><td>Still need to check, but less often</td></tr>
+<tr><td>Best for</td><td>Testing, demo accounts, small starts</td><td>Live accounts you do not want to babysit</td></tr></tbody></table>
+<h2>What the EA needs</h2>
+<ul><li><b>MetaTrader 5 on Windows.</b> Phones and MT4 cannot run MT5 Expert Advisors.</li>
+<li><b>Algo trading switched on</b> in MT5, and the EA attached to the right chart.</li>
+<li><b>A stable internet connection.</b> If the connection drops, the EA cannot manage open trades.</li>
+<li><b>The computer must not sleep or restart.</b> Turn off sleep and automatic restarts in Windows.</li></ul>
+<h2>Setup checklist</h2>
+<ol class="steps"><li>Install MT5 from your broker and log in to the account.</li><li>Open the XAUUSD chart and attach the EA.</li><li>Turn on Algo Trading and allow the EA to trade.</li>
+<li>Set Windows power options to never sleep, and pause automatic restarts where you can.</li><li>Let alerts tell you if something stops. GoldTriEngine sends Telegram alerts for EA start and stop and for an offline heartbeat.</li></ol>
+<h2>GoldTriEngine</h2>
+<p>GoldTriEngine runs on MetaTrader 5 on Windows, on your own computer or a Windows VPS that stays on Monday to Friday. It needs a Fusion Markets or IC Markets Raw account in USD. You can <a href="free-backtest.html">run the free backtest EA</a> on your own PC first, before you decide on anything else.</p>
+<div class="row" style="margin:22px 0"><a class="btn mint" href="free-backtest.html">Test it free in the MT5 Strategy Tester</a><a class="btn" href="pricing.html">See plans</a><a class="btn" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch it trade live</a></div><h2>Questions people ask</h2><h3>Can I run a gold EA on my laptop?</h3><p>Yes, if MetaTrader 5 stays open, the laptop does not sleep, and the connection is stable. For a live account that must run all week, many people prefer a VPS.</p><h3>Does an EA work if my computer is off?</h3><p>No. An MT5 Expert Advisor only runs while MetaTrader 5 is open and connected, so open trades are not managed while the computer is off.</p><h3>Can I run MT5 EAs on a phone or MT4?</h3><p>No. MT5 Expert Advisors need MetaTrader 5 on Windows. Phones cannot run Expert Advisors and MT4 uses a different format.</p><h3>Does GoldTriEngine need a VPS?</h3><p>No VPS is required. It needs MetaTrader 5 on Windows that stays on Monday to Friday, which can be your PC or a Windows VPS.</p><h2>Related guides</h2><ul><li><a href="best-gold-ea-mt5.html">Best gold EA for MT5? Ten checks before you buy one</a></li><li><a href="is-a-gold-ea-safe.html">Is a gold EA safe?</a></li><li><a href="martingale-vs-stop-loss-gold-ea.html">Martingale vs a stop loss</a></li><li><a href="goldtriengine-review.html">GoldTriEngine review: what you can verify</a></li></ul><p class="fine">Trading involves substantial risk of loss. Nothing on this page is financial advice, a trade signal or a promise of profit. Backtest results are simulated and past results do not guarantee future results.</p></div></section>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="./"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+        <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
+      </div>
+      <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="contact.html">Contact &amp; support</a></li><li><a href="stream-bot.html">Stream software</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="pricing.html">Pricing</a></li><li><a href="partners.html">Partners</a></li><li><a href="blog/">Blog &amp; Academy</a></li><li><a href="guide.html">How to judge a gold EA</a></li><li><a href="gold-ea-mt5.html">Gold EA for MT5</a></li><li><a href="best-gold-ea-mt5.html">Best gold EA? 10 checks</a></li><li><a href="goldtriengine-review.html">Review: is it legit?</a></li><li><a href="fusion-markets-ic-markets-gold-ea.html">Fusion and IC Markets</a></li><li><a href="faq.html">FAQ</a></li><li><a href="privacy.html">Privacy</a></li><li><a href="apps.html">Get the app</a></li><li><a href="terms.html">Terms</a></li><li><a href="refund.html">Refund policy</a></li><li><a href="changelog.html">EA changelog</a></li><li><a href="status.html">System status</a></li><li><a href="risk.html">Risk disclaimer</a></li><li><a href="llms.txt">llms.txt</a></li></ul></div>
+    </div>
+    <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: <a href="contact.html">contact page</a> or Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+  </div>
+</footer>
+<script src="site.js?v=20261021app5" defer></script><script src="pwnav.js?v=20261030pw6" defer></script><script src="growth.js?v=20261101m2" defer></script>
+<script src="app.js?v=20261021app5"></script>
+
+<script src="wow.js?v=20261021app5" defer></script>
+<script src="chat.js?v=20261101m2" defer></script>
+<link rel="stylesheet" href="pub-ds.css?v=12"><link rel="stylesheet" href="pub-tone.css?v=2"><link rel="stylesheet" href="pub-premium.css?v=7"><link rel="stylesheet" href="pub-wow.css?v=35"><script src="pub-ds-page.js?v=3" defer></script><script src="partner-track.js?v=20261102p1" defer></script><script src="pub-wow.js?v=8" defer></script>
+<script src="pub-social.js?v=2" defer></script></body>
+</html>

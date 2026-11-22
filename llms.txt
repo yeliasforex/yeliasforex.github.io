@@ -17,6 +17,9 @@ Key facts:
 - Risk notice: trading involves substantial risk of loss. Backtests are simulations and past results do not guarantee future results. Nothing published by GoldTriEngine is financial advice or a trade signal.
 
 ## Main pages
+- [Gold EA: VPS or PC](https://goldtriengine.com/gold-ea-vps-or-pc.html): what an MT5 EA needs to run, PC versus VPS, setup checklist
+- [Martingale vs stop loss](https://goldtriengine.com/martingale-vs-stop-loss-gold-ea.html): how martingale and grid EAs fail and why a stop loss on every trade is safer
+- [Is a gold EA safe?](https://goldtriengine.com/is-a-gold-ea-safe.html): what can go wrong with a gold EA, seven red flags, and a checklist
 - [Home](https://goldtriengine.com/): what GoldTriEngine is, how the stream works, backtest summary, license plans, brokers
 - [Gold EA for MT5 (product page)](https://goldtriengine.com/gold-ea-mt5.html): what GoldTriEngine is, how it trades, risk controls, requirements and how to check it before paying
 - [Best gold EA for MT5? Ten checks](https://goldtriengine.com/best-gold-ea-mt5.html): a checklist for judging any gold EA, with GoldTriEngine's own answers including its weak spots
