@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to Calculate Lot Size for Gold From Your Stop Loss | GoldTriEngine</title>
+<meta name="description" content="A step-by-step method to size a gold trade: pick the risk in dollars, measure the stop, divide. Includes worked examples for 0.5%, 1% and 2% risk.">
+<link rel="canonical" href="https://goldtriengine.com/blog/how-to-calculate-lot-size-for-gold-with-a-stop-loss/">
+<meta name="author" content="Yelias">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="GoldTriEngine">
+<meta property="og:title" content="How to Calculate Lot Size for Gold From Your Stop Loss | GoldTriEngine">
+<meta property="og:description" content="A step-by-step method to size a gold trade: pick the risk in dollars, measure the stop, divide. Includes worked examples for 0.5%, 1% and 2% risk.">
+<meta property="og:url" content="https://goldtriengine.com/blog/how-to-calculate-lot-size-for-gold-with-a-stop-loss/">
+<meta property="og:image" content="https://goldtriengine.com/blog/img/how-to-calculate-lot-size-for-gold-with-a-stop-loss.png?v=20261108">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Calculate Lot Size for Gold From Your Stop Loss | GoldTriEngine">
+<meta name="twitter:description" content="A step-by-step method to size a gold trade: pick the risk in dollars, measure the stop, divide. Includes worked examples for 0.5%, 1% and 2% risk.">
+<meta name="twitter:image" content="https://goldtriengine.com/blog/img/how-to-calculate-lot-size-for-gold-with-a-stop-loss.png?v=20261108">
+<link rel="alternate" type="application/rss+xml" title="GoldTriEngine blog" href="/blog/feed.xml">
+
+
+<meta name="theme-color" content="#F4F6FB">
+<meta property="og:site_name" content="GoldTriEngine">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="/style.css?v=20261101m2">
+<link rel="stylesheet" href="/wow.css?v=20261101m2">
+<link rel="stylesheet" href="/theme.css?v=20261021app5">
+<link rel="stylesheet" href="/blog.css?v=20261108bl4">
+<link rel="stylesheet" href="/blog-pro.css?v=20261108bl4">
+<script src="/theme.js?v=20261021app5"></script>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GoldTriEngine">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script src="/pwa.js?v=20261108app9" defer></script><script src="/track.js?v=20261021app5" defer></script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
+<link rel="stylesheet" href="/pub-ds.css?v=12">
+<link rel="stylesheet" href="/pub-tone.css?v=2">
+<link rel="stylesheet" href="/pub-premium.css?v=7">
+<link rel="stylesheet" href="/pub-wow.css?v=35">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How to Calculate Lot Size for Gold From Your Stop Loss","description":"A step-by-step method to size a gold trade: pick the risk in dollars, measure the stop, divide. Includes worked examples for 0.5%, 1% and 2% risk.","image":["https://goldtriengine.com/blog/img/how-to-calculate-lot-size-for-gold-with-a-stop-loss.png"],"datePublished":"2026-11-25","dateModified":"2026-11-25","author":{"@type":"Person","name":"Yelias"},"publisher":{"@type":"Organization","name":"GoldTriEngine","logo":{"@type":"ImageObject","url":"https://goldtriengine.com/icon-192.png"}},"mainEntityOfPage":"https://goldtriengine.com/blog/how-to-calculate-lot-size-for-gold-with-a-stop-loss/","articleSection":"Risk & Money","wordCount":359,"inLanguage":"en"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://goldtriengine.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://goldtriengine.com/blog/"},{"@type":"ListItem","position":3,"name":"Risk & Money","item":"https://goldtriengine.com/blog/category/risk-money/"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What risk per trade is sensible?","acceptedAnswer":{"@type":"Answer","text":"Many professional risk guides use between 0.25% and 2% of the account per trade. Smaller is safer; the right number depends on your drawdown tolerance."}},{"@type":"Question","name":"Should the stop depend on volatility?","acceptedAnswer":{"@type":"Answer","text":"Yes. A fixed dollar stop that was wide last year can be tight today. See how a stop can be set from the average daily range in our lesson on stop-loss placement."}},{"@type":"Question","name":"What if my broker's lot step is 0.01?","acceptedAnswer":{"@type":"Answer","text":"Round the result down to the nearest 0.01. Rounding up increases your risk above the figure you chose."}}]}</script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="progress" aria-hidden="true"></div>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="/index.html" aria-label="GoldTriEngine home"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menu"><span></span><span></span></button>
+    <nav class="nav" id="nav" aria-label="Main"><a href="/index.html#account">Live account</a><a href="/index.html#how">How it works</a><a href="/index.html#backtest">Backtest</a><a href="/free-backtest.html">Free EA</a><a href="/pricing.html">Pricing</a><a href="/guide.html">Guide</a><a href="/blog/">Blog</a><a href="/faq.html">FAQ</a><a href="/contact.html">Contact</a><a href="/my-account.html">My account</a><a class="pill" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener"><span class="dot"></span>Watch live</a></nav>
+  </div>
+</header>
+<main id="main">
+<div class="bl-wrap"><header class="bl-head"><nav class="bl-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> <span>/</span> <a href="/blog/">Blog</a> <span>/</span> <a href="/blog/category/risk-money/">Risk &amp; Money</a> <span>/</span> <span>How to Calculate Lot Size for Gold From Your Stop Loss</span></nav><a class="bl-chip" href="/blog/category/risk-money/"><i></i>Risk &amp; Money</a><h1>How to Calculate Lot Size for Gold From Your Stop Loss</h1><p class="bl-answer">Lot size = amount you risk / (stop distance in dollars x 100) on a broker where one lot of gold is 100 ounces. For a 10,000 account risking 1% (100) with a 5-dollar stop, the size is 100 / (5 x 100) = 0.2 lots.</p><div class="bl-meta"><span><b>Yelias</b></span><span>Published 25 November 2026</span><span>2 min read</span></div></header><div class="bl-grid"><article class="bl-body"><h2 id="size-the-trade-from-the-stop-not-from-the-feeling">Size the trade from the stop, not from the feeling</h2>
+<p>Most blown accounts have one thing in common: the lot size was picked first and the stop was an afterthought. Reverse it. <strong>Decide how much you can lose, find where the trade is proved wrong, then let those two numbers set the size.</strong></p>
+<ol class="bl-steps"><li><strong>Amount at risk</strong> = account size x risk percent. On 10,000 at 1% that is 100.</li><li><strong>Stop distance</strong> = the number of dollars between entry and stop, in the gold price. If you buy at 4,000.00 with a stop at 3,995.00, the distance is 5.</li><li><strong>Lot size</strong> = amount at risk / (stop distance x 100). Here that is 100 / (5 x 100) = <strong>0.20 lots</strong>.</li><li><strong>Round down</strong> to your broker&#x27;s lot step, never up.</li></ol>
+<p>The factor 100 comes from the contract size of 100 ounces per lot, so each dollar of movement is $100 per lot. If your broker uses a different contract size, use that number instead.</p>
+<div class="bl-tw"><table><thead><tr><th>Account</th><th>Risk per trade</th><th>Amount at risk</th><th>Stop distance</th><th>Lot size</th></tr></thead><tbody><tr><td class="">$10,000</td><td class="">0.5%</td><td class="">$50</td><td class="">$5</td><td class="">0.10</td></tr><tr><td class="">$10,000</td><td class="">1%</td><td class="">$100</td><td class="">$5</td><td class="">0.20</td></tr><tr><td class="">$10,000</td><td class="">1%</td><td class="">$100</td><td class="">$10</td><td class="">0.10</td></tr><tr><td class="">$10,000</td><td class="">2%</td><td class="">$200</td><td class="">$10</td><td class="">0.20</td></tr><tr><td class="">$50,000</td><td class="">1%</td><td class="">$500</td><td class="">$8</td><td class="">0.62</td></tr></tbody></table></div><figcaption>Made-up examples. A wider stop means a smaller lot for the same amount at risk.</figcaption>
+<figure class="bl-fig"><h4>Lot size for the same 100 at risk</h4><p class="bl-sub">Lots, by stop distance in dollars of gold price</p><svg viewBox="0 0 640 300" class="bl-svg" role="img" aria-label="Lot size for 100 at risk by stop distance"><line class="bl-gl z" x1="44" x2="628" y1="264.0" y2="264.0"/><text class="bl-yt" x="38" y="267.0" text-anchor="end">0</text><line class="bl-gl" x1="44" x2="628" y1="201.3" y2="201.3"/><text class="bl-yt" x="38" y="204.3" text-anchor="end">0.1</text><line class="bl-gl" x1="44" x2="628" y1="138.6" y2="138.6"/><text class="bl-yt" x="38" y="141.6" text-anchor="end">0.2</text><line class="bl-gl" x1="44" x2="628" y1="75.9" y2="75.9"/><text class="bl-yt" x="38" y="78.9" text-anchor="end">0.3</text><rect class="bl-bar pos" style="--i:0" x="79.4" y="57.0" width="46.0" height="207.0" rx="3"/><text class="bl-bv" x="102.4" y="51.0" text-anchor="middle" style="--i:0">0.33</text><text class="bl-xt" x="102.4" y="286" text-anchor="middle">$3</text><rect class="bl-bar pos" style="--i:1" x="196.2" y="138.6" width="46.0" height="125.4" rx="3"/><text class="bl-bv" x="219.2" y="132.6" text-anchor="middle" style="--i:1">0.2</text><text class="bl-xt" x="219.2" y="286" text-anchor="middle">$5</text><rect class="bl-bar pos" style="--i:2" x="313.0" y="188.7" width="46.0" height="75.3" rx="3"/><text class="bl-bv" x="336.0" y="182.7" text-anchor="middle" style="--i:2">0.12</text><text class="bl-xt" x="336.0" y="286" text-anchor="middle">$8</text><rect class="bl-bar pos" style="--i:3" x="429.8" y="213.8" width="46.0" height="50.2" rx="3"/><text class="bl-bv" x="452.8" y="207.8" text-anchor="middle" style="--i:3">0.08</text><text class="bl-xt" x="452.8" y="286" text-anchor="middle">$12</text><rect class="bl-bar pos" style="--i:4" x="546.6" y="232.6" width="46.0" height="31.4" rx="3"/><text class="bl-bv" x="569.6" y="226.6" text-anchor="middle" style="--i:4">0.05</text><text class="bl-xt" x="569.6" y="286" text-anchor="middle">$20</text></svg><figcaption>Doubling the stop halves the lot. The amount you can lose stays the same.</figcaption></figure>
+<aside class="bl-call "><b class="t">Choose the stop first</b><p>Put the stop where the idea is wrong, not where the lot size feels comfortable. If the proper stop makes the lot too small to be worth taking, skip the trade. That is the system doing its job.</p></aside>
+<h2 id="check-the-whole-account-not-one-trade">Check the whole account, not one trade</h2>
+<p>If three trades are open at 1% each, you can lose 3% on one bad day. Add the risk of all open trades and keep it below the figure you chose in advance. Two trades in the same direction on gold are largely one idea: see correlation and overexposure.</p><h2 id="faq">Frequently asked questions</h2><div class="bl-faq"><details><summary>What risk per trade is sensible?</summary><p>Many professional risk guides use between 0.25% and 2% of the account per trade. Smaller is safer; the right number depends on your drawdown tolerance.</p></details><details><summary>Should the stop depend on volatility?</summary><p>Yes. A fixed dollar stop that was wide last year can be tight today. See how a stop can be set from the average daily range in our lesson on stop-loss placement.</p></details><details><summary>What if my broker&#x27;s lot step is 0.01?</summary><p>Round the result down to the nearest 0.01. Rounding up increases your risk above the figure you chose.</p></details></div><h2 id="sources">Sources and method</h2><ul class="bl-src"><li>Standard risk-management and statistics formulas. Every example in this lesson uses made-up round numbers to show how the maths works; none of them is a result or a forecast.</li></ul><div class="bl-author"><div class="av">Y</div><p><b>Yelias</b>, GoldTriEngine. We trade gold with an automated EA and publish every trade in public. Everything here is built from that live data. <a href="/index.html#account">See the live account</a> or <a href="/pricing.html">the EA</a>.</p></div><div class="bl-disc"><b>Not financial advice.</b> This is education and research, not a recommendation to buy or sell anything. Trading gold and CFDs carries a high risk of loss, and past results, back-tests and forecasts do not guarantee future results. Read our <a href="/risk.html">risk disclaimer</a>. Numbers in this article are computed by our own software from our own price data and trading account; drafting is assisted by AI. Written under the name Yelias.</div></article><aside class="bl-aside"><nav class="bl-toc" aria-label="On this page"><b>On this page</b><a href="#size-the-trade-from-the-stop-not-from-the-feeling">Size the trade from the stop, not from the feeling</a><a href="#check-the-whole-account-not-one-trade">Check the whole account, not one trade</a><a href="#faq">Frequently asked questions</a><a href="#sources">Sources and method</a></nav><div class="bl-side-cta"><p>Watch the same EA trade gold live, 24/5, with every entry and exit explained.</p><a class="btn primary" href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Watch live</a></div></aside></div></div><div class="bl-wrap"><section class="bl-related"><h2>Keep reading</h2><div class="bl-cards"><a class="bl-card" href="/blog/position-sizing-risk-of-ruin/"><span class="bl-chip"><i></i>Risk &amp; Money</span><h3>Position Sizing and Risk of Ruin: What 1%, 2% and 5% Risk Really Do</h3><p>We simulated 20,000 traders with a real edge. At 1% risk per trade almost none suffered a 30% drawdown; at 5% most did. See the numbers, the formula for gold lot size and why losses need bigger gains to recover.</p><div class="bl-meta"><span>1 Nov 2026</span><span>4 min read</span></div></a></div></section></div>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="/./"><span class="logo" role="img" aria-label="GoldTriEngine logo"></span>GoldTriEngine</a>
+        <p style="margin:16px 0 0;max-width:30ch">A gold (XAUUSD) Expert Advisor for MetaTrader 5, trading live in public, 24/5.</p>
+      </div>
+      <div><h4>Watch</h4><ul><li><a href="https://www.youtube.com/@GoldTriEngine/live" rel="noopener">Live stream</a></li><li><a href="https://www.youtube.com/@GoldTriEngine" rel="noopener">YouTube channel</a></li><li><a href="https://www.tiktok.com/@goldtriengine" rel="noopener">TikTok</a></li></ul></div>
+      <div><h4>Community</h4><ul><li><a href="https://t.me/+l7QyD_fRy25mNWJl" rel="noopener">Telegram channel</a></li><li><a href="/contact.html">Contact &amp; support</a></li><li><a href="/stream-bot.html">Stream software</a></li><li><a href="https://t.me/GoldTriEngine_Support" rel="noopener">Support</a></li><li><a href="https://www.myfxbook.com/portfolio/goldtriengine/12235544" rel="noopener">Myfxbook</a></li></ul></div>
+      <div><h4>Site</h4><ul><li><a href="/pricing.html">Pricing</a></li><li><a href="/partners.html">Partners</a></li><li><a href="/blog/">Blog &amp; Academy</a></li><li><a href="/guide.html">How to judge a gold EA</a></li><li><a href="/gold-ea-mt5.html">Gold EA for MT5</a></li><li><a href="/best-gold-ea-mt5.html">Best gold EA? 10 checks</a></li><li><a href="/goldtriengine-review.html">Review: is it legit?</a></li><li><a href="/fusion-markets-ic-markets-gold-ea.html">Fusion and IC Markets</a></li><li><a href="/faq.html">FAQ</a></li><li><a href="/privacy.html">Privacy</a></li><li><a href="/apps.html">Get the app</a></li><li><a href="/terms.html">Terms</a></li><li><a href="/llms.txt">llms.txt</a></li></ul></div>
+    </div>
+    <p class="risk">© 2026 GoldTriEngine · Built by Yelias · Contact: <a href="/contact.html">contact page</a> or Telegram <a href="https://t.me/GoldTriEngine_Support">@GoldTriEngine_Support</a><br>
+    Trading involves substantial risk of loss. Nothing on this site is financial advice, a trade signal or a promise of profit. Backtest results are simulated, and past results do not guarantee future results. Broker links on this site are affiliate links. The stream's voice host is AI-generated.</p>
+  </div>
+</footer>
+<a class="fab" href="https://t.me/GoldTriEngine_Support" rel="noopener" aria-label="Message GoldTriEngine on Telegram"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.5 4.3 2.9 11.5c-1.3.5-1.3 1.2-.2 1.5l4.8 1.5 1.8 5.6c.2.6.1.9.8.9.5 0 .7-.2 1-.5l2.3-2.3 4.9 3.6c.9.5 1.5.2 1.8-.8l3.2-15.2c.3-1.3-.5-1.9-1.8-1.5ZM8.9 14.1l9.8-6.2c.5-.3.9-.1.5.2l-8.4 7.6-.3 3.5z"/></svg><span>Contact us</span></a>
+<script src="/site.js?v=20261021app5" defer></script><script src="/pwnav.js?v=20261030pw6" defer></script><script src="/growth.js?v=20261101m2" defer></script>
+<script src="/wow.js?v=20261021app5" defer></script>
+<script src="/chat.js?v=20261101m2" defer></script>
+<script src="/pub-ds-page.js?v=3" defer></script><script src="/partner-track.js?v=20261102p1" defer></script><script src="/pub-wow.js?v=8" defer></script>
+<script src="/pub-social.js?v=2" defer></script><script src="/blog.js?v=20261108bl4" defer></script>
+<script src="/blog-pro.js?v=20261108bl4" defer></script>
+</body>
+</html>
